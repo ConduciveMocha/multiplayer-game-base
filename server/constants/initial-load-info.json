@@ -1,0 +1,36 @@
+{
+    "cdnAddress":"http://ec2-3-17-28-100.us-east-2.compute.amazonaws.com",
+    "assets": [
+        {
+            "url":"/assets/player-sprites/sprite1_front.png",
+            "assetType":"image",
+            "dim":{"x":100,"y":100},
+            "assetId":0
+        },
+        {
+            "url":"/assets/backgrounds/background_gennas.jpg",
+            "assetType":"image",
+            "dim": {
+                "x": 100,
+                "y": 100
+            },
+            "assetId":1
+        },
+        {
+            "url":"/assets/player-portraits/portrait1.png",
+            "assetType":"image",
+            "dim":{"x":100,"y":100},
+            "assetId":"2"
+        },
+        {
+            "url": "/assets/environment-sprites/stool.png",
+            "assetType": "image",
+            "dim": {
+                "x": 100,
+                "y": 100
+            },
+            "assetId": "3"
+        }
+
+    ]
+}
