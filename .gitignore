@@ -24,3 +24,4 @@ yarn-error.log*
 /fe-src
 /venv
 **.pyc
+/__pycache__

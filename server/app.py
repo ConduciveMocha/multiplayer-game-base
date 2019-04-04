@@ -37,7 +37,7 @@ def handle_message(message):
 
 @socketio.on('private message')
 def handle_connect(data):
-    54455
+    
     x =  '{ "name":"John", "age":30, "city":"New York"}'
     emit('private message', x)
 
