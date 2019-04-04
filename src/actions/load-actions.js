@@ -14,7 +14,6 @@ export const loadSuccess = (gameAsset) => {
     }
 }
 
-
 export const loadFailed = (gameAsset,error) => {
     return {
         type: LoadActions.LOAD_FAILED,
@@ -23,14 +22,14 @@ export const loadFailed = (gameAsset,error) => {
     }
 }
 
-
-export const startInitialLoad = (assetUrls) => {
+export const startInitialLoad = () => {
     return{     
-        type: LoadActions.START_INITIAL_LOAD,
-        assetUrls
+        type: LoadActions.START_INITIAL_LOAD
     }
 }
 
 export const initialLoadFinished = () => {
-    return {type:LoadActions.INITIAL_LOAD_FINISHED}
+    return {
+        type:LoadActions.INITIAL_LOAD_FINISHED
+    }
 }

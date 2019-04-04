@@ -1,0 +1,11 @@
+.field-error-container{
+  background-color: blue;
+  margin: 0, auto;
+  height: 1.5em;
+}
+
+.field-error{
+  margin: 0;
+  font-size:.75em;
+  color: red;
+}

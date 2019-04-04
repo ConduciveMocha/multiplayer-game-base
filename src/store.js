@@ -2,22 +2,23 @@ import { createStore,applyMiddleware,compose } from "redux";
 import createSagaMiddleWare from "redux-saga";
 import {assetLoader} from './sagas/load-saga';
 import socketSaga from './sagas/socket-saga'
-import loadReducer from './reducers/load-reducer';
+import authSaga from './sagas/auth-saga'
+import rootReducer from './reducers';
 import testObjs from './api/saga-reducer-test'
-import {loadStarted} from './actions/load-actions'
+import {loadStarted,startInitialLoad} from './actions/load-actions'
 
+import {flaskServer} from './api/urls'
 import {createSocket} from './actions/socket-actions'
 
 const composeEnhancers =  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-const loadmw = createSagaMiddleWare()
-const socketmw = createSagaMiddleWare()
-const store = createStore(loadReducer,{completed:false, gameAssets:[]}, composeEnhancers(applyMiddleware(loadmw,socketmw)
+const loadMw = createSagaMiddleWare()
+const socketMw = createSagaMiddleWare()
+const authMw = createSagaMiddleWare()
+const store = createStore(rootReducer, composeEnhancers(applyMiddleware(loadMw,socketMw,authMw)
 ));
-loadmw.run(assetLoader);
-socketmw.run(socketSaga)
-testObjs.forEach((x) => store.dispatch(loadStarted(x)));
-
-store.dispatch(createSocket('http://localhost:5000', 'auth'))
-
+loadMw.run(assetLoader);
+socketMw.run(socketSaga)
+authMw.run(authSaga)
+store.dispatch(createSocket(flaskServer,'auth'))
 export const dispatch = store.dispatch;
 export default store;

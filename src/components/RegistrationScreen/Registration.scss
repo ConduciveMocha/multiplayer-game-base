@@ -1,0 +1,53 @@
+@import '../Common';
+
+.registration-form-container  {
+    @include jc-center();
+
+    background-color: white;
+    height: 100vh;
+    margin: auto;
+
+    
+}
+
+form {
+    background-color: rgb(255, 254, 211);
+    height: 60vh;
+    width: 60vw;
+    margin-top: 15vh;
+    border-radius: 60px;
+}
+
+.fake-id-photo {
+    width: 4vw;
+    height: 5vh;
+    margin: 4vh;
+    background-color:white;
+}
+
+// form > label {
+//     font-size: 2em;
+// }
+
+.register-username-container {
+    width: 2vw;
+    height: 2vh
+}
+
+.register-password-container {
+    width: 2vw;
+    height: 2vh;
+
+}
+
+.register-dob-container {
+    width: 5vw;
+    height: 5vh;
+    display: flex;
+    align-content: row;
+}
+
+.register-dob-container >div> input {
+    width: 3vw;
+    height: 4vh;
+}

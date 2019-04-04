@@ -24,7 +24,6 @@ export class GameAsset {
         this.loadState=LoadStates.LOADING;
         this.error = '';
     }
-    initialize = () => {this.asset=null};
     completed = (error='') => {this.loadState = error ? LoadStates.FAILED : LoadStates.SUCCESSFUL; this.error=error}
     setID = (newId) => {this.id=newId};
 
@@ -35,13 +34,12 @@ export class ImageAsset extends GameAsset {
     constructor(imageUrl,imageDim={}, id=0) {
         super(imageUrl, 'img',id=id);
         this.imageDim = imageDim;
-        try{this.asset  =  new Image(this.imageDim.x,this.imageDim.y)}
-        catch(error) {this.asset = new Image(); }
+        this.asset = new Image()
         this.asset.src = this.assetUrl;
-        this.initialize = this.initializeImage
+        
     }
 
-    initializeImage(cb) {
+    initialize(cb) {
         this.asset.onload = cb;
     }
     completed = (error='') => {

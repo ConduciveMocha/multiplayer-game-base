@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css?family=Audiowide|Iceland|Monoton|Pacifico|Press+Start+2P|Vampiro+One|Fredoka+One');
+* {
+    outline: none !important;
+}
+
+
+.barsign-container {
+    margin:auto;
+    /* height: 200vh; */
+    height:30vh;
+    padding-top:20vh;
+    padding-bottom: 30vh;
+
+}
+
+.neon-text-container{
+    display:flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin:auto;
+    width: 300px;
+    height: 200px;
+    border: 8px solid rgba(167, 229, 254, 0.253);
+    border-radius: 150px;
+    background-color: rgb(27, 41, 41);
+
+
+    animation: sign-on-border;
+    animation-duration: 7s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
+
+
+}
+
+.redirect-buttons{
+    display: flex;
+    justify-content:center;
+
+}
+
+.redirect-buttons > button {
+    opacity: 0;
+    margin:0 3vw;
+    width: 200px;
+    height: 100px;
+    border: 6px solid rgba(0, 240, 112, 0.226);
+    border-radius: 50px;
+    font-size: 2em;
+    line-height: 1.2em;
+    font-family:Pacifico;
+    background-color: rgb(27, 41, 41);
+    overflow-wrap: break-word;
+    color: rgba(255, 107, 206, 0.308);
+    
+
+    transition: all .3s ease;
+
+    animation-name: buttonFadeIn;
+    animation-duration: 1s;
+    animation-delay:3.5s;
+    animation-fill-mode: forwards;
+    /* -webkit-tap-highlight-color: rgba(255, 255, 255, 0);  */
+    /* -webkit-tap-highlight-color: transparent; */
+
+}
+.redirect-buttons > button:hover{
+    color: rgb(255, 107, 206);
+    box-shadow: 0 0 60px 2px #00F071;
+    border:6px solid #00F071;
+
+    text-shadow:rgb(255, 107, 206) 2px 2px 20px; 
+
+}
+
+
+
+
+.sim-text {
+    display:flex;
+    justify-content: center;
+    font-family: Pacifico;
+    font-size:7em;
+    color:rgb(0, 0, 0);
+    margin: 0;
+
+    animation-name: fadeIn;
+    animation-duration: 1s;
+    animation-delay: 2s;
+    animation-fill-mode: forwards;
+}
+
+.neon-text-container > p {
+    margin: 0;
+    font-family: Audiowide,cursive;
+    font-size: 6em;
+    text-decoration: none;
+
+    color: rgba(255, 107, 206, 0.308);
+
+}
+
+.neon-text-b {
+    animation-duration: 10s;
+    animation-name:sign-on-flicker;
+    animation-timing-function:ease-out;
+    animation-fill-mode: forwards;
+}
+
+.neon-text-a {
+    animation-name:sign-on;
+    animation-duration: 10s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
+}
+
+.neon-text-r {
+    animation-duration: 10s;
+    animation-name:sign-on;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
+ } 
+
+
+
+
+
+@keyframes sign-on {
+
+    21% {
+        color: rgba(255, 107, 206, 0.308);
+         text-shadow: rgba(255, 107, 206, 0.0) 2px 2px 20px;  
+    }
+
+    22% {
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 20px; 
+
+    }
+    
+    27% {
+        text-shadow: rgb(255,107,206) 2px 2px 40px
+    }
+
+    100%{
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 30px; 
+
+    }
+    
+}
+
+@keyframes sign-on-border {
+    14%{
+        border-color:  rgba(167, 229, 254, 0.253);
+        box-shadow: 0 0 60px 10px rgba(167, 229, 254, 0.0);
+    }
+    15% {
+        border-color:  #A7E6FE;
+        box-shadow: 0 0 60px 5px rgba(167, 229, 254, 0.575);
+    }
+
+    20% {
+        box-shadow: 0 0 60px 10px rgba(167, 229, 254, 0.884);
+    }
+
+    100% {
+        border-color:  #A7E6FE;
+        box-shadow: 0 0 60px 5px #A7E6FE;
+    }
+}
+
+
+
+@keyframes sign-on-flicker {
+
+    17% {
+        color: rgba(255, 107, 206, 0.308);
+         text-shadow: rgba(255, 107, 206, 0.0) 2px 2px 20px;  
+    }
+
+    18% {
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 40px; 
+
+    }
+
+    36% {
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 40px; 
+
+    }
+
+    37%{
+        color: rgb(78, 32, 63);
+        text-shadow: rgb(78, 32, 63) 2px 2px 20px;  
+    }
+ 
+    38% {
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 40px; 
+
+    }
+
+    61% {
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 40px; 
+
+    }
+
+    62%{
+        color: rgb(78, 32, 63);
+        text-shadow: rgb(78, 32, 63) 2px 2px 20px;  
+    }
+ 
+    63% {
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 40px; 
+
+    }
+
+
+    64%{
+        color: rgb(78, 32, 63);
+        text-shadow: rgb(78, 32, 63) 2px 2px 20px;  
+    }
+ 
+    65% {
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 40px; 
+
+    }
+
+    100%{
+        color: rgb(255, 107, 206);
+        text-shadow:rgb(255, 107, 206) 2px 2px 40px; 
+
+    }
+}
+
+@keyframes fadeIn {
+    0%{
+        color:black;
+    }
+    100%{
+        color:yellow;
+    }
+}
+
+@keyframes buttonFadeIn {
+    0% {opacity:0;}
+    100% {opacity:1;}
+}

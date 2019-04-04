@@ -1,0 +1,18 @@
+.messenger-container{
+    
+    border: 1px solid black;
+    
+    height:40vh
+}
+.tab-container{
+    height: 2.5vh;
+    border: 1px solid green;
+}
+
+.message-box-container{
+    height:15vh;
+
+}
+/* .message-box{
+    height:12.5vh;
+} */

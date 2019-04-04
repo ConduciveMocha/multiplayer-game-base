@@ -1,11 +1,11 @@
 import LoadActions from '../constants/action-types/load-types';
 import LoadStates from '../constants/LoadStates';
-import {dispatch} from '../store'
 
 
 
 const initialLoadStates = {
     gameAssets:[],
+    initialLoadComplete:false
 };
 
 const updateLoadState = (id,  newState, gameAssets, setToNull=false) =>  {
@@ -15,7 +15,7 @@ const updateLoadState = (id,  newState, gameAssets, setToNull=false) =>  {
 }
 const checkLoadFinished = (gameAssets) => {
     let result =  gameAssets.every((x) => {
-        return (x.loadState === LoadStates.SUCCESSFUL || x.loadState === LoadStates.FAILED)
+        return (x.loadState === LoadStates.SUCCESSFUL)
     });
 
     return result;
@@ -27,11 +27,16 @@ export default function loadReducer(state=initialLoadStates, action) {
     switch(action.type){
 
         case LoadActions.START_INITIAL_LOAD:
-            return {...state}
-        case LoadActions.INITIAL_LOAD_FINISHED:
-            return {...state}
+            return state;
 
+        case LoadActions.INITIAL_LOAD_FINISHED:
+            if (!checkLoadFinished(state.gameAssets)) {
+                //TODO: try to fetch backup assets
+            }
+            return {...state}
+            
         case LoadActions.LOAD_SUCCESS:{
+            
             const updatedGameAssetList = updateLoadState(action.gameAsset.id, LoadStates.SUCCESSFUL, state.gameAssets);
             
             return {

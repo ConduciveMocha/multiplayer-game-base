@@ -3,6 +3,7 @@ import {take, put, call,all,actionChannel} from 'redux-saga/effects';
 import * as SocketActions from '../actions/socket-actions'
 import * as SocketTypes from '../constants/action-types/socket-types'
 import io from 'socket.io-client';
+import * as MessageActions from '../actions/message-actions'
 
 // Makes Socket and checks connection
 const makeSocket = (url, auth) => {
@@ -29,37 +30,50 @@ function socketEventChannel(socket) {
             emitter(SocketActions.socketFailed(error))
         });
 
+        socket.on('private message', (data) => {
+            emitter(MessageActions.newMessage(data.senderId, data.content,data.timestamp,true))
+        })
+        socket.on('global message', (data) => {
+            emitter(MessageActions.newMessage(data.senderId,data.content,data.timestamp,false))
+        })
+        
         socket.on('new gamestate', (data) =>{
             // emitter(GameActions.newGameState(data))
         })
         socket.on('update gamestate', (data) => {
             // emitter(GameActions.updateGameState(data))
         })
-        socket.on('private message', (data) => {
-            console.log('here')
-            console.log(data)
-            // emitter(MessageActions.privateMessageRecieved)
-        })
-        socket.on('global message', (data) => {
-            // emitter(MessageActions.globalMessageRecieved)
-        })
         return () => {socket.close()}        
     })
 }
-
-const createMessageHandler = socket => msg => {
-    socket.send(JSON.stringify(msg))
-}
-
 const createMovementHandler = socket => movement => {
     socket.send(JSON.stringify(movement))
 }
+
+const createMessageHandler = socket => msg => {
+            if (msg.isPrivate)
+              socket.eemit("private message",JSON.stringify(msg));
+            else
+              socket.emit("global message", JSON.stringify(msg));}
+
+
+const createMessageInterceptChannel = socket => {
+    const handler = createMessageHandler(socket);
+    return function* () {
+        const messageChan = yield actionChannel('MESSAGE_SENT')
+        while(true) {
+            const action = yield take(messageChan);
+            console.log(action)
+            yield call(handler,action)
+        }
+    }
+}
+
 
 const createEventChannelSaga = socket => {
     return function* (){
         const channel = socketEventChannel(socket)
         while(true) {
-            console.log('3')
 
             const action = yield take(channel);
             yield put(action);
@@ -67,16 +81,6 @@ const createEventChannelSaga = socket => {
     }
 }
 
-const createMessageChannelSaga = socket => {
-    const handler = createMessageHandler(socket);
-    return function* () {
-        const messageChan = yield actionChannel('SEND_MESSAGE')
-        while(true) {
-            const action = yield take(messageChan);
-            yield call(handler,action.msg)
-        }
-    }
-}
 
 const createMovementChannelSaga = socket => {
     const handler = createMovementHandler(socket);
@@ -97,11 +101,10 @@ export default function* socketSaga() {
         socket = makeSocket(createSocketAction.url, createSocketAction.auth)
     }
 
-    yield put(SocketActions.socketConnected())
-    console.log('there')
-    socket.emit('private message', JSON.stringify({data:'abcd'}))
+    yield put(SocketActions.socketCreated(socket,'socket'))
+    // socket.emit('private message', JSON.stringify({data:'abcd'}))
     const movementChannel = createMovementChannelSaga(socket);
-    const messageChannel = createMessageChannelSaga(socket);
+    const messageChannel = createMessageInterceptChannel(socket);
     const eventChannel = createEventChannelSaga(socket);
 
     yield all([call(movementChannel),call(messageChannel), call(eventChannel)])

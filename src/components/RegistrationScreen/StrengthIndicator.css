@@ -1,0 +1,30 @@
+#password-strength-indicator {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#password-strength-indicator div{
+    width: 100px;
+    height: 5px;
+    margin: 2px;
+    background-color:grey;
+}
+
+.error #password-strong,.error #password-moderate,.error #password-poor  {
+    background-color: red
+}
+
+.poor #password-poor{
+    background-color:orange;
+}
+
+.moderate #password-poor,.moderate #password-moderate{
+    background-color:yellow
+}
+
+.strong #password-strong,.strong #password-moderate,.strong #password-poor  {
+    background-color: green
+}
+
+

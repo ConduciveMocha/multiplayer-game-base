@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css?family=Audiowide|Iceland|Monoton|Pacifico|Press+Start+2P|Vampiro+One|Fredoka+One|Lobster|Vidaloka');
+
+
+$sign-bg: rgb(27, 41, 41);
+$blue-off: rgba(34, 171, 250, 0.308);
+$green-off: rgba(0, 240, 112, 0.226);
+$purple-off:  rgb(78, 32, 63);
+$blue-on: rgb(34, 171, 250);
+$green-on: #00F071;
+$purple-on: rgb(255, 107, 206);
+$sim-color: yellow;
+
+$neon-text-dur: 7s;
+
+@mixin jc-center {
+    display:flex;
+    justify-content: center;
+    
+}
+
+@mixin blue-border-off {
+    border:  8px solid $blue-off;
+    box-shadow: 0 0 60px 5px $blue-off;
+
+}
+@mixin green-border-off {
+    border:  6px solid $green-off;
+    box-shadow: 0 0 60px 0px $green-off;
+}
+@mixin purple-text-off {
+    color: $purple-off;
+    text-shadow: $purple-off 2px 2px 20px; 
+}
+@mixin green-border-on {
+    border:6px solid $green-on;
+    box-shadow: 0 0 60px 2px $green-on;
+}
+@mixin blue-border-on {
+    border-color:  $blue-on;
+    box-shadow: 0 0 60px 5px $blue-on;
+}
+
+@mixin purple-text-on {
+    color: $purple-on;
+    text-shadow: $purple-on 2px 2px 40px;
+}
+
+@mixin sign-animation ($animation-name) {
+    animation-duration:$neon-text-dur;
+    animation-name:$animation-name;
+    animation-timing-function:ease-out;
+    animation-fill-mode: forwards;
+}
+
+
+* {outline: none !important;}

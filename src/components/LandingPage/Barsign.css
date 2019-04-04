@@ -1,0 +1,163 @@
+@import url("https://fonts.googleapis.com/css?family=Audiowide|Iceland|Monoton|Pacifico|Press+Start+2P|Vampiro+One|Fredoka+One");
+@import url("https://fonts.googleapis.com/css?family=Audiowide|Iceland|Monoton|Pacifico|Press+Start+2P|Vampiro+One|Fredoka+One|Lobster|Vidaloka");
+* {
+  outline: none !important; }
+
+.barsign-container {
+  margin: auto;
+  height: 30vh;
+  padding-top: 20vh;
+  padding-bottom: 30vh; }
+
+.neon-text-container {
+  display: flex;
+  justify-content: center;
+  border: 8px solid rgba(34, 171, 250, 0.308);
+  box-shadow: 0 0 60px 5px rgba(34, 171, 250, 0.308);
+  margin: auto;
+  height: 200px;
+  width: 300px;
+  align-items: center;
+  border-radius: 150px;
+  background-color: #1b2929;
+  animation-duration: 7s;
+  animation-name: sign-border-on;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+  animation-timing-function: step-start; }
+
+.redirect-buttons {
+  display: flex;
+  justify-content: center; }
+
+.redirect-buttons > a > button {
+  border: 6px solid rgba(0, 240, 112, 0.226);
+  box-shadow: 0 0 60px 0px rgba(0, 240, 112, 0.226);
+  color: #4e203f;
+  text-shadow: #4e203f 2px 2px 20px;
+  opacity: 0;
+  margin: 0 3vw;
+  height: 100px;
+  width: 200px;
+  border-radius: 50px;
+  font-family: Pacifico;
+  font-size: 2em;
+  line-height: 1.2em;
+  overflow-wrap: break-word;
+  background-color: #1b2929;
+  transition: all .3s ease;
+  animation-name: button-fade-in;
+  animation-duration: 2s;
+  animation-delay: 3s;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease; }
+
+.redirect-buttons > a > button:hover {
+  color: #ff6bce;
+  text-shadow: #ff6bce 2px 2px 40px;
+  border: 6px solid #00F071;
+  box-shadow: 0 0 60px 2px #00F071; }
+
+.sim-text {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  font-family: Pacifico;
+  font-size: 7em;
+  color: black;
+  animation-name: sim-fade-in;
+  animation-delay: 3s;
+  animation-duration: 2s;
+  animation-fill-mode: forwards; }
+
+.neon-text-container > p {
+  color: #4e203f;
+  text-shadow: #4e203f 2px 2px 20px;
+  margin: 0;
+  font-family: Audiowide,cursive;
+  font-size: 6em; }
+
+.neon-text-b {
+  animation-name: sign-on-flicker;
+  animation-duration: 7s;
+  animation-delay: 2s;
+  animation-fill-mode: forwards;
+  animation-timing-function: step-start;
+  animation-iteration-count: infinite; }
+
+.neon-text-a, .neon-text-r {
+  animation-duration: 7s;
+  animation-name: sign-on;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+  animation-delay: 2.5s; }
+
+@keyframes sign-on {
+  1% {
+    color: #4e203f;
+    text-shadow: #4e203f 2px 2px 20px; }
+  5% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; }
+  27% {
+    text-shadow: #ff6bce 2px 2px 20px; }
+  100% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; } }
+@keyframes sign-on-flicker {
+  1% {
+    color: #4e203f;
+    text-shadow: #4e203f 2px 2px 20px; }
+  5% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; }
+  36% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; }
+  39% {
+    color: #4e203f;
+    text-shadow: #4e203f 2px 2px 20px; }
+  42% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; }
+  61% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; }
+  63% {
+    color: #4e203f;
+    text-shadow: #4e203f 2px 2px 20px; }
+  64% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; }
+  67% {
+    color: #4e203f;
+    text-shadow: #4e203f 2px 2px 20px; }
+  69% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; }
+  100% {
+    color: #ff6bce;
+    text-shadow: #ff6bce 2px 2px 40px; } }
+@keyframes sign-border-on {
+  14% {
+    border: 8px solid rgba(34, 171, 250, 0.308);
+    box-shadow: 0 0 60px 5px rgba(34, 171, 250, 0.308); }
+  16% {
+    border-color: #22abfa;
+    box-shadow: 0 0 60px 5px #22abfa; }
+  100% {
+    border-color: #22abfa;
+    box-shadow: 0 0 60px 5px #22abfa; } }
+@keyframes sim-fade-in {
+  0% {
+    color: black; }
+  100% {
+    color: yellow;
+    text-shadow: 2px 2px 25px rgba(255, 255, 0, 0.699); } }
+@keyframes button-fade-in {
+  0% {
+    opacity: 0; }
+  100% {
+    opacity: 1; } }
+
+/*# sourceMappingURL=Barsign.css.map */

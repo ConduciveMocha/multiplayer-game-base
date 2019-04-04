@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css?family=Audiowide|Iceland|Monoton|Pacifico|Press+Start+2P|Vampiro+One|Fredoka+One');
+@import '../Common.scss';
+
+
+
+.barsign-container {
+    // @include blue-border-off();
+    margin:auto;
+    height:30vh;
+    padding-top:20vh;
+    padding-bottom: 30vh;
+}
+
+.neon-text-container{
+    @include jc-center;
+    @include blue-border-off;
+
+    margin:auto;
+    height:200px;
+    width:300px;
+    align-items:center;
+    border-radius: 150px;
+    background-color:$sign-bg;
+
+    @include sign-animation(sign-border-on);
+    animation-timing-function: step-start;
+}
+
+.redirect-buttons{
+    @include jc-center;
+}
+
+.redirect-buttons >a> button{   
+    @include green-border-off();
+    @include purple-text-off();
+    opacity: 0;
+    margin:0 3vw;
+    height: 100px;
+    width: 200px;
+    border-radius: 50px;
+    font-family: Pacifico;
+    font-size:2em;
+    line-height: 1.2em;
+    overflow-wrap:break-word;
+    
+    background-color:$sign-bg;
+
+    transition: all .3s ease;
+
+    animation-name: button-fade-in;
+    animation-duration: 2s;
+    animation-delay:3s;
+    animation-fill-mode: forwards;
+    animation-timing-function: ease;
+}
+
+.redirect-buttons >a> button:hover{
+    @include purple-text-on();
+    @include green-border-on();
+}
+
+.sim-text {
+    @include jc-center();
+    margin: 0;
+    font-family: Pacifico;
+    font-size: 7em;
+    color: black;
+    
+    // Animation
+    animation-name: sim-fade-in;
+    animation-delay:3s;
+    animation-duration: 2s;
+    animation-fill-mode: forwards;
+    
+}
+
+.neon-text-container>p {
+    @include purple-text-off();    
+    margin:0;
+    font-family: Audiowide,cursive;
+    font-size: 6em;
+    
+}
+
+.neon-text-b{
+    animation-name:sign-on-flicker;
+    animation-duration: $neon-text-dur;
+    animation-delay:2s;
+    animation-fill-mode: forwards;
+    animation-timing-function: step-start;
+    animation-iteration-count: infinite;
+}
+.neon-text-a, .neon-text-r{
+    @include sign-animation(sign-on);
+    animation-delay:2.5s;
+}
+
+@keyframes sign-on {
+    1%{@include purple-text-off()}
+    5%{@include purple-text-on()}
+    27%{text-shadow: $purple-on 2px 2px 20px;}
+    100%{@include purple-text-on()}
+}
+
+@keyframes sign-on-flicker {
+    1%{@include purple-text-off()}
+    5%{@include purple-text-on()}
+   
+    36%{@include purple-text-on()}
+    39%{@include purple-text-off()}
+    42%{@include purple-text-on()}
+    
+    61%{@include purple-text-on()}
+    63%{@include purple-text-off()}
+    64%{@include purple-text-on()}    
+    67%{@include purple-text-off()}
+    69%{@include purple-text-on()}    
+    
+    100%{@include purple-text-on()}
+}
+
+@keyframes sign-border-on {
+    14%{@include blue-border-off()}
+    16%{@include blue-border-on()}
+    100%{@include blue-border-on()}
+}
+
+
+@keyframes sim-fade-in {
+    0%{color:black;}
+    100%{
+        color:yellow;
+        text-shadow:2px 2px 25px rgba(255, 255, 0, 0.699);
+    }
+}
+
+@keyframes button-fade-in {
+    0% {opacity:0;}
+    100% {opacity:1;}
+}
+
