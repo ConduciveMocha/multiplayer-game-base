@@ -17,7 +17,7 @@ class App extends Component {
     return ( 
       
       <Provider store={store}>
-      <Router>
+      {/* <Router>
         
         <div className="App">
           <Route exact path='/' component={Barsign} />
@@ -26,11 +26,11 @@ class App extends Component {
           <Route path='/game' component={GamePage}/>
         </div>
 
-      </Router>
-       {/* <Messenger messageThreads={[]}/>  */}
+      </Router> */}
+       <Messenger messageThreads={[]}/> 
       </Provider>
 
-      // <Barsign/>
+      
     );
   }
 }
