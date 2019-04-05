@@ -1,6 +1,8 @@
-from db.declaratives import User,PrivateMessage
 from datetime import datetime
-from db.dbsession import DBSession
+
+from server.db.declaratives import User,PrivateMessage
+from server.db.dbsession import DBSession
+
 class MessageSession(DBSession):
 
 

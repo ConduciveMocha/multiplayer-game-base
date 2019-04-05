@@ -1,7 +1,7 @@
-from db.db import Session
-from db.messagesession import MessageSession
-from db.usersession import UserSession
-from db.declaratives import User
+from server.db.db import Session
+from server.db.messagesession import MessageSession
+from server.db.usersession import UserSession
+from server.db.declaratives import User
 # try:
 #     user_sess = UserSession()
 #     user_sess.add_user('nate12345678','password1234','email.email@email.com',dob=None)

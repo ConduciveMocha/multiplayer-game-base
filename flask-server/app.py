@@ -7,9 +7,9 @@ from flask import Flask, request,make_response, redirect
 from flask_cors import CORS
 from flask_socketio import SocketIO,emit,send
 
-from loggers.serverlogger import request_log
-from blueprints.authbp import bp as authbp
-from blueprints.registrationbp import bp as registerationbp
+from server.loggers.serverlogger import request_log
+from server.blueprints.authbp import bp as authbp
+from server.blueprints.registrationbp import bp as registerationbp
 
 
 app = Flask(__name__)

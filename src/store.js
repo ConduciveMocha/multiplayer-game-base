@@ -14,11 +14,13 @@ const composeEnhancers =  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
 const loadMw = createSagaMiddleWare()
 const socketMw = createSagaMiddleWare()
 const authMw = createSagaMiddleWare()
-const store = createStore(rootReducer, composeEnhancers(applyMiddleware(loadMw,socketMw,authMw)
-));
+const store = createStore(rootReducer, composeEnhancers(applyMiddleware(loadMw,socketMw,authMw)));
+
+
 loadMw.run(assetLoader);
 socketMw.run(socketSaga)
 authMw.run(authSaga)
 store.dispatch(createSocket(flaskServer,'auth'))
+
 export const dispatch = store.dispatch;
 export default store;

@@ -25,3 +25,4 @@ yarn-error.log*
 /venv
 **.pyc
 /server/__pycache__
+**.code-workspace

@@ -5,10 +5,7 @@ from sqlalchemy.dialects.mysql import TIMESTAMP
 
 Base = declarative_base()
 
-
-
-
-
+# Generates a __repr__ function for a given declarative
 def db_repr(s):
     ret = f"{s.__class__.__name__} <"
     for field in filter(lambda x: x[0] != '_' and x != 'metadata', s.__class__.__dict__.keys()):
@@ -35,16 +32,17 @@ class PrivateMessage(Base):
     
 class User(Base):
     __tablename__='users'
+
     id = Column(Integer,primary_key=True)
     username = Column(String(16))
     password_hash = Column(String(100))
     password_salt = Column(String(10))
     email = relationship("Email", uselist=False,back_populates="user")
-    # sent_messages = relationship("PrivateMessage",back_populates="sender")
-    # recieved_messages = relationship("PrivateMessage",back_populates="reciever")
     sent_messages = relationship("PrivateMessage",foreign_keys=[PrivateMessage.sender_id])
     recieved_messages = relationship("PrivateMessage",foreign_keys=[PrivateMessage.reciever_id])
+
     __repr__ = db_repr
+
 class Email(Base):
     __tablename__='emails'
 

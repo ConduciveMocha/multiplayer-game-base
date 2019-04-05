@@ -1,34 +1,41 @@
 import re
+import logging
 from contextlib import contextmanager
 from werkzeug.security import generate_password_hash, check_password_hash
-from db.declaratives import User, Email
-from db.dbsession import DBSession
-import logging
+
+from server.db.declaratives import User, Email
+from server.db.dbsession import DBSession
 class UserSession(DBSession):
 
 
-    def username_in_use(self,username):
-        result = self.session.query(User.username).filter(User.username==username).one_or_none()
-        return result is not None
-
-    def email_in_use(self,email):
-        result = self.session.query(Email.email).filter(Email.email==email).one_or_none()
-        return result is not None
     
     # Validation Functions
     @staticmethod
     def valid_email(email):
-        return re.fullmatch(r'^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$', email,flags=re.IGNORECASE)
-
+        fm =  re.fullmatch(r'^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$', email,flags=re.IGNORECASE)
+        return True if fm else False
+    
     @staticmethod
     def valid_username(username):
-        return re.fullmatch(r'[A-Za-z0-9_]{8,16}',username)
+        if re.fullmatch(r'^[0-9_]{8,16}$',username):
+            return False
+        fm = re.fullmatch(r'^[A-Za-z0-9_]{8,16}$',username)
+        return True if fm else False
 
     @staticmethod
     def valid_password(password):
-        return re.fullmatch(r'\S{8,16}',password)
+        fm = re.fullmatch(r'^\S{8,16}$',password)
+        return True if fm else False
     
- 
+    # Checks if username has been registered; Returns boolean
+    def username_in_use(self,username):
+        result = self.session.query(User.username).filter(User.username==username).one_or_none()
+        return result is not None
+
+    # Checks if email has been registered; returns boolean
+    def email_in_use(self,email):
+        result = self.session.query(Email.email).filter(Email.email==email).one_or_none()
+        return result is not None
 
     # Checks if all fields are valid
     def validate_info(self,username,password,email):
@@ -41,8 +48,7 @@ class UserSession(DBSession):
         if self.username_in_use(username):
             return 'username in use'
         if self.email_in_use(email):
-            return 'email in use'
-        
+            return 'email in use'    
         return None
 
         

@@ -1,7 +1,8 @@
 import re
+import logging
+
 from contextlib import contextmanager
 from .db import Session
-import logging
 class DBSession():
     def __init__(self):
         self.session = None
