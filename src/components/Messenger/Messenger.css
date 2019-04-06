@@ -1,18 +1,49 @@
-.messenger-container{
-    
-    border: 1px solid black;
-    
-    height:40vh
-}
-.tab-container{
-    height: 2.5vh;
-    border: 1px solid green;
+.messenger-container {
+  border: 1px solid black;
+  margin: 0, auto;
+  height: 40vh;
 }
 
-.message-box-container{
-    height:15vh;
-
+.tab-container {
+  height: 100px;
+  width: 25vh;
+  display: flex;
+  border: 1px solid black;
 }
+
+.message-tab, .message-tab-active {
+  flex-grow: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.message-tab {
+  background-color: gray;
+}
+
+.message-tab-active {
+  background-color: white;
+}
+
+.message-tab-active:hover {
+  background-color: red;
+}
+
+.message-tab-title {
+  font-size: 1em;
+}
+
+.message-tab:hover {
+  background-color: blue;
+}
+
+.message-box-container {
+  height: 15vh;
+}
+
 /* .message-box{
     height:12.5vh;
 } */
+
+/*# sourceMappingURL=Messenger.css.map */

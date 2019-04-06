@@ -11,7 +11,7 @@ import Messenger from './components/Messenger'
 import store from './store'
 import {Provider} from 'react-redux'
 import './App.css';
-
+import {mockThreads} from './utils/messaging-mock'
 class App extends Component {
   render() {
     return ( 
@@ -27,7 +27,8 @@ class App extends Component {
         </div>
 
       </Router> */}
-       <Messenger messageThreads={[]}/> 
+        
+       <Messenger activeThreads={mockThreads} currentThread={mockThreads[1]}/> 
       </Provider>
 
       

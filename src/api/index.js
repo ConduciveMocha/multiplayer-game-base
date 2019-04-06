@@ -1,4 +1,5 @@
-import {flaskServer} from './urls'
+import {flaskServer} from '../constants/urls'
+
 export function decodeJwt(jwt) {
     let base64Url = jwt.split('.')[1]
     let base64 = base64Url.replace('-', '+').replace('_', '/');
@@ -38,6 +39,10 @@ export function setAuthCookie(resp) {
 export function getAuthCookie() {
     return document.cookie.replace(/(?:(?:^|.*;\s*)auth\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 }
+
+export function appendJwt(payload) {
+    return {...payload, auth:getAuthCookie()}
+} 
 
 
 

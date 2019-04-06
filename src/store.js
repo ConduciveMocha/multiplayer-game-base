@@ -7,7 +7,7 @@ import rootReducer from './reducers';
 import testObjs from './api/saga-reducer-test'
 import {loadStarted,startInitialLoad} from './actions/load-actions'
 
-import {flaskServer} from './api/urls'
+import {flaskServer} from './constants/urls'
 import {createSocket} from './actions/socket-actions'
 
 const composeEnhancers =  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;

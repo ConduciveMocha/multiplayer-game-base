@@ -1,0 +1,52 @@
+$debug-border: 1px solid black;
+
+.messenger-container{
+    
+    border: $debug-border;
+
+    margin: 0, auto;
+    height:40vh
+}
+.tab-container{
+    height: 100px;
+    width: 25vh;
+    display:flex;
+
+    border: $debug-border;
+}
+
+.message-tab, .message-tab-active {
+    flex-grow:2;
+    display:flex;
+    justify-content: center;
+    align-items:center;
+}
+.message-tab{
+    background-color: gray;
+
+}
+
+.message-tab-active{
+
+    background-color: white;
+}
+
+.message-tab-active:hover{
+    background-color:red;
+}
+
+.message-tab-title {
+    font-size: 1em;
+}
+
+
+.message-tab:hover {
+    background-color:blue;
+}
+.message-box-container{
+    height:15vh;
+
+}
+/* .message-box{
+    height:12.5vh;
+} */

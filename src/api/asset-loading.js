@@ -1,7 +1,8 @@
-import {flaskServer,staticServer} from './urls';
+import {flaskServer,staticServer} from '../constants/urls';
 import LoadStates from '../constants/LoadStates'
 import {loadSuccess,loadFailed} from '../actions/load-actions'
 import {dispatch} from '../store'
+
 export async function getInitialLoadInfo(payload) {
     const url = flaskServer + '/initial-load-info'
     const response = await fetch(url)
