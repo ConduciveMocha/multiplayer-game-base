@@ -1,5 +1,9 @@
 import LoadActions from '../constants/action-types/load-types';
 
+/** Action created when asset has began loading
+ * 
+ * @param {string} gameAsset 
+ */
 export const loadStarted = (gameAsset) => {
     return  {
         type: LoadActions.LOAD_STARTED,
@@ -7,6 +11,10 @@ export const loadStarted = (gameAsset) => {
     }
 }
 
+/** Action created when asset has loaded successfully
+ * 
+ * @param {string} gameAsset 
+ */
 export const loadSuccess = (gameAsset) => {
     return {
         type: LoadActions.LOAD_SUCCESS,

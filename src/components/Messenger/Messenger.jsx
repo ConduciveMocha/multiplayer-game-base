@@ -1,56 +1,33 @@
-import React,{useState, useRef} from 'react'
-import MessageTab from './MessageTab'
-import MessageBox from './MessageBox'
-import MessageFeed from './MessageFeed'
-import UserList from './UserList'
-import {connect} from 'react-redux'
+import React, {useState, useEffect} from 'react';
+import useArray from '../hooks/useArray';
 
-
-import './Messenger.css'
 const Messenger = (props) => {
-    const [openThreads, setOpenThreads] = useState([]);
-    const [currentThread,setCurrentThread] = useState({});
-    const [savedInputs, setSavedInputs] = useState({})
-    const threadTabs = openThreads.map(th => {
-        return (<MessageTab 
-                    key={th.threadId}
-                    isCurrent={th.threadId === currentThread.threadId} 
-                    thread={th} 
-                    onTabFocus={e=>{setCurrentThread(th)}}
-                />)
-    });
+    const [activeThread,setActiveThread] = useState(null); // Set to a thread object
+    const openThreads = useArray([]); // threads that are open in the user's window
+    
+    // Serves two purposes:
+    // 1. If array is empty, that will cause a thread to render as opposed to the 
+    //    create thread window.
+    // 2. Stores a list of users to add to the new thread.
+    const createNewThread = useArray([]); 
+
+    // Effect that handles the active thread being closed
+    useEffect(()=>{
+        if (!openThreads.arr.find(el=>activeThread.threadId === el.threadId)) {
+            if(openThreads.arr) setActiveThread(openThreads.arr[0]);
+            else setActiveThread(null);
+        }
+    }, [openThreads])
 
 
-    const openThread = userId => e => {
-                
-    }
 
-    return(
-        <div className="messenger-container">
-            <div className="tab-container">
-                {threadTabs}
-            </div>
-            <UserList users={props.users} createOnClick={openThread}/>
-            <MessageFeed thread={currentThread}/>
-            <MessageBox 
-                currentText={savedInputs[currentThread.threadId]} 
-                onChangeFunction={s=>{
-                    let newSavedInputs = {...savedInputs};
-                    newSavedInputs[currentThread.threadId] = s;
-                    setSavedInputs(newSavedInputs);
-                }}
-            />
+    return (
+        <div className="messenger">
+            <ThreadTabs threads={openThreads} />
+            <UserList users={props.users} onClickFunction={user => e => { createNewThread.push(user) }}/>
+            {createNewThread ? <CreateThread 
+                    includeUsers={createNewThread.arr} 
+                    /> : <Thread active={activeThread} />}
         </div>
     )
 }
-// export default  connect(
-//     state => {
-//         return {
-//             activeThreads: state.messaging.activeThreads,
-//             currentThread: state.messaging.currentThread,
-//             users: state.messaging.users
-//         }
-//     },
-//     null
-// )(Messenger);
-export default Messenger;
