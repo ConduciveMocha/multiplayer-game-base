@@ -21,7 +21,7 @@ const Thread = (props) => {
                 <input type="color"/>
                 <input type="range"/>
             </div>          
-            <button>Send</button>        
+            <button onSubmit={}>Send</button>        
         </form>
       </div>
     );

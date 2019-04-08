@@ -30,16 +30,6 @@ def index_page():
 @app.route('/initial-load-info', methods=['GET'])
 def get_initial_load_info():
     return open('./constants/initial-load-info.json', 'rb').read()
-    
-@socketio.on('message')
-def handle_message(message):
-    emit('private message', ('fooo'))
-
-@socketio.on('private message')
-def handle_connect(data):
-    
-    x =  '{ "name":"John", "age":30, "city":"New York"}'
-    emit('private message', x)
 
 if __name__ == "__main__":
     socketio.run(app);
