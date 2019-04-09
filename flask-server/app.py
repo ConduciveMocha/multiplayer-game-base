@@ -15,12 +15,10 @@ from server.blueprints.registrationbp import bp as registerationbp
 app = Flask(__name__)
 app.config.from_object(get_config())
 
-# app.config['DEBUG'] = True
-# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 
 
-app.config['SECRET_KEY'] = 'secret!secret!';
 CORS(app)
 socketio = SocketIO(app)
 app.register_blueprint(authbp)
