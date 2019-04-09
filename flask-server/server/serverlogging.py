@@ -2,8 +2,7 @@ import logging
 
 import json
 
-def create_logger():
-    
+
 
 logging.basicConfig(level=logging.DEBUG)
 server_logger = logging.getLogger(name='ServerLog')

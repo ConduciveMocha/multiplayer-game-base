@@ -5,10 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from server.db.declaratives import User, Email
 from server.db.dbsession import DBSession
-class UserSession(DBSession):
-
-
-    
+class UserSession(DBSession):    
     # Validation Functions
     @staticmethod
     def valid_email(email):
@@ -29,12 +26,14 @@ class UserSession(DBSession):
     
     # Checks if username has been registered; Returns boolean
     def username_in_use(self,username):
-        result = self.session.query(User.username).filter(User.username==username).one_or_none()
+        with self.db_open():
+            result = self.session.query(User.username).filter(User.username==username).one_or_none()
         return result is not None
 
     # Checks if email has been registered; returns boolean
     def email_in_use(self,email):
-        result = self.session.query(Email.email).filter(Email.email==email).one_or_none()
+        with self.db_open():
+            result = self.session.query(Email.email).filter(Email.email==email).one_or_none()
         return result is not None
 
     # Checks if all fields are valid
@@ -59,7 +58,7 @@ class UserSession(DBSession):
             if validation_error: return validation_error,-1
             
             method, password_salt, password_hash = generate_password_hash(password).split('$')
-            print(method,password_salt,password_hash)
+
             new_user = User(username=username,password_hash=password_hash,password_salt=password_salt)
             self.session.add(new_user)
             self.session.commit()

@@ -1,0 +1,4 @@
+{
+    "python.venvPath": "~/code/multiplayer-game-base/flask-server/",
+    "python.pythonPath": "venv/bin/python"
+}
