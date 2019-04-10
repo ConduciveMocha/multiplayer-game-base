@@ -1,7 +1,7 @@
-
-  
 import json
 import logging
+
+from serverconfig import get_config
 
 from flask import Flask, request,make_response, redirect
 from flask_cors import CORS
@@ -13,10 +13,14 @@ from server.blueprints.registrationbp import bp as registerationbp
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!secret!';
+app.config.from_object(get_config())
+
+logging.basicConfig(level=logging.DEBUG)
+
+
+
 CORS(app)
 socketio = SocketIO(app)
-logging.basicConfig(level=logging.DEBUG)
 app.register_blueprint(authbp)
 app.register_blueprint(registerationbp)
 

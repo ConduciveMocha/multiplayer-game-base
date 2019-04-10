@@ -7,12 +7,16 @@ class DBSession():
     def __init__(self):
         self.session = None
 
+        self.log = logging.getLogger(type(self).__name__)
+        self.log.setLevel(logging.INFO)  
+        
+
     @contextmanager
     def db_open(self):
 
         self.session = Session()
-        logging.info('MYSQL: SESSION CREATED')
+        self.log.info('SESSION OPENED')
         yield self.session
         self.session.close()
-        logging.info('MYSQL: SESSION CLOSED')
+        self.log.info('SESSION CLOSED')
         self.session = None

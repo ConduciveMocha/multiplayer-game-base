@@ -54,3 +54,13 @@ def get_thread():
 
 #     x = '{ "name":"John", "age":30, "city":"New York"}'
 #     emit('private message', x)
+
+
+
+@bp.route('/create')
+def request_thread():
+    pass
+
+@bp.route('/history')
+def thread_history():
+    pass
