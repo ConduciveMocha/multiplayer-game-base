@@ -2,12 +2,19 @@ import logging
 
 import json
 
-def create_logger():
-    
+
 
 logging.basicConfig(level=logging.DEBUG)
 server_logger = logging.getLogger(name='ServerLog')
 
+def log_funcname(logger):
+    def decorator(func):
+        def wrapped(*args,**kwargs):
+            logger.debug('%(asctime)s - Calling %(funcName)s')
+            return func(*args,**kwargs)
+        wrapped.__name__ = func.__name__
+        return wrapped
+    return decorator
 
 def request_log(request):
     def decorator(func):
