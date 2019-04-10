@@ -1,16 +1,16 @@
 import json
 import logging
 
-from serverconfig import get_config
 
 from flask import Flask, request,make_response, redirect
 from flask_cors import CORS
 from flask_socketio import SocketIO,emit,send
 
 from server.loggers.serverlogger import request_log
-from server.blueprints.authbp import bp as authbp
-from server.blueprints.registrationbp import bp as registerationbp
-
+from server.blueprints.authbp import authbp
+from server.blueprints.registrationbp import registrationbp
+from server.db import db_session
+from serverconfig import get_config
 
 app = Flask(__name__)
 app.config.from_object(get_config())
@@ -21,8 +21,13 @@ logging.basicConfig(level=logging.DEBUG)
 
 CORS(app)
 socketio = SocketIO(app)
+
 app.register_blueprint(authbp)
-app.register_blueprint(registerationbp)
+app.register_blueprint(registrationbp)
+
+@app.teardown_appcontext
+def cleanup(resp_or_exc):
+    db_session.remove()
 
 
 @app.route('/',methods=['GET','POST'])

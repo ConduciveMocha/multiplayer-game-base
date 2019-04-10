@@ -1,29 +1,36 @@
 import json
 from flask import Blueprint, request,make_response
 
+from server.models import User, Email
 from server.loggers.serverlogger import request_log
-from server.db.usersession import UserSession
+from server.db import db_session
 
-_user_session = UserSession()
 
-bp = Blueprint('register', __name__, url_prefix='/register')
+
+registrationbp = Blueprint('register', __name__, url_prefix='/register')
 
 
 """
     API endpoint for creating new user. 
 """
-@bp.route('/create', methods=['POST'])
+@registrationbp.route('/create', methods=['POST'])
 @request_log(request)
 def create_account():
     try:
         username=  request.form['username']
         password = request.form['password']
         email = request.form['email']
-        msg, user_id = _user_session.add_user(username,password,email)
-        if user_id is -1: raise ValueError
+    
+        new_user = User(username,password,email)
+
+        db_session.add(new_user)
+        db_session.commit()
+
+        return json.dumps({'message':'success','user_id':new_user.user_id}),201
+    except AssertionError as e:
+        return json.dumps({'error':'Invalid username or password'})
     except Exception as e:
         return json.dumps({'error':'error creating user'}),409
-    return json.dumps({'message':msg,'user_id':user_id}),201
 
 
 
@@ -32,22 +39,17 @@ def create_account():
     API endpoint for checking if a username is valid before 
     account creation request is submitted.
 """
-@bp.route('/check-availability')
-@request_log(request)
+@registrationbp.route('/check-availability')
 def check_availability():
 
     payload = request.get_json()
     email = payload.get('email', None)
     username = payload.get('username', None)
+    
     response_dict = {}
     if email:
-        if _user_session.valid_email(email):
-            response_dict['email'] = 'Unavailable' if  _user_session.email_in_use(email) else 'Available'
-        else:
-            response_dict['email'] = 'Invalid'
+        response_dict['email'] = 'Unavailable' if db_session.query(Email).filter(Email.email == email).one_or_none() else 'Available'
     if username:
-        if _user_session.valid_username(username):
-            response_dict['username'] = 'Unavailable' if _user_session.email_in_use(email) else 'Available'
-        else:
-            response_dict['username'] = 'Invalid'
+        response_dict['username'] = 'Unavailable' if db_session.query(User).filter(User.username==username) else 'Available'
+        
     return make_response(json.dumps(response_dict), 200)
