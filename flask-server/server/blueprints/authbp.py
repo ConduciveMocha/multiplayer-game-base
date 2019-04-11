@@ -4,6 +4,7 @@ from flask import Blueprint,request,make_response
 from server.auth import login_jwt, require_auth
 from server.loggers.serverlogger import request_log
 from server.db  import db_session
+from server.models import User
 
 authbp = Blueprint('auth',__name__,url_prefix='/auth')
 
@@ -13,13 +14,13 @@ authbp = Blueprint('auth',__name__,url_prefix='/auth')
 @authbp.route('/login', methods=['POST'])
 @request_log(request)
 def login():
-    payload = request.get_json()
     try:
-        username, password = data['username'], data['password']
+        payload = request.get_json()
+        username, password = payload['username'], payload['password']
         user_match = db_session.query(User).filter(User.username==username).one()
         if user_match.check_login(username,password):
-            token = login_jwt(user_match.user_id)
-            return json.dumps({'message': 'success', 'auth': token}), 200
+            token = login_jwt(user_match.id)
+            return json.dumps({'message': 'success', 'auth': token.decode('utf-8')}),200
         else:
             return json.dumps({'error': 'Invalid Username or Password'}), 401   
     except KeyError:

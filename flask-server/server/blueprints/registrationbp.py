@@ -17,9 +17,10 @@ registrationbp = Blueprint('register', __name__, url_prefix='/register')
 @request_log(request)
 def create_account():
     try:
-        username=  request.form['username']
-        password = request.form['password']
-        email = request.form['email']
+        payload = request.get_json()
+        username=  payload['username']
+        password = payload['password']
+        email = payload['email']
     
         new_user = User(username,password,email)
 

@@ -11,20 +11,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 Base = declarative_base()
 
-
-# Generates a __repr__ function for a given declarative
-def db_repr(s):
-    ret = f"{s.__class__.__name__} <"
-    for field in filter(lambda x: x[0] != '_' and x != 'metadata', s.__class__.__dict__.keys()):
-        if len(ret) - ret.find('\n')>50:
-            ret = ret + '\n' + ' ' * (len(s.__class__.__name__) + 2)
-        ret = ret + f'{field}=({s.__dict__[field]}) '
-
-    return ret+'>'
-
-
-
-
 class PrivateMessage(Base):
     __tablename__ = "privatemessages"
 
@@ -34,7 +20,6 @@ class PrivateMessage(Base):
     reciever_id = Column(Integer, ForeignKey("users.id"))
     timestamp = Column(TIMESTAMP)
 
-    __repr__ = db_repr
 
     
 class User(Base):
@@ -51,17 +36,17 @@ class User(Base):
     def __init__(self,username,password,email):
         self.username=username
         self.password = password
-        self.email = Email(email)
+        self.email = Email(email,user=self)
     
     @validates('username')
     def validate_username(self,key,username):
-        assert re.fullmatch(r'^[0-9_]{8,16}$', username) is not None
+        assert re.fullmatch(r'^[0-9_]{8,16}$', username) is None
         assert re.fullmatch(r'^[A-Za-z0-9_]{8,16}$', username) is not None
         return username
 
     @hybrid_property
     def password(self):
-        return '$'.join(['pbkdf2:sha256:50000', self.password_salt, self.password_hash])
+        return '$'.join(['pbkdf2:sha256', self.password_salt, self.password_hash])
 
     @password.setter
     def password(self,password):
@@ -77,7 +62,6 @@ class User(Base):
         else:
             return True
 
-    __repr__ = db_repr
 
 class Email(Base):
     __tablename__='emails'
@@ -94,9 +78,13 @@ class Email(Base):
             r'^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$', email, flags=re.IGNORECASE)
         assert fm != None
         return email
+    def __init__(self,email,user=None):
+        self.email = email
+        self.verified = False
+        if user is not None:
+            self.user = user
 
 
-    __repr__ = db_repr
 
 
 

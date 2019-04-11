@@ -10,10 +10,10 @@ from server.loggers.serverlogger import request_log
 from server.blueprints.authbp import authbp
 from server.blueprints.registrationbp import registrationbp
 from server.db import db_session
-from serverconfig import get_config
+from server.serverconfig import get_config, TestingConfig
 
 app = Flask(__name__)
-app.config.from_object(get_config())
+app.config.from_object(TestingConfig)
 
 logging.basicConfig(level=logging.DEBUG)
 

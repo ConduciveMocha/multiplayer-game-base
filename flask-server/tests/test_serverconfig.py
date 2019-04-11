@@ -1,7 +1,7 @@
 import pytest
 import os
 
-import serverconfig
+import server.serverconfig
 
 """ Fixture that creates a function to set environment 
 dict. Environment dict is reset back during cleanup.
