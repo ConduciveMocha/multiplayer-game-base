@@ -1,4 +1,10 @@
 {
-    "python.venvPath": "~/code/multiplayer-game-base/flask-server/",
-    "python.pythonPath": "venv/bin/python"
+  "python.pythonPath": "venv/bin/python",
+  "python.linting.pylintPath": "venv/bin/pylint",
+  "python.linting.pylintUseMinimalCheckers": false,
+  "python.linting.pep8CategorySeverity.E": "Information",
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true,
+  "python.linting.pylintCategorySeverity.convention": "Hint",
+  "python.linting.pylintArgs": ["--load-plugins", "pylint_flask"]
 }

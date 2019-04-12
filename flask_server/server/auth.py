@@ -68,9 +68,26 @@ def require_auth(request):
     def decorator(func):
         def wrapper(*args,**kwargs):
             token = request.headers.get('authorization',None)
-            if not verify_jwt(token):
+            if not verify_jwt(token,user_id=payload['user_id']):
                 return json.dumps({'error':'Token is invalid'}), 400
             else:
-                return func(*args,id=payload['user_id'],**kwargs)
+                return func(*args,**kwargs)
         return wrapper
     return decorator
+
+
+def make_thread_id(members):
+    enc = '_'.join(map(lambda x: str(x), members.sort()))
+    return base64.b64encode(enc.encode('utf-8')).decode('utf-8')
+
+
+def members_from_thread_id(thread_id):
+    dec = base64.b64decode(thread_id).decode('utf-8')
+    dec = dec.split('_')
+    members = []
+    for i, m in enumerate(dec):
+        if i == 0:
+            members.append(int(m))
+        else:
+            members.append(members[-1] + int(m))
+    return members

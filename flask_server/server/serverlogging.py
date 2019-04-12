@@ -3,18 +3,19 @@ import logging
 import json
 
 
-
 logging.basicConfig(level=logging.DEBUG)
 server_logger = logging.getLogger(name='ServerLog')
 
+
 def log_funcname(logger):
     def decorator(func):
-        def wrapped(*args,**kwargs):
+        def wrapped(*args, **kwargs):
             logger.debug('%(asctime)s - Calling %(funcName)s')
-            return func(*args,**kwargs)
+            return func(*args, **kwargs)
         wrapped.__name__ = func.__name__
         return wrapped
     return decorator
+
 
 def request_log(request):
     def decorator(func):
@@ -44,7 +45,7 @@ def db_log(db_method, db_types, inspect_args=False):
             server_logger.info(
                 f'MYSQL: RUNNING {db_method.upper} WITH TYPES {", ".join(db_types).upper()}')
             if inspect_args:
-                loggin.debug(f'MYSQL:ARGS: *args: {args}')
+                logging.debug(f'MYSQL:ARGS: *args: {args}')
                 server_logger.debug(f'MYSQL:KWARGS: *kwargs: {kwargs}')
             try:
                 resp = func(*args, **kwargs)

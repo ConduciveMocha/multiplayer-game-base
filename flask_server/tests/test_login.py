@@ -47,7 +47,7 @@ def test_default_route(client):
     assert b'<h1>hello world</h1>' in res.data
 
 
-def test_loging_route(client):
+def test_loging_route(client,mock_users):
     request_payload = {
         'username': mock_users_list[0][0], 'password': mock_users_list[0][1]}
     resp = client.post('/auth/login', json=request_payload).get_json(force=True)

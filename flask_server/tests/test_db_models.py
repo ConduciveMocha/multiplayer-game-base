@@ -3,7 +3,7 @@ import pytest
 from werkzeug.security import check_password_hash
 
 from server.db import db_session
-from server.models import PrivateMessage,User,Email
+from server.models import User,Email
 
 
 
@@ -53,7 +53,7 @@ def test_password_prop():
     assert check_password_hash(user.password,new_pass)
     assert user.check_login(username, new_pass)
 
-    
+
 @pytest.mark.parametrize("username,expected",[
     ("username123456", True),
     ("username_use2",True),
