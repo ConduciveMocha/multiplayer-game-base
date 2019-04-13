@@ -16,6 +16,8 @@ from server.serverconfig import get_config, TestingConfig, Config
 celery = Celery(__name__, backend=Config.CELERY_RESULT_BACKEND,
                 broker=Config.CELERY_BROKER_URL)
 socketio = SocketIO()
+serverlogger = logging.getLogger(__name__)
+serverlogger.setLevel(logging.DEBUG)
 
 
 def create_application(conf=None):
@@ -38,7 +40,6 @@ def create_application(conf=None):
     def index_page():
         from server.celery_tasks.tasks import print_hello
 
-        logging.debug('Help me!')
         result = print_hello.delay()
         result.wait()
         return "<h1>hello world</h1>"
@@ -60,4 +61,4 @@ def create_application(conf=None):
 
 if __name__ == "__main__":
     app = create_application(TestingConfig)
-    socketio.run(app)
+    socketio.run(app, log_output=True, log=serverlogger)

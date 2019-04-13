@@ -13,6 +13,7 @@ class Config(object):
     CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
     CELERY_BROKER_URL = 'redis://localhost:6379/1'
     CELERY_IMPORTS = ('server.celery_tasks.tasks')
+    CELERY_TASK_RESULT_EXPIRES = 20
 
 
 class DevelopmentConfig(Config):
