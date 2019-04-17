@@ -23,6 +23,7 @@ yarn-debug.log*
 yarn-error.log*
 /fe-src
 /venv
+/flask_server/scratch.py
 **.pyc
 /server/__pycache__
 **.code-workspace
