@@ -11,11 +11,12 @@ from server.blueprints.authbp import authbp
 from server.blueprints.registrationbp import registrationbp
 from server.db import db_session
 from server.serverconfig import get_config, TestingConfig, Config
-
+from server.cachemanager import poolman
 
 celery = Celery(__name__, backend=Config.CELERY_RESULT_BACKEND,
                 broker=Config.CELERY_BROKER_URL)
 socketio = SocketIO()
+
 serverlogger = logging.getLogger(__name__)
 serverlogger.setLevel(logging.DEBUG)
 
@@ -27,12 +28,13 @@ def create_application(conf=None):
 
     CORS(app)
     socketio.init_app(app)
+    poolman.init_app(app)
     celery.conf.update(app.config)
 
     @app.teardown_appcontext
     def cleanup(resp_or_exc):
         db_session.remove()
-
+        poolman.close_pool()
     app.register_blueprint(authbp)
     app.register_blueprint(registrationbp)
 

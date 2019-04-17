@@ -1,5 +1,6 @@
 import argparse
 import os
+from server.cachemanager import make_redis_url
 
 
 class Config(object):
@@ -10,8 +11,13 @@ class Config(object):
     SECRET_KEY = os.urandom(24).hex()
     JWT_KEY = os.urandom(24).hex()
 
-    CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
-    CELERY_BROKER_URL = 'redis://localhost:6379/1'
+    REDIS_HOST = 'localhost'
+    REDIS_PORT = 6379
+    REDIS_DB = 0
+    REDIS_CACHE_URL = make_redis_url(REDIS_HOST, REDIS_PORT, REDIS_DB)
+
+    CELERY_RESULT_BACKEND = make_redis_url(REDIS_HOST, REDIS_PORT, 1)
+    CELERY_BROKER_URL = make_redis_url(REDIS_HOST, REDIS_PORT, 1)
     CELERY_IMPORTS = ('server.celery_tasks.tasks')
     CELERY_TASK_RESULT_EXPIRES = 20
 
