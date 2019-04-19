@@ -1,15 +1,14 @@
 import argparse
 import os
-from server.cachemanager import make_redis_url
+from server.redis_cache.cachemanager import make_redis_url
 
 
 class Config(object):
     DEBUG = False
     TESTING = False
-    DATABASE_URI = 'mysql+pymysql://egghunt:password@localhost:3306/multiplayerserver'
-
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://egghunt:password@localhost:3306/multiplayerserver'
+    SQLALCHEMY_ECHO = False
     SECRET_KEY = os.urandom(24).hex()
-    JWT_KEY = os.urandom(24).hex()
 
     REDIS_HOST = 'localhost'
     REDIS_PORT = 6379
@@ -21,9 +20,15 @@ class Config(object):
     CELERY_IMPORTS = ('server.celery_tasks.tasks')
     CELERY_TASK_RESULT_EXPIRES = 20
 
+    JWT_KEY = os.urandom(24).hex()
+    JWT_ALGORITHMS = ['HS256']
+    JWT_ISS = 'http://localhost:5000'
+    JWT_EXP_DELTA_SECONDS = 20
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    SQLALCHEMY_ECHO = True
 
 
 class TestingConfig(Config):

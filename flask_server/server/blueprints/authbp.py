@@ -1,69 +1,57 @@
 import json
-from flask import Blueprint, request, make_response, jsonify
+import logging
+from flask import Blueprint, request, make_response, jsonify, current_app, g
 
-from server.auth import login_jwt, require_auth
-from server.loggers.serverlogger import request_log
-from server.db import db_session
-from server.models import User
-from server.cachemanager import poolman
-authbp = Blueprint('auth', __name__, url_prefix='/auth')
+from server.serverlogging import request_log
+from server.db.models import User
+from server.db.user_actions import verify_user
+from server.redis_cache.user_cache import set_user_online, set_user_offline, user_online
+from server.auth import require_auth
+from server.responses.util import required_or_400
 
+
+authbp = Blueprint("auth", __name__, url_prefix="/auth")
+
+auth_logger = logging.getLogger(__name__)
 """
     Login endpoint. Returns a JWT if successful
 """
-@authbp.route('/login', methods=['POST'])
-@request_log(request)
+
+
+@authbp.route("/login", methods=["POST", "GET"])
+@required_or_400(required=["username", "password"])
 def login():
-    try:
-        payload = request.get_json()
-        username, password = payload['username'], payload['password']
-        user_match = db_session.query(User).filter(
-            User.username == username).one()
-        if user_match.check_login(username, password):
 
-            token = login_jwt(user_match.id)
+    username, password = g.username, g.password
+    user = verify_user(username, password)
+    if user:
+        token = g.auth.login_jwt(user.id)
+        set_user_online(user)
 
-            with poolman as r:
-                # Checks if user is online
-                if r.sismember('user:online', user_match.id):
-                    return jsonify(error='User logged in somewhere else')
-                else:
-                    r.sadd('user:online', user_match.id)
-
-                # Checks if user is cached
-                if r.exists(f'user:{user_match.id}'):
-                    r.hset(f'user:{user_match.id}', 'online', 1)
-
-                # Not cached...
-                else:
-                    with r.pipeline() as pipe:
-                        pipe.hmset(f'user:{user_match.id}', {
-                                   'username': user_match.username, 'online': 1})
-
-                        # Sets user:<id>:threads and sends requests to load threads not cached
-                        for thread in user_match.message_threads:
-                            pipe.zadd(
-                                f'user:{user_match.id}:threads', thread.created, thread.id)
-
-                            if not r.exists(f'thread:{thread.id}'):
-                                # TODO Dispatch Celery Task -- Load threads
-                                pass
-
-                        pipe.execute()
-
-            return json.dumps({'message': 'success', 'auth': token.decode('utf-8')}), 200
-        else:
-            return json.dumps({'error': 'Invalid Username or Password'}), 401
-    except KeyError:
-        return json.dumps({'error': 'Invalid Request'}), 400
+        return json.dumps({"message": "success", "auth": token.decode("utf-8")}), 200
+    else:
+        return json.dumps({"error": "Invalid Username or Password"}), 401
 
 
 """
     Logout endpoint
 """
 # TODO Write this method
-@authbp.route('/logout', methods=['POST'])
+@authbp.route("/logout", methods=["POST"])
 @request_log(request)
+@require_auth
+@required_or_400(required="userId", logger=auth_logger)
 def logout():
 
-    return 'logout', 501
+    user_id = g.userId
+    if user_online(user_id):
+        set_user_offline(user_id)
+        auth_logger.info(f"User `{user_id}` successfully logged off")
+        return jsonify(message="Success"), 501
+    else:
+        auth_logger.info(
+            f"A valid logoff request was sent by user not found in `user:online`. Id: {user_id}"
+        )
+        return jsonify(message="Already offline")
+
+    return "logout", 501

@@ -1,7 +1,7 @@
+import logging
 
 from celery.utils.log import get_task_logger
 from app import celery
-import logging
 
 logger = get_task_logger('server.celery_tasks.tasks.print_hello')
 

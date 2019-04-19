@@ -1,45 +1,39 @@
 import json
 from flask import Blueprint, request, jsonify
 
-from server.loggers.serverlogger import request_log
-from server.cachemanager import poolman
+from server.serverlogging import request_log
+from server.db.user_actions import query_user_by_id, query_user_by_username
 from server.auth import require_auth
-from server.db import db_session
-from server.models import User
+from server.redis_cache.user_cache import user_id_cached, get_online_users
+userbp = Blueprint('user', __name__, url_prefix='/user')
 
 
-bp = Blueprint('user', __name__, url_prefix='/user')
-
-
-@bp.route('/')
+@userbp.route('/online')
 @require_auth
 def request_userlist():
     """Gets mapping of users -> usernames for online users
     """
-    with poolman as r:
-        user_list = {user_id: r.hget(
-            f'user:{user_id}', 'username') for user_id in r.sscan_iter('user:online')}
-    return jsonify(usersOnline=user_list)
+    return get_online_users()
 
 
-@bp.route('/<int:user_id>')
+@userbp.route('/<int:user_id>')
 @require_auth
 def request_username(user_id):
     """Queries user by ID
     """
-    with poolman as r:
-        if r.exists(f'user:{user_id}'):
-            return jsonify(user={user_id: r.hget(f'user:{user_id}', 'username')})
+    cache_result = user_id_cached(user_id)
+    if cache_result:
+        return cache_result
+    else:
+        queried_user = query_user_by_id(user_id)
+        if queried_user:
+            return jsonify(user={user_id: queried_user.username})
         else:
-            queried_user = db_session.query(User).filter(
-                User.id == user_id).one_or_none()
-            if queried_user:
-                return jsonify(user={user_id: queried_user.username})
-            else:
-                return jsonify(error="No user found")
+            return jsonify(user={})
 
 
-@bp.route('/<string:username>')
+@userbp.route('/<string:username>')
+@require_auth
 def request_user_id(username):
     """Queries User by username
     """

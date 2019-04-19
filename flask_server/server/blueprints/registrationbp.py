@@ -1,10 +1,11 @@
 import json
-from flask import Blueprint, request, make_response
+import logging
+from flask import Blueprint, request, jsonify
 
-from server.models import User, Email
-from server.loggers.serverlogger import request_log
-from server.db import db_session
+from server.db.user_actions import create_account, query_user_by_username, query_user_by_email
+from server.serverlogging import request_log
 
+registration_log = logging.getLogger(__name__)
 
 registrationbp = Blueprint('register', __name__, url_prefix='/register')
 
@@ -20,17 +21,10 @@ def create_account():
         username = payload['username']
         password = payload['password']
         email = payload['email']
-
-        new_user = User(username, password, email)
-
-        db_session.add(new_user)
-        db_session.commit()
-
-        return json.dumps({'message': 'success', 'user_id': new_user.user_id}), 201
-    except AssertionError as e:
-        return json.dumps({'error': 'Invalid username or password'})
-    except Exception as e:
-        return json.dumps({'error': 'error creating user'}), 409
+        return create_account(username, password, email)
+    except KeyError as e:
+        registration_log.error(e)
+        return jsonify(error='Invalid Request')
 
 
 """
@@ -46,10 +40,13 @@ def check_availability():
 
     response_dict = {}
     if email:
-        response_dict['email'] = 'Unavailable' if db_session.query(
-            Email).filter(Email.email == email).one_or_none() else 'Available'
-    if username:
-        response_dict['username'] = 'Unavailable' if db_session.query(
-            User).filter(User.username == username) else 'Available'
+        registration_log.debug(f'Checking email availability: {email}')
+        response_dict['email'] = 'Unavailable' if query_user_by_email(
+            email) else 'Available'
 
-    return make_response(json.dumps(response_dict), 200)
+    if username:
+        registration_log.debug(f'Checking username availability: {username}')
+        response_dict['username'] = 'Unavailable' if query_user_by_username(
+            username) else 'Available'
+
+    return jsonify(response_dict)
