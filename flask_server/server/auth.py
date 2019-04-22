@@ -29,13 +29,13 @@ class UserAuthenticator:
         self.JWT_KEY = app.config.get('JWT_KEY')
         self.JWT_ALGORITHMS = app.config.get('JWT_ALGORITHMS')
 
-    def login_jwt(self, user_id, iat=None):
-
+    def login_jwt(self, user_id, iat=None,iss=None,exp_delta=None):
+    
         payload = {
-            'iss': self.JWT_ISS,
+            'iss': iss if iss else self.JWT_ISS,
             'user_id': user_id,
             'iat': iat if iat else datetime.utcnow(),
-            'exp': datetime.utcnow() + timedelta(seconds=self.JWT_EXP_DELTA_SECONDS)
+            'exp': datetime.utcnow() + timedelta(seconds=(exp_delta if exp_delta else self.JWT_EXP_DELTA_SECONDS))
         }
         token = jwt.encode(payload, self.JWT_KEY, self.JWT_ALGORITHMS[0])
         return token

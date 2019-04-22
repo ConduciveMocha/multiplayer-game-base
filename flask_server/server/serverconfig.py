@@ -8,6 +8,8 @@ class Config(object):
     TESTING = False
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://egghunt:password@localhost:3306/multiplayerserver'
     SQLALCHEMY_ECHO = False
+    SQLALCHEMY_TRACK_MODIFICATIONS=False
+
     SECRET_KEY = os.urandom(24).hex()
 
     REDIS_HOST = 'localhost'
@@ -29,10 +31,12 @@ class Config(object):
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO='mysql+pymysql://mgb_test:password@localhost:3306/mgb_test'
 
 
 class TestingConfig(Config):
     TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://mgb_test:password@localhost:3306/mgb_test'
 
 
 def get_config(cmd_args=None):
@@ -66,11 +70,11 @@ def get_config(cmd_args=None):
     # Sets the args object
     if isinstance(cmd_args, list):
         if len(cmd_args) > 0:
-            args = argument_parser.parse_args(cmd_args)
+            args,_ = argument_parser.parse_known_args(cmd_args)
         else:
             args = None  # Debug with no flags set
     else:
-        args = argument_parser.parse_args()
+        args,_ = argument_parser.parse_known_args()
 
     # Gets env arguments
     os_debug = os.environ.get('DEBUG', default='FALSE')

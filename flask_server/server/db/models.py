@@ -1,39 +1,63 @@
 
 import re
+import logging
+
+from datetime import datetime
+
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from server.auth import make_thread_hash, members_from_thread_hash
+from server.db.dbmeta import RedisORMMeta
+model_log = logging.getLogger(__name__)
+
+class CreatedTimestampMixin(object):
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @validates('created')
+    def _validate_created(self,key,created):
+        assert Thread.validate_created(created) == True
+        return created
+
+    @staticmethod
+    def validate_created(created):
+        if datetime.utcnow >= created:
+            return True
+        else:
+            return False
+
+
+
 
 
 # Defines the many-to-many mapping between Users and Threads
-user_thread = db.Table('user_thread', db.Model.metadata,
+user_thread = db.Table('user_thread', 
                        db.Column('user_id', db.Integer,
                                  db.ForeignKey('user.id')),
-                       db.Column('thread_id', db.String(64),
-                                 db.ForeignKey('thread.id'))
+                       db.Column('thread_id', db.Integer,
+                                 db.ForeignKey('thread.id')),
                        )
 
 
-class Message(db.Model):
+class Message(CreatedTimestampMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(256))
     color = db.Column(db.String(24))
     mods = db.Column(db.String(256))
-    sent_time = db.Column(db.DateTime)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    thread_id = db.Column(db.String(64), db.ForeignKey('thread.id'))
-
-
-class Thread(db.Model):
+    thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
+    TEST = [id,content,color]
+    CACHED=['content']
+    CACHE_KEY = 'id'
+class Thread(CreatedTimestampMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     thread_hash = db.Column(db.String(64))
-    thread_name = db.Column(db.String(100))
-    created_time = db.Column(db.DateTime)
-
-    def __init__(self, members, thread_hash, created_time, thread_name=None):
+    name = db.Column(db.String(100))
+    
+    # members = db.relationship("User",secondary=user_thread,primaryjoin=(user_thread.c.thread_id==id),lazy='dynamic')
+    def __init__(self, members, thread_hash, create, thread_name=None):
         if len(members) > 10:
             raise ValueError(
                 'List of members must have fewer than 10 elements')
@@ -42,23 +66,27 @@ class Thread(db.Model):
         self.thread_hash = make_thread_hash(member_ids)
 
         self.members = members
+        self.created = created
+
         if thread_name:
             self.thread_name = thread_name
+
         else:
             self.thread_name = ""
 
-
-class User(db.Model):
-
+class User(CreatedTimestampMixin,db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(16))
     password_hash = db.Column(db.String(100))
     password_salt = db.Column(db.String(10))
+    created = db.Column(db.DateTime,nullable=False,default=datetime.utcnow)
+    
     email = db.relationship("Email", uselist=False, backref="user", lazy=True)
-
     sent_messages = db.relationship("Message", backref="sender")
     message_threads = db.relationship(
-        "Thread", secondary=user_thread, backref="members")
+        "Thread", secondary=user_thread,primaryjoin=(user_thread.c.user_id==id),lazy='dynamic', backref=db.backref("members",lazy='dynamic'))
+    
+
 
     def __init__(self, username, password, email):
         self.username = username
@@ -66,9 +94,8 @@ class User(db.Model):
         self.email = Email(email, user=self)
 
     @validates('username')
-    def validate_username(self, key, username):
-        assert re.fullmatch(r'^[0-9_]{8,16}$', username) is None
-        assert re.fullmatch(r'^[A-Za-z0-9_]{8,16}$', username) is not None
+    def _validate_username(self, key, username):
+        assert User.validate_username(username) == True
         return username
 
     @hybrid_property
@@ -89,6 +116,28 @@ class User(db.Model):
         else:
             return True
 
+    @staticmethod
+    def validate_username(username):
+        if re.fullmatch(r'^[0-9_]{8,16}$', username) is not None:
+            model_log.debug(f'Invalid Username ({username}): Starts with a number or "_"')
+            return False
+        elif re.fullmatch(r'^[A-Za-z0-9_]{8,16}$', username) is None:
+            model_log.debug(f'Invalid Username ({username}): Contains invalid character')
+            return False
+        else:
+            return True
+        
+    @staticmethod
+    def validate_password(password):
+        
+        
+        if re.fullmatch(r'^[\S]{8,16}$',password):
+            return True
+        else:
+            model_log.debug(f'Invalid password ({password}): Included whitespace character')
+            return False
+        
+
 
 class Email(db.Model):
 
@@ -97,15 +146,23 @@ class Email(db.Model):
     verified = db.Column(db.Boolean)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
-    @validates('email')
-    def validate_email(self, key, email):
-        fm = re.fullmatch(
-            r'^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$', email, flags=re.IGNORECASE)
-        assert fm != None
-        return email
-
     def __init__(self, email, user=None):
-        self.email = email
+        self.email = email.lower()
         self.verified = False
         if user is not None:
             self.user = user
+
+    @validates('email')
+    def _validate_email(self, key, email):
+        assert Email.validate_email(email) == True
+        return email
+
+
+    @staticmethod
+    def validate_email(email):
+        fm = re.fullmatch(
+            r'^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$', email, flags=re.IGNORECASE)
+        valid = fm != None
+        if not valid:
+            model_log.debug(f'Invalid Email ({email})')
+        return valid

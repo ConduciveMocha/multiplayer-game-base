@@ -168,7 +168,7 @@ class PoolManager:
     @contextmanager
     def pipe(self, remove_client=True, execute_pipe=False):
 
-        with self.conn().pipeline() as pipe:
+        with self.conn.pipeline() as pipe:
             self.logger.debug("Pipeline opened")
             yield pipe
             if execute_pipe:
@@ -176,7 +176,7 @@ class PoolManager:
                 pipe.execute()
         self.logger.debug("Pipeline closed")
         if remove_client:
-            self.close()
+            self._r = None
 
     def init_app(self, app):
         self.app = app
@@ -247,7 +247,7 @@ def global_pipe(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         poolman = g.poolman
-        with poolman.using_pipe() as pipe:
+        with poolman.pipe() as pipe:
             return func(pipe, *args, **kwargs)
 
     return wrapper

@@ -1,7 +1,7 @@
 import pytest
 import os
 
-import server.serverconfig
+import server.serverconfig as serverconfig
 
 """ Fixture that creates a function to set environment 
 dict. Environment dict is reset back during cleanup.
@@ -34,7 +34,7 @@ def config_is_base(config_base):
         pytest.fail('SECRET_KEY not a string')
     if not isinstance(config_base.JWT_KEY,str):
         pytest.fail('JWT_KEY is not a string')
-    if not isinstance(config_base.DATABASE_URI,str):
+    if not isinstance(config_base.SQLALCHEMY_DATABASE_URI,str):
         pytest.fail('DATABASE_URI is not a string')
 
 # Helper functuion that checks if config class matches
@@ -49,7 +49,7 @@ def config_is_dev(config_dev):
         pytest.fail('SECRET_KEY not a string')
     if not isinstance(config_dev.JWT_KEY,str):
         pytest.fail('JWT_KEY is not a string')
-    if not isinstance(config_dev.DATABASE_URI,str):
+    if not isinstance(config_dev.SQLALCHEMY_DATABASE_URI,str):
         pytest.fail('DATABASE_URI is not a string')
 
 # Helper functuion that checks if config class matches
@@ -64,7 +64,7 @@ def config_is_test(config_test):
         pytest.fail('SECRET_KEY not a string')
     if not isinstance(config_test.JWT_KEY,str):
         pytest.fail('JWT_KEY is not a string')
-    if not isinstance(config_test.DATABASE_URI,str):
+    if not isinstance(config_test.SQLALCHEMY_DATABASE_URI,str):
         pytest.fail('DATABASE_URI is not a string')
 
 # Tests properties of Config

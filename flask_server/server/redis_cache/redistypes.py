@@ -162,10 +162,13 @@ class RedisType(RedisObject):
             else:
                 return func(*args, **kwargs)
 
-    def typed_redis_method(arg_type, n=1):
+    def typed_redis_method(arg_type=None, n=1):
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
+                if arg_type is None:
+                    arg_type = arg[0].__class__
+
                 obj, *args = args
                 if n - 1 is 0:
                     if isinstance(args[0], arg_type):
@@ -369,7 +372,7 @@ class RedisList(RedisType):
     def __len__(self):
         return self.llen()
 
-    @RedisType.redis_method(int)
+    @RedisType.typed_redis_method(int)
     def __getitem__(self, index):
         if isinstance(index, slice):
             if index.step is None:
@@ -454,11 +457,11 @@ class RedisSet(RedisType):
     def __contains__(self, val):
         return self.sismember(val)
 
-    @RedisType.typed_redis_method(RedisSet)
+    @RedisType.typed_redis_method()
     def __and__(self, other):
         return self.union(other.key)
 
-    @RedisType.typed_redis_method(RedisSet)
+    @RedisType.typed_redis_method()
     def __iand__(self, other):
         self.sunionstore(other.key, self.key)
 

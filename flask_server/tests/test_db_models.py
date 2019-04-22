@@ -2,10 +2,14 @@ import pytest
 
 from werkzeug.security import check_password_hash
 
-from server.db import db_session
-from server.models import User,Email
+from app import db,create_app
+from server.db.models import User,Email
+from server.serverconfig import TestingConfig
 
-
+@pytest.fixture
+def with_app():
+    app = create_app(TestingConfig)
+    yield app
 
 
 @pytest.mark.parametrize("username,password,email", [
@@ -21,7 +25,7 @@ def test_user_model(username,password,email):
     assert user.check_login(username,password) == True
 
 
-def test_check_login():
+def test_check_login(with_app):
     username, password, email = (
         "testuser12345", "password123456", "testemail@email.com")
     user = User(username,password,email)
@@ -31,7 +35,7 @@ def test_check_login():
     assert user.check_login(username, 'wrongpassword') == False
     assert user.check_login('wrong_user', 'wrongpassword') == False    
 
-def test_password_prop():
+def test_password_prop(with_app):
     username, password, email = (
         "testuser12345", "password123456", "testemail@email.com")
     user = User(username, password, email)
@@ -65,7 +69,7 @@ def test_password_prop():
     ('thisusernameiswaytoolong', False),
     ("<>[]\\@#$%^&&#", False)
 ])
-def test_username_validation(username, expected):
+def test_username_validation(with_app,username, expected):
     password, email = "password123456", "testemail@email.com"
     if expected == True:
         user = User(username,password,email)
@@ -86,7 +90,7 @@ def test_username_validation(username, expected):
     ('@fails.com',False),
     ('email@email', False)
 ])
-def test_email_validation(address,expected):
+def test_email_validation(with_app,address,expected):
     if expected:
         email = Email(address)
         assert email.email == address
