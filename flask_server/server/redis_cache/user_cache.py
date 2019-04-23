@@ -1,7 +1,7 @@
 import logging
 
 from flask import g, jsonify
-from server.redis_cache.cachemanager import global_poolman, global_pipe
+from server.redis_cache.poolmanager import global_poolman, global_pipe
 
 uc_logger = logging.getLogger(__name__)
 

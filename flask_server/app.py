@@ -11,21 +11,21 @@ from flask_sqlalchemy import Model
 from flask_migrate import Migrate
 
 
-
-
-from server.redis_cache.cachemanager import PoolManager
+from server.redis_cache.poolmanager import PoolManager
 from server.serverconfig import get_config, TestingConfig, Config
 from server.serverlogging import request_log
 from server.auth import UserAuthenticator
-from server.db.dbmeta import RedisORMMeta
 
+# from server.db.dbmeta import RedisORMMeta
 
 
 celery = Celery(
     __name__, backend=Config.CELERY_RESULT_BACKEND, broker=Config.CELERY_BROKER_URL
 )
 socketio = SocketIO()
-db = SQLAlchemy(model_class=declarative_base(cls=Model,metaclass=RedisORMMeta,name='model'))
+db = SQLAlchemy(
+    model_class=declarative_base(cls=Model, metaclass=RedisORMMeta, name="model")
+)
 migrate = Migrate()
 
 auth = UserAuthenticator()
@@ -37,17 +37,17 @@ serverlogger.setLevel(logging.DEBUG)
 
 
 def create_app(conf=None):
-  
+
     app = Flask(__name__)
     config = conf if conf else get_config()
     app.config.from_object(config)
     serverlogger.debug(f"Config: {app.config}")
     poolman.init_app(app)
-    RedisORMMeta._set_redis_pool(poolman)
+    # RedisORMMeta._set_redis_pool(poolman)
     CORS(app)
     db.init_app(app)
     socketio.init_app(app)
-    migrate.init_app(app,db=db)
+    migrate.init_app(app, db=db)
     celery.conf.update(app.config)
 
     @app.before_request
@@ -72,12 +72,9 @@ def create_app(conf=None):
     #     print('not defined in class')
 
     from server.db.models import Message
-    m = Message(content='some_content')
-    print(m.CACHED)
-    print(m.CACHE_KEY[1])
-    
 
-
+    m = Message(content="some content")
+    print(m.__dict__["content"])
 
     from server.blueprints.registrationbp import registrationbp
     from server.blueprints.authbp import authbp

@@ -2,8 +2,6 @@ import logging
 import copy
 import redis
 from redis.lock import Lock
-from server.redis_cache.namespace import BaseNamespace
-from server.redis_cache.redistypes import RedisHash
 from contextlib import contextmanager
 from functools import wraps
 
@@ -41,29 +39,6 @@ class PoolManager:
 
         return wrapper
 
-    class LockClass(Lock):
-        def __init__(
-            self,
-            redis,
-            name,
-            timeout,
-            sleep=0.1,
-            blocking=True,
-            blocking_timeout=None,
-            thread_local=True,
-        ):
-
-            name = f"lock:{name}"
-            super().__init__(
-                redis,
-                name,
-                timeout=timeout,
-                sleep=sleep,
-                blocking=blocking,
-                blocking_timeout=blocking_timeout,
-                thread_local=thread_local,
-            )
-
     def __init__(self, host=None, port=None, db=None, logger=None):
         self._key = (host, port, db)
         self._host = host
@@ -71,7 +46,6 @@ class PoolManager:
         self._db = db
         self.logger = logger if logger else cm_logger
         self._pool = None
-        self._namespace = None
         self.init_pool()
 
     def init_pool(self):
@@ -87,7 +61,6 @@ class PoolManager:
                 if self._pool is not PoolManager._POOLS[self._key]["pool"]:
                     PoolManager._POOLS[self._key]["n"] += 1
                     self._pool = PoolManager._POOLS[self._key]["pool"]
-                    self._namespace = BaseNamespace(self)
                     self.logger.info(
                         "Pool already instantiated. Setting pool to existing object"
                     )
@@ -103,7 +76,6 @@ class PoolManager:
 
                 PoolManager._POOLS[self._key]["n"] = 1
                 self._pool = PoolManager._POOLS[self._key]["pool"]
-                self._namespace = BaseNamespace(self)
                 self.logger.debug("New connection pool created")
 
         else:
@@ -151,10 +123,6 @@ class PoolManager:
     @alters_pool
     def db(self, db):
         self._db = db
-
-    @property
-    def namespace(self):
-        return self._namespace
 
     @property
     def conn(self):
@@ -221,15 +189,12 @@ class PoolManager:
         self._POOLS[self._key]["n"] += 1
         return copy.copy(self)
 
-    @staticmethod
-    def get_lock_name(key):
-        return f"lock:{key}"
-
     @contextmanager
-    def with_lock(self, key, timeout=None, sleep=0.1, blocking_timeout=5):
-        r = self.conn()
-        lock = r.lock(self.get_lock_name(key), lock_class=self.LockClass)
-        yield lock
+    def with_lock(self, key, pipe=False, timeout=None, sleep=0.1, blocking_timeout=5):
+        r = self.conn
+        lock = r.lock(key)
+        lock.acquire
+        yield r
         lock.release()
 
 
@@ -251,9 +216,4 @@ def global_pipe(func):
             return func(pipe, *args, **kwargs)
 
     return wrapper
-
-
-pm = PoolManager(host="localhost", port=6379, db=0)
-bn = pm.namespace
-bn.add_child(RedisHash("testname", ["test1", "test2", "test3"]))
 

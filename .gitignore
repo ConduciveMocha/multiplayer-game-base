@@ -28,3 +28,6 @@ yarn-error.log*
 /server/__pycache__
 **.code-workspace
 /.vscode
+**/.pytest_cache
+**/__pycache__
+TODOS.txt
