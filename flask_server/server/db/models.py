@@ -9,9 +9,9 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from server.auth import make_thread_hash, members_from_thread_hash
-from server.db.dbmeta import RedisORMMeta, ModelCache
+from server.serverlogging import make_logger
 
-model_log = logging.getLogger(__name__)
+model_log = make_logger(__name__)
 
 
 class CreatedTimestampMixin(object):

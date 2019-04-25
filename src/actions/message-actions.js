@@ -186,3 +186,11 @@ export const requestNewThread = (members, threadName, initialMessage) => {
     initialMessage
   };
 };
+
+export const newThreadFailed = (threadHash, error) => {
+  return {
+    type: MessageTypes.NEW_THREAD_FAILED,
+    threadHash,
+    error
+  };
+};

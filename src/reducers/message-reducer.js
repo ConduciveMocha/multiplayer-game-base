@@ -5,9 +5,7 @@ let _users = {};
 _users[thisUser.userId] = thisUser.username;
 const messengerInitialState = {
   threads: { "1": { threadId: 1 }, "2": { threadId: 2 } },
-  users: {
-    "1": { id: thisUser.userId, username: thisUser.username, online: true }
-  }
+  users: [{ id: thisUser.userId, username: thisUser.username, online: true }]
 };
 
 function makeMessageObject(action) {
@@ -48,19 +46,19 @@ export default function messagingReducer(
       updatedUsers[action.userId].online = false;
       return { ...state, users: updatedUsers };
 
-    case MessageTypes.NEW_MESSAGE:
+    case MessageTypes.RECIEVE_MESSAGE:
       updatedThreads = { ...state.threads };
       updatedThreads[action.threadId].messages.push(makeMessageObject(action));
       updatedThreads[action.threadId].hasUnread = true;
 
       return { ...state, threads: updatedThreads };
 
-    case MessageTypes.MESSAGE_SENT:
+    case MessageTypes.SEND_MESSAGE:
       updatedThreads = { ...state.threads };
       updatedThreads[action.threadId].messages.push(makeMessageObject(action));
       return { ...state, threads: updatedThreads };
 
-    case MessageTypes.MESSAGE_FAILED:
+    case MessageTypes.MESSAGE_HAS_FAILED:
       return { ...state };
 
     case MessageTypes.USER_LIST_RECIEVED:

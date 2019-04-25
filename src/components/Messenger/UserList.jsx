@@ -1,23 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-export const UserList = (userList, onClickFunction) => {
+const UserList = props => {
   const { searchString, setSearchString } = useState("");
 
+  console.log(searchString);
   // Filters the passed userlist to match the value
   // of the search box, then creates <li> components
   // for the displayed users
+  console.log("users", props.users);
 
-  const users = userList
+  const users = props.users
     .filter(user => {
       if (searchString === "") return true;
       else
         return user.username
           .toLowerCase()
-          .startsWith(searchString.trim().toLowerCase());
+          .startsWith(searchString ? searchString.trim().toLowerCase() : "");
     })
     .map(user => {
       return (
-        <li className="user" key={user.userId} onClick={onClickFunction(user)}>
+        <li
+          className="user"
+          key={"user-list" + user.userId}
+          onClick={props.userOnClick(user)}
+        >
           <div className="user-avatar" />
           <p className="user-username">{user.username}</p>
           <div

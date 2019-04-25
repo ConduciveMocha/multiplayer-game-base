@@ -1,5 +1,7 @@
 import json
 import logging
+import logging.config
+import sys
 
 from celery import Celery
 from flask import Flask, request, make_response, redirect, g
@@ -11,81 +13,83 @@ from flask_sqlalchemy import Model
 from flask_migrate import Migrate
 
 
+from server.serverlogging import (
+    request_log,
+    serverlogger,
+    make_socket_loggers,
+    make_logger,
+    default_file_fmt,
+)
 from server.redis_cache.poolmanager import PoolManager
 from server.serverconfig import get_config, TestingConfig, Config
-from server.serverlogging import request_log
 from server.auth import UserAuthenticator
 
-# from server.db.dbmeta import RedisORMMeta
 
-
+socketio_logger, engineio_logger = make_socket_loggers()
+socketio = SocketIO()
 celery = Celery(
     __name__, backend=Config.CELERY_RESULT_BACKEND, broker=Config.CELERY_BROKER_URL
 )
-socketio = SocketIO()
-db = SQLAlchemy(
-    model_class=declarative_base(cls=Model, metaclass=RedisORMMeta, name="model")
-)
+
+db = SQLAlchemy()
 migrate = Migrate()
 
 auth = UserAuthenticator()
 poolman = PoolManager()
 
 
-serverlogger = logging.getLogger(__name__)
-serverlogger.setLevel(logging.DEBUG)
+#! Dont remove the logger kwargs or the custom logging settings will be overwritten
 
 
-def create_app(conf=None):
+# TODO: Move these to serverlogging.py
+
+
+def create_app(conf=None, log=False):
+
+    logger = make_logger("APPFACTORY")
+    if not log:
+        logger.setLevel(logging.WARNING)
+    # Socket event imports
+    #! Dont move this or it will break things
+    import server.socketevents.messageevents
+    import server.socketevents.debugevents
+    import server.socketevents.connectionevents
 
     app = Flask(__name__)
     config = conf if conf else get_config()
+
+    logger.debug(f"Config name: {config.CONFIG_NAME}")
     app.config.from_object(config)
-    serverlogger.debug(f"Config: {app.config}")
-    poolman.init_app(app)
-    # RedisORMMeta._set_redis_pool(poolman)
+    logger.debug("App configured successfully")
+
     CORS(app)
     db.init_app(app)
-    socketio.init_app(app)
+    socketio.init_app(app, logger=socketio_logger, engineio_logger=engineio_logger)
     migrate.init_app(app, db=db)
     celery.conf.update(app.config)
 
+    poolman.init_app(app)
+    auth.init_app(app)
+
+    logger.debug("Extensions initialized")
+
     @app.before_request
     def attach_globs():
-        if not poolman.pool:
-            serverlogger.info("Init poolman")
-        if not auth.app:
-            serverlogger.debug("initializing UserAuthentiactor")
-            auth.init_app(app)
         g.poolman = poolman
         g.auth = auth
         serverlogger.debug("Globals attached")
-
-    # try:
-    #     print('REDIS_POOL--instance:',m._REDIS_POOL)
-    # except AttributeError:
-    #     print('not definied in instance')
-
-    # try:
-    #     print('REDIS_POOL--instance: class',m.__class__._REDIS_POOL)
-    # except AttributeError:
-    #     print('not defined in class')
-
-    from server.db.models import Message
-
-    m = Message(content="some content")
-    print(m.__dict__["content"])
 
     from server.blueprints.registrationbp import registrationbp
     from server.blueprints.authbp import authbp
     from server.blueprints.userbp import userbp
 
     app.register_blueprint(authbp)
-    serverlogger.info("Added authbp")
+    logger.debug("Added authbp")
     app.register_blueprint(registrationbp)
-    serverlogger.info("Added registrationbp")
+    logger.debug("Added registrationbp")
     app.register_blueprint(userbp)
-    serverlogger.info("Added userbp")
+    logger.debug("Added userbp")
+    logger.debug("Blueprints Added")
 
     @app.route("/", methods=["GET", "POST"])
     def index_page():
@@ -95,19 +99,9 @@ def create_app(conf=None):
     return app
 
 
-# @app.teardown_appcontext
-# def cleanup(resp_or_exc):
-#     db_session.remove()
-
-
-# @request_log(request)
-
-# @app.route('/initial-load-info', methods=['GET'])
-# def get_initial_load_info():
-#     return open('./constants/initial-load-info.json', 'rb').read()
-
-
 if __name__ == "__main__":
-    app = create_app(TestingConfig)
-    # app.app_context().push()
-    socketio.run(app, log_output=True, log=serverlogger)
+
+    app = create_app(log=True)
+
+    serverlogger.debug(f"App Created. Config: {app.config['CONFIG_NAME']}")
+    socketio.run(app)

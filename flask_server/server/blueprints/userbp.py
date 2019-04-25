@@ -4,11 +4,12 @@ from flask import Blueprint, request, jsonify
 from server.serverlogging import request_log
 from server.db.user_actions import query_user_by_id, query_user_by_username
 from server.auth import require_auth
-from server.redis_cache.user_cache import user_id_cached, get_online_users
-userbp = Blueprint('user', __name__, url_prefix='/user')
+from server.redis_cache.user_cache import user_from_cache, get_online_users
+
+userbp = Blueprint("user", __name__, url_prefix="/user")
 
 
-@userbp.route('/online')
+@userbp.route("/online")
 @require_auth
 def request_userlist():
     """Gets mapping of users -> usernames for online users
@@ -16,12 +17,12 @@ def request_userlist():
     return get_online_users()
 
 
-@userbp.route('/<int:user_id>')
+@userbp.route("/<int:user_id>")
 @require_auth
 def request_username(user_id):
     """Queries user by ID
     """
-    cache_result = user_id_cached(user_id)
+    cache_result = user_from_cache(user_id)
     if cache_result:
         return cache_result
     else:
@@ -32,7 +33,7 @@ def request_username(user_id):
             return jsonify(user={})
 
 
-@userbp.route('/<string:username>')
+@userbp.route("/<string:username>")
 @require_auth
 def request_user_id(username):
     """Queries User by username

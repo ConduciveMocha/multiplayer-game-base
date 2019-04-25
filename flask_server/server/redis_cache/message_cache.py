@@ -31,3 +31,8 @@ def new_message(pipe, message):
 def get_messages(r, message_ids):
     return [(m, r.hgetall(f"message:{m}")) for m in message_ids]
 
+
+@global_poolman
+def message_by_id(pipe, message_id):
+    return pipe.hgetall(f"message:{message_id}")
+

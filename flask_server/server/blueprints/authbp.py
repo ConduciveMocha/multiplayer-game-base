@@ -2,17 +2,17 @@ import json
 import logging
 from flask import Blueprint, request, make_response, jsonify, current_app, g
 
-from server.serverlogging import request_log
+from server.serverlogging import request_log, make_logger
 from server.db.models import User
 from server.db.user_actions import verify_user
 from server.redis_cache.user_cache import set_user_online, set_user_offline, user_online
 from server.auth import require_auth
-from server.responses.util import required_or_400
+from server.utils.errors import required_or_400
 
 
 authbp = Blueprint("auth", __name__, url_prefix="/auth")
 
-auth_logger = logging.getLogger(__name__)
+auth_logger = make_logger(__name__)
 """
     Login endpoint. Returns a JWT if successful
 """

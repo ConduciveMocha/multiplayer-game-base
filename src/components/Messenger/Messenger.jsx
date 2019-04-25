@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 
 import useArray from "../hooks/useArray";
+import CreateThread from "./CreateThread";
+import Thread from "./Thread";
+import ThreadTabs from "./ThreadTabs";
+import UserList from "./UserList";
+
 import {
   sendMessage,
   requestNewThread,
@@ -9,6 +14,7 @@ import {
 } from "../../actions/message-actions";
 //? Switch userslist to a list of available threads?
 const Messenger = props => {
+  console.log("in messenger props.users is,", props.users);
   const [activeThread, setActiveThread] = useState(null); // Set to a thread object
 
   // List of open threads. Passed to ThreadTabs so
@@ -50,11 +56,11 @@ const Messenger = props => {
   );
 };
 
-connect(
+export default connect(
   state => {
     return {
       users: state.messaging.users,
-      threads: state.messageing.threads
+      threads: state.messaging.threads
     };
   },
   dispatch => {
@@ -70,11 +76,11 @@ connect(
         );
       },
       markAsRead: message => {
-        dispatch(reportMessageRead(message.id, messsage.threadId));
+        dispatch(reportMessageRead(message.id, message.threadId));
       },
       requestNewThread: (thread, initialMessage) => {
         dispatch(requestNewThread(thread.members, thread.name, initialMessage));
       }
     };
   }
-);
+)(Messenger);

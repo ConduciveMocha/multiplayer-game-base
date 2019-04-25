@@ -10,9 +10,9 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.exc import NoInspectionAvailable
 from sqlalchemy import Column
 from server.redis_cache.poolmanager import PoolManager
-from server.serverlogging import try_call
+from server.serverlogging import try_call, make_logger
 
-logger = logging.getLogger(__name__)
+logger = make_logger(__name__)
 
 
 class RedisORMMeta(DefaultMeta):

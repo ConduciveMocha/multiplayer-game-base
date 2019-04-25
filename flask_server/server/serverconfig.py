@@ -4,6 +4,7 @@ from server.redis_cache.poolmanager import make_redis_url
 
 
 class Config(object):
+    CONFIG_NAME = "DEFAULT"
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = (
@@ -31,12 +32,14 @@ class Config(object):
 
 
 class DevelopmentConfig(Config):
+    CONFIG_NAME = "DEBUG"
     DEBUG = True
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_ECHO = "mysql+pymysql://mgb_test:password@localhost:3306/mgb_test"
 
 
 class TestingConfig(Config):
+    CONFIG_NAME = "TESTINGg"
     TESTING = True
     SQLALCHEMY_DATABASE_URI = (
         "mysql+pymysql://mgb_test:password@localhost:3306/mgb_test"

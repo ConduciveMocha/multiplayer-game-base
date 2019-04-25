@@ -1,23 +1,21 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
-import {BrowserRouter as Router, Route} from 'react-router-dom';
+import { BrowserRouter as Router, Route } from "react-router-dom";
 
-
-import Barsign from './components/LandingPage/Barsign'
-import LoginScreen from './components/LoginScreen'
-import RegistrationScreen from './components/RegistrationScreen'
-import GamePage from './components/GamePage/GamePage'
-import Messenger from './components/Messenger'
-import store from './store'
-import {Provider} from 'react-redux'
-import './App.css';
-import {mockThreads} from './utils/messaging-mock'
+import Barsign from "./components/LandingPage/Barsign";
+import LoginScreen from "./components/LoginScreen";
+import RegistrationScreen from "./components/RegistrationScreen";
+import GamePage from "./components/GamePage/GamePage";
+import Messenger from "./components/Messenger";
+import store from "./store";
+import { Provider } from "react-redux";
+import "./App.css";
+import { mockThreads } from "./utils/messaging-mock";
 class App extends Component {
   render() {
-    return ( 
-      
+    return (
       <Provider store={store}>
-      {/* <Router>
+        {/* <Router>
         
         <div className="App">
           <Route exact path='/' component={Barsign} />
@@ -27,16 +25,11 @@ class App extends Component {
         </div>
 
       </Router> */}
-        
-       <Messenger activeThreads={mockThreads} currentThread={mockThreads[1]}/> 
-      </Provider>
 
-      
+        <Messenger userList={[1, 2]} threads={[]} />
+      </Provider>
     );
   }
 }
 
-
-
-export default (App);
-    
+export default App;

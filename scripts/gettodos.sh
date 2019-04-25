@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 cd ~/code/multiplayer-game-base/
+FILE=TODOS.txt
+echo "" > /tmp/TODOS.txt
+[ -f $FILE ] && { cp "$FILE" /tmp/; }
+
 
 echo "Setting Todos File"
 # Title
@@ -7,9 +11,18 @@ awk  'BEGIN{
     for(c=0;c<55;c++) printf "="f; printf("\n")
     print "TODOS IN PROJECT: Multiplayer-Game-Base";
 
-    for(c=0;c<55;c++) printf "="f; printf("\n\n");
+    for(c=0;c<55;c++) printf "=";
+    printf("\n\n");
+    for(c=0;c<55;c++) printf "=";
+    printf("\n")
+    print "TODO LIST"
+    for(c=0;c<55;c++) printf "=";
+    printf("\n")
 }
 ' TODOS.txt > TODOS.txt
+# awk '{for(c=0;c<55;c++) printf "=";}' TODOS.txt >> TODOS.txt
+awk '/[ \t]---/{print$0;}END{for(c=0;c<55;c++) printf "=";
+    printf("\n\n\n")}' /tmp/TODOS.txt >> TODOS.txt
 
 grep -r -i "TODO" ./src | awk '
 BEGIN {
@@ -92,6 +105,6 @@ END {
     for(c=0;c<55;c++) printf "="f; printf("\n\n")
 
 } ' >> TODOS.txt
-fmt --w 55 -s TODOS.txt > _TODOS.txt
-awk '!seen[$0]++ || /([=]+)/ || !NF' _TODOS.txt > TODOS.txt
-rm _TODOS.txt
+# fmt --w 55 -s TODOS.txt > _TODOS.txt
+# awk '!seen[$0]++ || /([=]+)/ || !NF' _TODOS.txt > TODOS.txt
+# rm _TODOS.txt

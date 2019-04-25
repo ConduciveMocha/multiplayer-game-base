@@ -1,108 +1,85 @@
-import {eventChannel, END} from 'redux-saga';
-import {take, put, call,all,actionChannel} from 'redux-saga/effects';
-import * as SocketActions from '../actions/socket-actions'
-import * as SocketTypes from '../constants/action-types/socket-types'
-import io from 'socket.io-client';
-import * as MessageActions from '../actions/message-actions'
-import {appendJwt} from '../api';
-import * as MessageTypes from '../constants/action-types/message-types'
-// Makes Socket and checks connection
-const makeSocket = (url, auth) => {
-    try{
-        const socket = io(url);
-        socket.emit('connect',auth);
-        return socket;
-    }
-    catch(error){
-        return null;
-    }
+import { eventChannel, END } from "redux-saga";
+import {
+  take,
+  put,
+  call,
+  all,
+  actionChannel,
+  fork,
+  cancel
+} from "redux-saga/effects";
+import * as SocketActions from "../actions/socket-actions";
+import * as SocketTypes from "../constants/action-types/socket-types";
+import io from "socket.io-client";
+import * as MessageActions from "../actions/message-actions";
+import testAction from "../actions/debug-actions";
+import * as MessageTypes from "../constants/action-types/message-types";
+import { appendJwt } from "../api";
+
+function connect(url) {
+  const socket = io(url);
+  return new Promise(resolve => {
+    socket.on("connect", () => {
+      socket.emit("SOCKET_TEST");
+      resolve(socket);
+    });
+  });
 }
 
+function subscribe(socket) {
+  return eventChannel(emit => {
+    socket.on("MESSAGE SENT", data => {
+      console.log(data);
+      console.log("MESSAGE_SENT");
 
-
-// Emits actions in response to server pushes
-function socketEventChannel(socket) {
-    return eventChannel(emitter=>{
-        socket.on('connect', ()=>{
-            emitter(SocketActions.socketConnected())
-        })
-
-        socket.on('error', (error) => {
-            emitter(SocketActions.socketFailed(error))
-        });
-
-        socket.on('new_message', (data) => {
-            emitter(MessageActions.newMessage(data.senderId, data.content,data.timestamp,true))
-        })
-        
-        socket.on('new gamestate', (data) =>{
-            // emitter(GameActions.newGameState(data))
-        })
-        socket.on('update gamestate', (data) => {
-            // emitter(GameActions.updateGameState(data))
-        })
-        return () => {socket.close()}        
-    })
+      emit(data);
+    });
+    socket.on("SOCKET_TEST_2", data => {
+      emit("SOCKET_TEST2");
+      emit(data);
+    });
+    //? What is this for? Source: https://github.com/kuy/redux-saga-chat-example/blob/master/src/client/sagas.js
+    return () => {};
+  });
 }
 
-
-
-const createSocketEventHandler = socket => eventType => msg => {
-    socket.emit(eventType, JSON.stringify(appendJwt(msg)));
+function* read(socket) {
+  const channel = yield call(subscribe, socket);
+  while (true) {
+    let action = yield take(channel);
+    console.log("read:", action);
+    yield put(testAction(action));
+  }
 }
 
-
-
-const createMessageChannel = socket => {
-    const handler = createSocketEventHandler(socket)('new_message');
-    return function* () {
-        const messageChan = yield actionChannel('MESSAGE_SENT')
-        while(true) {
-            const action = yield take(messageChan);
-            yield call(handler,action)
-        }
-    }
+function* write(socket) {
+  while (true) {
+    //? Modified this, might be wrong
+    const { payload } = yield take(MessageTypes.SEND_MESSAGE);
+    socket.emit("message", payload);
+  }
 }
 
-
-const createEventChannelSaga = socket => {
-    return function* (){
-        const channel = socketEventChannel(socket)
-        while(true) {
-
-            const action = yield take(channel);
-            yield put(action);
-        }
-    }
+function* handleIO(socket) {
+  yield fork(read, socket);
+  yield fork(write, socket);
 }
 
-
-const createMovementChannelSaga = socket => {
-    const handler = createSocketEventHandler(socket)('player_movement');
-    return function* () {
-        const moveChan = yield actionChannel('SEND_MOVEMENT')
-
-        while(true) {
-            const action = yield take(moveChan)
-            if (action) {yield call(handler,action.movement)};
-        }
-    }
+function* flow() {
+  while (true) {
+    const socket = yield call(connect, "http://localhost:5000");
+    const messageSocket = yield call(connect, "http://localhost:5000/message");
+    messageSocket.emit("NAMESPACE_TEST");
+    socket.emit("SEND_MESSAGE", { data: "data" });
+    const task = yield fork(handleIO, socket);
+    const mTask = yield fork(handleIO, messageSocket);
+    console.log("HERE!");
+    let wontBeCalled = yield take("NOTHING");
+    yield cancel(task);
+    socket.emit("NOTHING");
+  }
 }
 
 export default function* socketSaga() {
-    let socket = null
-    while(!socket) {
-        let createSocketAction = yield take(SocketTypes.CREATE_SOCKET)
-        socket = makeSocket(createSocketAction.url, createSocketAction.auth)
-    }
-
-    yield put(SocketActions.socketCreated(socket,'socket'))
-    
-    
-    const movementChannel = createMovementChannelSaga(socket);
-    const messageChannel = createMessageChannel(socket);
-    const eventChannel = createEventChannelSaga(socket);
-
-    yield all([call(movementChannel),call(messageChannel), call(eventChannel)])
-    
+  yield fork(flow);
 }

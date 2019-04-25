@@ -7,12 +7,14 @@ from functools import wraps
 
 from flask import g, _app_ctx_stack, current_app
 
+from server.serverlogging import make_logger
+
 
 def make_redis_url(host, port, db):
     return f"redis://{host}:{port}/{db}"
 
 
-cm_logger = logging.getLogger(name=__name__)
+cm_logger = make_logger(name=__name__)
 
 
 class PoolManager:
@@ -39,12 +41,12 @@ class PoolManager:
 
         return wrapper
 
-    def __init__(self, host=None, port=None, db=None, logger=None):
+    def __init__(self, host=None, port=None, db=None):
         self._key = (host, port, db)
         self._host = host
         self._port = port
         self._db = db
-        self.logger = logger if logger else cm_logger
+        self.logger = make_logger("poolmanager:instance")
         self._pool = None
         self.init_pool()
 
