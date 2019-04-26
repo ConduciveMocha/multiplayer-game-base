@@ -18,10 +18,12 @@ from server.redis_cache.user_cache import (
 )
 from server.redis_cache.thread_cache import check_for_thread, new_thread, get_thread_id
 from server.redis_cache.message_cache import message_by_id
-from server.serverlogging import make_logger
+from server.logging import make_logger, log_socket
 
-from __main__ import socketio
-
+try:
+    from __main__ import socketio
+except:
+    from app import socketio
 logger = make_logger(__name__)
 
 

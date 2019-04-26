@@ -4,7 +4,7 @@ from flask import jsonify
 
 from app import db
 from server.db.models import User
-from server.serverlogging import make_logger
+from server.logging import make_logger
 
 ua_logger = make_logger(__name__)
 

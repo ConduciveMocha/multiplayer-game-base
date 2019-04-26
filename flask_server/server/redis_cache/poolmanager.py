@@ -7,7 +7,7 @@ from functools import wraps
 
 from flask import g, _app_ctx_stack, current_app
 
-from server.serverlogging import make_logger
+from server.logging import make_logger
 
 
 def make_redis_url(host, port, db):
@@ -162,30 +162,52 @@ class PoolManager:
 
 
         """
+
         if self._pool is not None:
-            if self.r is not None:
-                if force_conn or force:
-                    del self.r
-                else:
-                    self.logger.error(
-                        "Pool in use by another object. Pool was not closed"
-                    )
-                    return
+            try:
+                if self.r is not None:
+                    if force_conn or force:
+                        del self.r
+
+                    else:
+                        self.logger.error(
+                            "Pool in use by connection. Pool was not closed"
+                        )
+                        self.logger.debug(f"Connections Left: {PoolManager._POOLS}")
+                        return False
+            except AttributeError:
+                pass
 
             if PoolManager._POOLS[self._key]["n"] == 1 or force:
                 PoolManager._POOLS[self._key]["pool"].disconnect()
                 self._pool = None
                 del PoolManager._POOLS[self._key]
                 self.logger.debug("Pool closed")
+                try:
+                    self.logger.debug(
+                        f"Connections Left After Deletion: {PoolManager._POOLS[self._key]['n']}"
+                    )
+
+                except KeyError:
+                    pass
+                return True
             else:
                 PoolManager._POOLS[self._key]["n"] -= 1
                 self._pool = None
                 self.logger.debug(
                     f'Pool remains open. Pool open in {PoolManager._POOLS[self._key]["n"]} other object(s)'
                 )
+                try:
+                    self.logger.debug(
+                        f"Connections Left After Removal: {PoolManager._POOLS[self._key]['n']}"
+                    )
+                except KeyError:
+                    self.logger.debug("All connections closed")
+                return False
 
         else:
-            self.logger.warn("No pool instantiated")
+            self.logger.warning("No pool instantiated")
+            return False
 
     def copy(self):
         self._POOLS[self._key]["n"] += 1

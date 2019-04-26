@@ -31,6 +31,7 @@ function subscribe(socket) {
     socket.on("MESSAGE SENT", data => {
       console.log(data);
       console.log("MESSAGE_SENT");
+      socket.emit("SEND_MESSAGE", "test");
 
       emit(data);
     });

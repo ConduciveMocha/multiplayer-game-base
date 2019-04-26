@@ -10,6 +10,9 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = (
         "mysql+pymysql://egghunt:password@localhost:3306/multiplayerserver"
     )
+    # SQLALCHEMY_BINDS = {
+    #     "test": "mysql+pymysql://mgb_test:password@localhost:3306/mgb_test"
+    # }
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -30,22 +33,34 @@ class Config(object):
     JWT_ISS = "http://localhost:5000"
     JWT_EXP_DELTA_SECONDS = 20
 
+    LOG_SOCKETS_INCOMING = False
+    LOG_SOCKETS_OUTGOING = False
+
 
 class DevelopmentConfig(Config):
     CONFIG_NAME = "DEBUG"
     DEBUG = True
-    SQLALCHEMY_ECHO = True
-    SQLALCHEMY_ECHO = "mysql+pymysql://mgb_test:password@localhost:3306/mgb_test"
+    SQLALCHEMY_ECHO = False
+    # SQLALCHEMY_DATABASE_URI = (
+    #     "mysql+pymysql://mgb_test:password@localhost:3306/mgb_test"
+    # )
+
+    LOG_SOCKETS_INCOMING = True
+    LOG_SOCKETS_OUTGOING = True
 
 
 class TestingConfig(Config):
-    CONFIG_NAME = "TESTINGg"
+    CONFIG_NAME = "TESTING"
     TESTING = True
+    LOG_SOCKETS_INCOMING = True
+    LOG_SOCKETS_OUTGOING = True
+
     SQLALCHEMY_DATABASE_URI = (
         "mysql+pymysql://mgb_test:password@localhost:3306/mgb_test"
     )
 
 
+# TODO: Fix this. The argparser bit breaks tests
 def get_config(cmd_args=None):
 
     # Configures argument parser for command line arguments

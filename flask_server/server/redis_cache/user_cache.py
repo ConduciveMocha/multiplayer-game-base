@@ -4,7 +4,7 @@ from flask import g, jsonify
 from redis.exceptions import DataError
 
 from server.redis_cache.poolmanager import global_poolman, global_pipe
-from server.serverlogging import make_logger
+from server.logging import make_logger
 
 uc_logger = make_logger(__name__)
 

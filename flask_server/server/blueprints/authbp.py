@@ -2,7 +2,7 @@ import json
 import logging
 from flask import Blueprint, request, make_response, jsonify, current_app, g
 
-from server.serverlogging import request_log, make_logger
+from server.logging import request_log, make_logger
 from server.db.models import User
 from server.db.user_actions import verify_user
 from server.redis_cache.user_cache import set_user_online, set_user_offline, user_online

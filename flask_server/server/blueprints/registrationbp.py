@@ -7,7 +7,7 @@ from server.db.user_actions import (
     query_user_by_username,
     query_user_by_email,
 )
-from server.serverlogging import request_log, make_logger
+from server.logging import request_log, make_logger
 
 registration_log = make_logger(__name__)
 

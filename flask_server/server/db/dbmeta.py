@@ -10,7 +10,7 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.exc import NoInspectionAvailable
 from sqlalchemy import Column
 from server.redis_cache.poolmanager import PoolManager
-from server.serverlogging import try_call, make_logger
+from server.logging import try_call, make_logger
 
 logger = make_logger(__name__)
 

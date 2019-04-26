@@ -1,62 +1,39 @@
 import * as MessageTypes from "../constants/action-types/message-types";
-const thisUser = { userId: "1", username: "username" };
+import Message from "../api/models/message";
+import User from "../api/models/user";
+import Thread from "../api/models/thread";
 
-let _users = {};
-_users[thisUser.userId] = thisUser.username;
 const messengerInitialState = {
-  threads: { "1": { threadId: 1 }, "2": { threadId: 2 } },
-  users: [{ id: thisUser.userId, username: thisUser.username, online: true }]
+  threads: new Map(),
+  users: { friends: new Map(), online: new Map() }
 };
-
-function makeMessageObject(action) {
-  return {
-    threadId: action.threadId,
-    senderId: action.senderId,
-    timestamp: action.timestamp,
-    content: action.content
-  };
-}
-
-function makeThreadObject(action) {
-  return {
-    threadId: action.threadId,
-    members: action.members,
-    created: action.created,
-    messages: action.messages
-  };
-}
 
 export default function messagingReducer(
   state = messengerInitialState,
   action
 ) {
-  let updatedThreads, updatedUsers;
+  let updatedThreads, updatedUsers, oldThread;
   switch (action.type) {
     case MessageTypes.USER_JOINED:
       updatedUsers = { ...state.users };
-      updatedUsers[action.userId] = {
-        id: action.userId,
-        username: action.username,
-        online: true
-      };
+      updatedUsers.online.set(action.user.id, user);
       return { ...state, users: updatedUsers };
 
     case MessageTypes.USER_LEFT:
       updatedUsers = { ...state.users };
-      updatedUsers[action.userId].online = false;
+      updatedUsers.set(action.user.id, action.user);
       return { ...state, users: updatedUsers };
 
     case MessageTypes.RECIEVE_MESSAGE:
       updatedThreads = { ...state.threads };
-      updatedThreads[action.threadId].messages.push(makeMessageObject(action));
-      updatedThreads[action.threadId].hasUnread = true;
+      oldThread = updatedThreads.get(action.threadId);
+      oldThread.messages.push(action.message);
+      updatedThreads.set(action.thread.id, oldThread);
 
       return { ...state, threads: updatedThreads };
 
     case MessageTypes.SEND_MESSAGE:
-      updatedThreads = { ...state.threads };
-      updatedThreads[action.threadId].messages.push(makeMessageObject(action));
-      return { ...state, threads: updatedThreads };
+      return { ...state };
 
     case MessageTypes.MESSAGE_HAS_FAILED:
       return { ...state };

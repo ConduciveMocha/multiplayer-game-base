@@ -1,7 +1,7 @@
 import json
 from flask import Blueprint, request, jsonify
 
-from server.serverlogging import request_log
+from server.logging import request_log
 from server.db.user_actions import query_user_by_id, query_user_by_username
 from server.auth import require_auth
 from server.redis_cache.user_cache import user_from_cache, get_online_users

@@ -57,6 +57,30 @@ def app(request):
 
 
 @pytest.fixture(scope="session")
+def socketio_client(request):
+    def _socketio_client(namespace=None):
+        if namespace is None:
+            namespace = "/"
+        app, socketio = create_app(TestingConfig, return_ext="socketio")
+
+        with app.test_request_context("/"):
+            flask_client = app.test_client()
+
+            def teardown():
+                pass
+
+            request.addfinalizer(teardown)
+
+            client = socketio.test_client(app, namespace=namespace)
+
+            assert client.is_connected()
+
+            return app, client
+
+    return _socketio_client
+
+
+@pytest.fixture(scope="session")
 def db(app, request):
     def teardown():
         _db.drop_all()

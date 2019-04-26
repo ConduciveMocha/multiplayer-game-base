@@ -6,7 +6,7 @@ from functools import wraps
 from flask import request, jsonify, g
 from werkzeug.exceptions import BadRequest
 
-from server.serverlogging import make_logger
+from server.logging import make_logger
 
 INTERNAL_SERVER_ERROR = json.dumps({"error": "Internal Server Error"}), 500
 # INVALID_REQUEST_ERROR = jsonify(error='Invalid Request'), 400

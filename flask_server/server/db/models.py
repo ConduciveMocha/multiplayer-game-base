@@ -9,7 +9,7 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from server.auth import make_thread_hash, members_from_thread_hash
-from server.serverlogging import make_logger
+from server.logging import make_logger
 
 model_log = make_logger(__name__)
 
@@ -82,7 +82,6 @@ class User(CreatedTimestampMixin, db.Model):
     message_threads = db.relationship(
         "Thread",
         secondary=user_thread,
-        primaryjoin=(user_thread.c.user_id == id),
         lazy="dynamic",
         backref=db.backref("members", lazy="dynamic"),
     )
