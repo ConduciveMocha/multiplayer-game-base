@@ -12,6 +12,7 @@ from server.auth import make_thread_hash, members_from_thread_hash
 from server.logging import make_logger
 
 model_log = make_logger(__name__)
+model_log.setLevel(logging.INFO)
 
 
 class CreatedTimestampMixin(object):

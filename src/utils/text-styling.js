@@ -22,6 +22,6 @@ export const textStyles = s => {
 export const colorFromInt = (n, N_COLORS = 8) => {
   let colorString = "#";
   for (let i = 0; i < Math.ceil(Math.log2(N_COLORS)); i++)
-    colorString += ind & Math.pow(2, i) ? "f" : "0";
+    colorString += n & Math.pow(2, i) ? "f" : "0";
   return colorString;
 };

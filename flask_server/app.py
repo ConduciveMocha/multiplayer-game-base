@@ -12,7 +12,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from flask_sqlalchemy import Model
 from flask_migrate import Migrate
 
-
 from server.logging import (
     request_log,
     serverlogger,

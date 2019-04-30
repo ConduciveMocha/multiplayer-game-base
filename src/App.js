@@ -26,7 +26,7 @@ class App extends Component {
 
       </Router> */}
 
-        <Messenger userList={[1, 2]} threads={[]} />
+        <Messenger />
       </Provider>
     );
   }

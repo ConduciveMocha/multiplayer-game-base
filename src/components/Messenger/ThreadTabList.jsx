@@ -1,6 +1,5 @@
 import React from "react";
-
-const Tab = (thread, tabClick, tabClose, isActive) => {
+const TabListItem = (thread, tabClick, tabClose, isActive) => {
   return (
     <li
       className={isActive ? "thread-tab-active" : "thread-tab-inactive"}
@@ -22,31 +21,34 @@ const Tab = (thread, tabClick, tabClose, isActive) => {
 // --tabClick: (Thread) => func
 // --tabClose: (Thread) => func
 // --nav: (Int) => func
-export const ThreadTabs = props => {
-  const tabList = props.openThreads.map((thread, ind) => {
-    const isActive = thread.threadHash === props.activeThread.threadHash;
-    return Tab(
-      thread.threadName,
-      thread.threadHash,
-      props.tabClick(thread),
-      props.tabClose(thread),
-      isActive
-    );
-  });
+export const TabList = props => {
+  console.log(props.openThreads);
+  const tabList = props.openThreads
+    ? props.openThreads.map((thread, ind) => {
+        console.log(thread);
+        const isActive =
+          props.activeThread &&
+          thread.threadHash === props.activeThread.threadHash;
+        return TabListItem(
+          thread,
+          props.tabClick(thread),
+          props.tabClose(thread),
+          isActive
+        );
+      })
+    : [];
 
   return (
     <div>
       <button
         className="tablist-open-global"
         onClick={e => {
-          props.openGlobalThread;
+          props.openGlobalThread();
         }}
       />
-      <ul>{tablist}</ul>
+      <ul>{tabList}</ul>
       <button className="tablist-navigation-left" onClick={props.nav(-1)} />
       <button className="tablist-navigation-right" onClick={props.nav(1)} />
     </div>
   );
 };
-
-export default ThreadTabs;

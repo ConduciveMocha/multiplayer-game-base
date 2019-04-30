@@ -1,20 +1,26 @@
 export default class Thread {
-  constructor(id, name, members, messages, created) {
+  constructor(id, name, members, messages, created, initialized = false) {
     this.id = id;
     this.initialized = this.id !== -1;
-    this.threadHash = threadHash;
-    this.name = name ? name : "";
+    this.threadHash = Thread.makeThreadHash(members);
+    this.threadName = name ? name : "";
     this.members = members ? members : [];
+
     this.messages = messages ? messages : [];
     this.created = created;
     this.savedAddedUsersList = [];
+    this.initialized = initialized;
+    if (!this.initialized) {
+      this.threadHash = "_" + this.threadHash;
+    }
   }
 
   static makeThreadHash(members) {
     if (typeof members === Object) {
       members = members.map(mem => mem.id);
     }
-    members.sort((a, b) => a - b);
+    console.log("makeThreadHash - members:", members, typeof members);
+    members.sort((a, b) => a.id - b.id);
     let enc = String(members[0]);
     for (let i = 1; i < members.length; i++) {
       enc += "_" + String(members[i] - members[i - 1]);

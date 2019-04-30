@@ -10,36 +10,9 @@ from flask import g, _app_ctx_stack, current_app
 from server.logging import make_logger
 
 
-def make_redis_url(host, port, db):
-    return f"redis://{host}:{port}/{db}"
-
-
-cm_logger = make_logger(name=__name__)
-
-
 class PoolManager:
+
     _POOLS = {}  # Object for saving connection pools
-
-    # wrappers for properties that change the pool object
-    def alters_pool(func):
-        @wraps(func)
-        def wrapper(self, val):
-            old_key = self._key
-
-            if old_key in PoolManager._POOLS and PoolManager._POOLS[old_key]["n"] is 1:
-                self.close_pool(force=True)
-
-            func(self, val)
-
-            self._key = (self.host, self.port, self.db)
-            if old_key == self._key:
-                return
-            elif None in self._key:
-                self._pool = None
-            else:
-                self.init_pool()
-
-        return wrapper
 
     def __init__(self, host=None, port=None, db=None):
         self._key = (host, port, db)
@@ -50,13 +23,12 @@ class PoolManager:
         self._pool = None
         self.init_pool()
 
+    # ---SETUP/TEARDOWN FUNCTIONS---
+
+    # TODO: Add settings for default lock behavior
     def init_pool(self):
-        """ Initializes a connection pool or sets the pool
-            member variable to a connection pool already opened
-            by another object.
-
+        """Initializes the connection pool with the specified host,port and db
         """
-
         if None not in self._key:
 
             if self._key in PoolManager._POOLS:
@@ -85,84 +57,16 @@ class PoolManager:
             self.logger.debug(f"Key: {self._key}")
             self._pool = None
 
-    def __enter__(self):
-        return self.conn
-
-    def __exit__(self, type, value, traceback):
-        pass
-
-    @property
-    def pool(self):
-        return self._pool
-
-    @pool.setter
-    def pool(self, p):
-        raise NotImplementedError("Pool cannot be set directly")
-
-    @property
-    def host(self):
-        return self._host
-
-    @property
-    def port(self):
-        return self._port
-
-    @property
-    def db(self):
-        return self._db
-
-    @host.setter
-    @alters_pool
-    def host(self, host):
-        self._host = host
-
-    @port.setter
-    @alters_pool
-    def port(self, port):
-        self._port = port
-
-    @db.setter
-    @alters_pool
-    def db(self, db):
-        self._db = db
-
-    @property
-    def conn(self):
-        if self._pool is None:
-            self.logger.error("Unable to create client. No connection Pool")
-            raise ValueError("No pool open in `PoolManager`")
-
-        else:
-            return redis.Redis(connection_pool=self.pool)
-
-    @contextmanager
-    def pipe(self, remove_client=True, execute_pipe=False):
-
-        with self.conn.pipeline() as pipe:
-            self.logger.debug("Pipeline opened")
-            yield pipe
-            if execute_pipe:
-                self.logger.debug("Executing redis commands")
-                pipe.execute()
-        self.logger.debug("Pipeline closed")
-        if remove_client:
-            self._r = None
-
-    def init_app(self, app):
-        self.app = app
-        self._host = app.config.get("REDIS_HOST", "localhost")
-        self._port = app.config.get("REDIS_PORT", 6379)
-        self._db = app.config.get("REDIS_DB", 0)
-        self._key = (self._host, self._port, self._db)
-        self.logger.debug(f"KEY: {self._key}")
-        self.init_pool()
-
     def close_pool(self, force_conn=False, force=False):
-        """Closes the connection pool (if one exists).
-
-
+        """Closes the connection pool (if open)
+        
+        Keyword Arguments:
+            force_conn {bool} -- Forces close any open connections ( (default: {False})
+            force {bool} -- Forces close the connection pool (default: {False})
+        
+        Returns:
+            [bool] -- Returns True if the connection pool was closed
         """
-
         if self._pool is not None:
             try:
                 if self.r is not None:
@@ -209,20 +113,168 @@ class PoolManager:
             self.logger.warning("No pool instantiated")
             return False
 
-    def copy(self):
-        self._POOLS[self._key]["n"] += 1
-        return copy.copy(self)
+    def init_app(self, app):
+        """Initializes the PoolManager object with settings from a flask app
+        
+        Arguments:
+            app {Flask} -- A flask app
+        """
+        self.app = app
+        self._host = app.config.get("REDIS_HOST", "localhost")
+        self._port = app.config.get("REDIS_PORT", 6379)
+        self._db = app.config.get("REDIS_DB", 0)
+        self._key = (self._host, self._port, self._db)
+        self.logger.debug(f"KEY: {self._key}")
+        self.init_pool()
+
+    # --------------------------------------------------------------------------------
+
+    # ---PROPERTIES---
+    def alters_pool(func):
+        """Decorator for property setters that modify connection pool attributes. Before
+            the wrapped function is called, the pool is closed (if it exists). Afterward,
+            init_pool is called with the new settings 
+        
+        Arguments:
+            func {function} -- Wrapped funtion (property setter)
+        
+        Returns:
+            [function] -- Wrapped function
+        """
+
+        @wraps(func)
+        def wrapper(self, val):
+            old_key = self._key
+
+            if old_key in PoolManager._POOLS and PoolManager._POOLS[old_key]["n"] is 1:
+                self.close_pool(force=True)
+
+            func(self, val)
+
+            self._key = (self.host, self.port, self.db)
+            if old_key == self._key:
+                return
+            elif None in self._key:
+                self._pool = None
+            else:
+                self.init_pool()
+
+        return wrapper
+
+    # =HOST=
+    @property
+    def host(self):
+        return self._host
+
+    @host.setter
+    @alters_pool
+    def host(self, host):
+        self._host = host
+
+    # =PORT=
+    @property
+    def port(self):
+        return self._port
+
+    @port.setter
+    @alters_pool
+    def port(self, port):
+        self._port = port
+
+    @property
+    def db(self):
+        return self._db
+
+    @db.setter
+    @alters_pool
+    def db(self, db):
+        self._db = db
+
+    # =POOL=
+    @property
+    def pool(self):
+        return self._pool
+
+    @pool.setter
+    def pool(self, p):
+        raise NotImplementedError("Pool cannot be set directly")
+
+    # ? Refactor this?
+    # =CONN=
+    @property
+    def conn(self):
+        if self._pool is None:
+            self.logger.error("Unable to create client. No connection Pool")
+            raise ValueError("No pool open in `PoolManager`")
+
+        else:
+            return redis.Redis(connection_pool=self.pool, decode_responses=True)
+
+    # --------------------------------------------------------------------------------
+
+    # ---CONTEXT MANAGERS---
+    # ? Refactor this out
+    # Allows the object to be used as a context manager
+    def __enter__(self):
+        return self.conn
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+    @contextmanager
+    def pipe(self, remove_client=True, execute_pipe=False):
+        """Context manager for using a pipe from the connection pool
+        
+        Keyword Arguments:
+            remove_client {bool} -- If True, removes r from object after call (deprecated) (default: {True})
+            execute_pipe {bool} -- If True, pipe.execute is called during cleanup (default: {False})
+        """
+        with self.conn.pipeline() as pipe:
+            self.logger.debug("Pipeline opened")
+            yield pipe
+            if execute_pipe:
+                self.logger.debug("Executing redis commands")
+                pipe.execute()
+        self.logger.debug("Pipeline closed")
+        if remove_client:
+            self._r = None
 
     @contextmanager
     def with_lock(self, key, pipe=False, timeout=None, sleep=0.1, blocking_timeout=5):
-        r = self.conn
-        lock = r.lock(key)
-        lock.acquire
-        yield r
-        lock.release()
+        """Context manager for acquiring a lock from the PoolManager
+        
+        Arguments:
+            key {str} -- Name of key that will be locked
+        
+        Keyword Arguments:
+            pipe {bool} -- If True, a pipe object will be returned  (default: {False})
+            timeout {int} -- Timeout for acquiring the lock (default: {None})
+            sleep {float} -- Duration of sleep between acquisition attemps (default: {0.1})
+            blocking_timeout {int} -- Timeout for the redis client to be blocked (default: {5})
+        """
+        connection_method = self.pipe if pipe else self.conn
+
+        with connection_method as r:
+            lock = r.lock(
+                key, timeout=timeout, sleep=sleep, blocking_timeout=blocking_timeout
+            )
+            lock.acquire()
+            yield r
+            lock.release()
+
+    # --------------------------------------------------------------------------------
 
 
 def global_poolman(func):
+    """Decorator for passing a connection from the app global PoolManager to the wrapped function
+    
+    Arguments:
+        func {function} -- Function that uses a redis connection
+    
+    Returns:
+        [type] -- The return value of the wrapped function
+    """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         poolman = g.poolman
@@ -233,6 +285,15 @@ def global_poolman(func):
 
 
 def global_pipe(func):
+    """Decorator for passing a pipe from the app global PoolManager to the wrapped function
+    
+    Arguments:
+        func {function} -- Function that uses a redis connection
+    
+    Returns:
+        [type] -- The return value of the wrapped function
+    """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         poolman = g.poolman

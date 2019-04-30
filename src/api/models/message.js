@@ -1,8 +1,5 @@
-
-
 class Message {
-  
-  constructor(id, threadId, senderId, content, color, fmt,created) {
+  constructor(id, threadId, senderId, content, color, fmt, created) {
     this.id = id;
     this.thread = threadId;
     this.senderId = senderId;
@@ -23,25 +20,25 @@ class Message {
   //TODO: Figure out implementation. Allow for hotswapping colors?
   static createMarkup(content, color, fmt) {}
 
-  checkCache(arguments){    
-      return Object.entries(this._markupCache).every((key,value)=>arguments[key] === value);
+  checkCache(args) {
+    return Object.entries(this._markupCache).every(
+      (key, value) => args[key] === value
+    );
   }
 
-  getMarkup(color=undefined,fmt=undefined){
-    let arguments = {content:this.content}
-    arguments.color = color?color:this.color;
-    arguments.fmt = fmt?fmt:this.fmt;
-    if (!this.checkCache(arguments)){
-        
-        this._markupCache = {...arguments, markup:this.createMarkup(...arguments)}
+  getMarkup(color = undefined, fmt = undefined) {
+    let args = { content: this.content };
+    args.color = color ? color : this.color;
+    args.fmt = fmt ? fmt : this.fmt;
+    if (!this.checkCache(args)) {
+      this._markupCache = { ...args, markup: this.createMarkup(...args) };
     }
-    return this._markupCache.markup
+    return this._markupCache.markup;
   }
 
   get markup() {
-    return this.getMarkup()
-  };
-
+    return this.getMarkup();
+  }
 }
 
-export default Message
+export default Message;

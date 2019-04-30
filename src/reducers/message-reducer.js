@@ -4,8 +4,17 @@ import User from "../api/models/user";
 import Thread from "../api/models/thread";
 
 const messengerInitialState = {
-  threads: new Map(),
-  users: { friends: new Map(), online: new Map() }
+  threads: new Map([
+    ["0", new Thread(0, "Global", [], [], new Date().getTime())]
+  ]),
+  pendingthreads: [],
+  users: {
+    friends: new Map([
+      ["0", new User(0, "friend1", true)],
+      ["1", new User(1, "friend2", true)]
+    ]),
+    online: new Map()
+  }
 };
 
 export default function messagingReducer(
@@ -16,7 +25,7 @@ export default function messagingReducer(
   switch (action.type) {
     case MessageTypes.USER_JOINED:
       updatedUsers = { ...state.users };
-      updatedUsers.online.set(action.user.id, user);
+      updatedUsers.online.set(action.user.id, action.user);
       return { ...state, users: updatedUsers };
 
     case MessageTypes.USER_LEFT:

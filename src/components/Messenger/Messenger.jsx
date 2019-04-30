@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { connect } from "react-redux";
 import useArray from "../../hooks/useArray";
-
-import UserList from "./Sidebar/UserList";
-import ConversationList from "./Sidebar/ConversationList";
-import ThreadTabs from "./ThreadDisplay/ThreadTabs";
-import MessageDisplay from "./ThreadDisplay/MessageDisplay";
-import MessageInput from "./ThreadDisplay/MessageInput";
-import AddUsersBar from "./ThreadDisplay/AddUsersBar";
-
-import Thread from "../../api/models/thread";
-import Message from "../../api/models/message";
+import useCache from "../../hooks/useCache.js";
+import ThreadDisplay from "./ThreadDisplay";
+import MessengerSidebar from "./MessengerSidebar/Me";
 
 //Conversation List Needs props:
 // -threadList: [Threads]  --ADDED
@@ -39,30 +33,49 @@ import Message from "../../api/models/message";
 // MesseageInput needs props:
 // --sendMessage: func(content,style)
 
-// TODO: Theres a bug with how im handling the threadHash of new threads. There can be collisions with existing threads
+// TODO: rework the newThreadList so it doesnt actually need to modify the activeThread object
+//? threadHash collision bug might be fixed. Needs testing
 export const Messenger = props => {
-  const openThreads = useArray([]);
-  const [activeThread, setActiveThread] = useState();
-  const addedUsersList = useArray([]);
+  const openThreads = useArray([props.threadMap.get("0")]);
+  const creationThreads = useCache();
 
-  const addUserToThread = user => {
-    addedUsersList.add(user);
-    const newActive = { ...activeThread };
-    newActive.setMembers(addedUsersList.value);
-    openThreads.setValue(
-      ...openThreads.value.filter(
-        th => th.threadHash !== activeThread.threadHash
-      ),
-      newActive
-    );
-    setActiveThread(newActive);
-  };
-  // TODO: Replace this with a real call
-  const sendMessage = (thread, content, style) => {
-    console.log("Placeholder for `sendMessage` in `Messenger.jsx`");
-  };
+  const [activeThread, setActiveThread] = useState(props.threadMap.get("0"));
+  const [activeThreadIndex, setActiveThreadIndex] = useState(0);
+
+  // Manages the active thread changing
   useEffect(() => {
+    let ind = openThreads.value.findIndex(
+      el => el.threadHash === activeThread.threadHash
+    );
+
+    // the activeThread has closed
+    if (openThreads[ind] === undefined) {
+      // a thread replaced the activeThread at activeThread index
+      if (openThreads[activeThreadIndex] !== undefined) {
+        setActiveThread(openThreads[ind]);
+      }
+      // Find the next lowest index that is not closed. Garaunteed to hit the global thread
+      else {
+        do {
+          ind--;
+          if (openThreads[ind] !== undefined) {
+            setActiveThread(openThreads[ind]);
+            setActiveThreadIndex(ind);
+            return;
+          }
+        } while (ind > 0);
+      }
+    } else {
+      setActiveThreadIndex(ind);
+    }
+  }, [openThreads, activeThread]);
+
+  // Manages creationThreads being replaced by realThreads
+  useEffect(() => {
+    // Thread id hasnt been set ==> pending
     const pendingThreads = openThreads.value.filter(th => th.id === -1);
+
+    // If ther are pending threads
     if (pendingThreads.length !== 0) {
       let upgraded;
       const newOpenThreads = openThreads.value.map(th => {
@@ -76,66 +89,24 @@ export const Messenger = props => {
     }
   }, [props.threadMap]);
 
+  const addUserToThread = user => {};
+
+  // TODO: Replace this with a real call
+  const sendMessage = (thread, content, style) => {
+    console.log("Placeholder for `sendMessage` in `Messenger.jsx`");
+  };
+
   return (
     <div className="messenger-container">
-      <div className="messenger-sidebar">
-        <ConversationList
-          threadList={props.threadMap
-            .values()
-            .sort((th1, th2) => (th2 < th1 ? 1 : th1 < th2 ? -1 : 0))}
+      <MessengerSidebar
+        threadList={Array.from(props.threadMap.values)}
+        friendsList={props.threadMap.friends}
+        onlineList={props.threadMap.online}
+      />
+      <>
+        <TabList
           openThreads={openThreads.value}
-          selectThreadItem={thread => e => {
-            if (!openThreads.find(th => thread.threadHash === th.threadHash))
-              openThreads.add(thread);
-            setActiveThread(thread);
-          }}
-          clickClose={thread => e => {
-            const ind = openThreads.findIndex(
-              th => thread.threadHash === th.threadHash
-            );
-
-            if (ind > -1) openThreads.removeIndex(ind);
-
-            if (thread.threadHash === activeThread.threadHash)
-              setActiveThread(
-                openThreads.find(th => th.threadHash !== thread.threadHash)
-              );
-          }}
-        />
-        <UserList
-          friendsList={props.userList.friends}
-          onlineList={props.userList.online}
-          userItemClick={user => e => {
-            // Currently adding users to a new thread
-            if (activeThread.id === -1) addUserToThread(user);
-            // Instead, open thread
-            else {
-              let members = [user, clientUser];
-              const thHash = Thread.makeThreadHash(members);
-              let existingThread = props.threadMap.get(thHash);
-
-              // Not an existing thread
-              if (!existingThread) {
-                const newThread = Thread(-1, "_" + thHash, "", members, -1);
-                addedUsersList.add(user);
-                openThreads.add(newThread);
-                setActiveThread(newThread);
-              }
-              // Open and existing thread
-              else {
-                // Existing but not open
-                if (openThreads.value.find(th => th.threadHash === thHash))
-                  setActiveThread(existingThread);
-                openThreads.add(existingThread);
-              }
-            }
-          }}
-        />
-      </div>
-      <div>
-        <ThreadTabs
-          openThreads={openThreads}
-          openGlobalThread={setActiveThread(openThreads.value[0])}
+          openGlobalThread={() => {} /*setActiveThread(openThreads.value[0])*/}
           activeThread={activeThread}
           tabClick={thread => e => setActiveThread(thread)}
           tabClose={thread => e => {
@@ -143,69 +114,26 @@ export const Messenger = props => {
               arr.filter(th => th && th.threadHash !== thread.threadHash)
             );
           }}
-        />
-        {activeThread.initialized ? (
-          ""
-        ) : (
-          <AddUsersBar
-            addedUsers={addedUsersList}
-            removeUser={user => e => {
-              const newAddedUsersList = addedUsersList.value.filter(
-                addedUser => user.id !== addedUser.id
-              );
-              addedUsersList.setValue(newAddedUsersList);
-              if (newAddedUsersList.length === 0) {
-                const newActive = openThreads.find(
-                  th => th.threadHash !== activeThread.threadHash
-                );
-                activeThread.setActiveThread(newActive);
-              }
-            }}
-          />
-        )}
-        <MessageDisplay messageList={activeThread.messageList} />
-        <MessageInput
-          onSendMessage={(content, style) => {
-            // First message of a new Thread
-            if (activeThread.threadHash[0] === "_") {
-              // Get existing thread object
-              const officialThreadHash = activeThread.threadHash.slice(1);
-              const existingThread = props.threadMap.get(officialThreadHash);
-
-              // Thread already exists
-              if (existingThread) {
-                // Existing thread is not open
-                if (
-                  !openThreads.find(th => officialThreadHash === th.threadHash)
-                )
-                  openThreads.add(existingThread);
-                sendMessage(existingThread, content, style);
-                setActiveThread(existingThread);
-              }
-              // Create a message with the uninitialized thread
-              else {
-                sendMessage(activeThread, content, style);
-                setActiveThread({
-                  ...activeThread,
-                  initialized: true,
-                  threadHash: officialThreadHash
-                });
-              }
-
-              // Remove creation thread
-              openThreads.setValue(arr =>
-                arr.filter(th => th.threadHash !== officialThreadHash)
-              );
-            }
-            // Existing thread
-            else {
-              sendMessage(activeThread, content, style);
-            }
+          nav={n => e => {
+            console.log(n, e);
           }}
         />
-      </div>
+
+        <ThreadDisplay activeThread={[activeThread, activeThreadIndex]} />
+      </>
     </div>
   );
 };
-
-export default Messenger;
+export default connect(
+  state => {
+    return {
+      threadMap: state.messaging.threads,
+      clientUser: state.login.clientUser,
+      userList: state.messaging.users,
+      pendingThreads: state.messaging.pendingThreads
+    };
+  },
+  dispatch => {
+    return {};
+  }
+)(Messenger);

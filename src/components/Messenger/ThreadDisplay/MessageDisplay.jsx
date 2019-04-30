@@ -17,7 +17,7 @@ const MessageItem = message => {
 // -messageList: [message]
 export const MessageDisplay = props => {
   let messageItems = props.messageList.map(message => MessageItem(message));
-  return <ul classNam="message-display-container">{messageItems}</ul>;
+  return <ul className="message-display-container">{messageItems}</ul>;
 };
 
 export default MessageDisplay;

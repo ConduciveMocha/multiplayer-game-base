@@ -1,6 +1,6 @@
 import argparse
 import os
-from server.redis_cache.poolmanager import make_redis_url
+from server.utils.redisutils import make_redis_url
 
 
 class Config(object):

@@ -5,14 +5,15 @@ from app import db as _db
 
 from server.db.models import User, Email, Thread, Message, user_thread
 from server.serverconfig import TestingConfig
-from server.utils.data_generators import mock_user_list
+from server.utils.data_generators import generate_user
+from server.utils.redisutils import make_redis_url
 
 
 def create_mock_users(db_session):
 
     user_list = []
-    for u in mock_user_list():
-        username, password, email = u
+    for u in generate_user.getn(100):
+        username, password, email = u["username"], u["password"], u["email"]
         try:
             current_user = (
                 db_session.query(User)

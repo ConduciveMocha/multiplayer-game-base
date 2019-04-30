@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from server.logging import request_log
 from server.db.user_actions import query_user_by_id, query_user_by_username
 from server.auth import require_auth
-from server.redis_cache.user_cache import user_from_cache, get_online_users
+from server.redis_cache.user_cache import get_user, get_online_users
 
 userbp = Blueprint("user", __name__, url_prefix="/user")
 
@@ -22,7 +22,7 @@ def request_userlist():
 def request_username(user_id):
     """Queries user by ID
     """
-    cache_result = user_from_cache(user_id)
+    cache_result = get_user(user_id)
     if cache_result:
         return cache_result
     else:

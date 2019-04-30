@@ -1,2 +1,2 @@
-import Messenger from "../_Messenger/Messenger";
+import Messenger from "./Messenger";
 export default Messenger;

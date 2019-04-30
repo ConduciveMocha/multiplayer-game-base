@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const ThreadItem = (thread, isOpen, selectThreadItem, clickClose) => {
   return (
@@ -7,7 +7,7 @@ const ThreadItem = (thread, isOpen, selectThreadItem, clickClose) => {
       key={"thread.item." + thread.threadHash}
       onClick={selectThreadItem}
     >
-      <p className="thread-item-name">thread.threadName</p>
+      <p className="thread-item-name">{thread.threadName}</p>
       {isOpen ? (
         <div className="thread-item-open">
           <button onSubmit={clickClose} />
@@ -25,7 +25,7 @@ const ThreadItem = (thread, isOpen, selectThreadItem, clickClose) => {
 // -selectThreadItem: (thread) => func
 // -clickClose: (thread) => func
 export const ConversationList = props => {
-  const [listOpened, setListOpened] = useState(True);
+  const [listOpened, setListOpened] = useState(true);
 
   let threadItems = props.threadList.map(thread => {
     let isOpen = props.openThreads.some(
@@ -43,7 +43,7 @@ export const ConversationList = props => {
     <>
       <div className="sidebar-title">
         <h3>Conversations</h3>
-        <button onClick={setListOpened(!listOpened)} />
+        <button onClick={e => setListOpened(!listOpened)} />
       </div>
       <ul
         className={
