@@ -5,33 +5,9 @@ import useCache from "../../hooks/useCache.js";
 import ThreadDisplay from "./ThreadDisplay";
 import MessengerSidebar from "./MessengerSidebar/Me";
 
-//Conversation List Needs props:
-// -threadList: [Threads]  --ADDED
-// -openThreads: [Threads] --ADDED
-// -selectThreadItem: (thread) => func --ADDED
-// -clickClose: (thread) => func --ADDED
-//
-//UserList Needs Props:
-// --onlineList: [User] --ADDED
-// --friendsList: [User] --ADDED
-// --userItemClick: (User) => func --BUGS
-//
-// ThreadTabs: Needs props:
-// --openThreads: [Thread] -- ADDED
-// --activeThread: Thread -- ADDED
-// -- openGlobal: func  --ADDED
-// --tabClick: (Thread) => func --ADDED
-// --tabClose: (Thread) => func --ADDED
-//
-// AddUsersBar Needs props
-// --removeUser: (User)=>func --ADDED
-// --addedUsers [User] --ADDED
-//
-// MessageDisplay Needs Props:
-// -messageList: [message] --ADDED
-//
-// MesseageInput needs props:
-// --sendMessage: func(content,style)
+const visibleTabs = (openThreads, shownTabIndex) => {
+  const MAX_OPEN_TABS = 8;
+};
 
 // TODO: rework the newThreadList so it doesnt actually need to modify the activeThread object
 //? threadHash collision bug might be fixed. Needs testing
@@ -88,8 +64,6 @@ export const Messenger = props => {
       openThreads.setValue(newOpenThreads);
     }
   }, [props.threadMap]);
-
-  const addUserToThread = user => {};
 
   // TODO: Replace this with a real call
   const sendMessage = (thread, content, style) => {
