@@ -1,45 +1,100 @@
 import * as MessageTypes from "../constants/action-types/message-types";
-import Message from "../api/models/message";
-import User from "../api/models/user";
-import Thread from "../api/models/thread";
+const MESSAGE_STATUS = {
+  SENT: 2,
+  RECIEVED: 1,
+  FAILED: 0
+};
 
 const messengerInitialState = {
-  threads: new Map(),
-  users: { friends: new Map(), online: new Map() }
+  threads: {},
+  users: {},
+  onlineUserIds: [],
+  friendsListIds: [],
+  messages: {}
 };
 
 export default function messagingReducer(
   state = messengerInitialState,
   action
 ) {
-  let updatedThreads, updatedUsers, oldThread;
   switch (action.type) {
     case MessageTypes.USER_JOINED:
-      updatedUsers = { ...state.users };
-      updatedUsers.online.set(action.user.id, user);
-      return { ...state, users: updatedUsers };
+      return {
+        ...state,
+        users: { ...state.users, [action.user.userId]: action.user },
+        onlineUserIds: [...state.onlineUserIds, action.user.userId]
+      };
 
     case MessageTypes.USER_LEFT:
-      updatedUsers = { ...state.users };
-      updatedUsers.set(action.user.id, action.user);
-      return { ...state, users: updatedUsers };
+      let removedUserState = { ...state };
+      delete removedUserState[action.user.userId];
+      let updatedOnlineUserIds = state.onlineUserIds.filter(
+        el => el !== action.user.userId
+      );
+      return { ...removedUserState, onlineUserIds: updatedOnlineUserIds };
 
     case MessageTypes.RECIEVE_MESSAGE:
-      updatedThreads = { ...state.threads };
-      oldThread = updatedThreads.get(action.threadId);
-      oldThread.messages.push(action.message);
-      updatedThreads.set(action.thread.id, oldThread);
-
-      return { ...state, threads: updatedThreads };
+      return {
+        ...state,
+        messages: {
+          ...state.messages,
+          [action.message.messageId]: action.message // Adds message to message hash
+        },
+        threads: {
+          ...state.threads,
+          [action.message.threadId]: [
+            // Adds MessageId to appropriate thread
+            ...state[action.message.threadId],
+            action.message.messageId
+          ]
+        }
+      };
 
     case MessageTypes.SEND_MESSAGE:
-      return { ...state };
+      return {
+        ...state,
+        messages: {
+          ...state.messages,
+          [action.message.messageId]: {
+            ...action.message,
+            status: MESSAGE_STATUS.SENT
+          } // Adds message to message hash
+        },
+        threads: {
+          ...state.threads,
+          [action.message.threadId]: [
+            // Adds MessageId to appropriate thread
+            ...state[action.message.threadId],
+            action.message.messageId
+          ]
+        }
+      };
 
     case MessageTypes.MESSAGE_HAS_FAILED:
-      return { ...state };
+      return {
+        ...state,
+        // Sets message status to failed
+        messages: {
+          ...state.messages,
+          [action.message.messageId]: {
+            ...state.messages[action.message.messageId],
+            status: MESSAGE_STATUS.FAILED
+          }
+        }
+      };
 
     case MessageTypes.USER_LIST_RECIEVED:
-      return { ...state, users: { ...state.users, ...action.userList } };
+      return {
+        ...state,
+        // Sets message status to recieved
+        messages: {
+          ...state.messages,
+          [action.message.messageId]: {
+            ...state.messages[action.message.messageId],
+            status: MESSAGE_STATUS.RECIEVED
+          }
+        }
+      };
 
     default:
       return state;
