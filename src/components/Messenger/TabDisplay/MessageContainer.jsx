@@ -10,9 +10,9 @@ const Message = (text, sender) => {
   );
 };
 
-const MessageContainer = props => {
-  let messages = props.messageList.map(m => {
-    return <Message id={m.id} text={m.text} sender={m.sender} />;
+const MessageContainer = messages => {
+  let messages = messages.map(m => {
+    return <Message key={m.id} text={m.text} sender={m.sender} />;
   });
   return <div className="message-container">{messages}</div>;
 };

@@ -9,7 +9,12 @@ const ThreadTab = thread => {
     <li>
       <div className={thread.hasUnread ? "tab-unread" : "tab-read"} />
       <p>{shortenThreadName(thread.name)}</p>
-      <button className="close-tab-button">x</button>
+
+      {thread.id === 0 ? (
+        <div />
+      ) : (
+        <button className="close-tab-button">x</button>
+      )}
     </li>
   );
 };

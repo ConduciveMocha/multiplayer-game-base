@@ -2,12 +2,20 @@ import React from "react";
 
 import CollapsableList from "./CollapsableList";
 
-const UserListItem = ({ item, id }) => {
-  return <div key={id}>{item}</div>;
+const UserListItem = ({ user, createNewThread }) => {
+  return <div key={user.id} onClick={e => createNewThread()} />;
 };
 
-const ThreadListItem = thread => {
-  return <div />;
+const ThreadListItem = ({ thread, openTab, closeTab }) => {
+  <div
+    key={thread.id}
+    onClick={() => {
+      openTab();
+    }}
+  >
+    <span>{thread.name}</span>
+    <button onClick={() => closeTab()}>x</button>
+  </div>;
 };
 
 const MessengerSidebar = props => {
