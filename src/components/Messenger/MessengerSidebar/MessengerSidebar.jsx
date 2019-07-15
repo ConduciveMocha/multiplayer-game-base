@@ -3,30 +3,39 @@ import React from "react";
 import CollapsableList from "./CollapsableList";
 
 const UserListItem = ({ user, createNewThread }) => {
-  return <div key={user.id} onClick={e => createNewThread()} />;
+  return (
+  <div key={user.id} onClick={e => createNewThread()} >
+    <span>{user.username}</span>
+    <button className="block-user-button"></button>
+    <button className="open-profile-button"></button>
+  </div>
+  );
 };
 
 const ThreadListItem = ({ thread, openTab, closeTab }) => {
-  <div
-    key={thread.id}
-    onClick={() => {
-      openTab();
-    }}
-  >
-    <span>{thread.name}</span>
-    <button onClick={() => closeTab()}>x</button>
-  </div>;
+  return (
+    <div
+      key={"thread-list-item-" + thread.id}
+    >
+      <span>{thread.name}</span>
+      <button onClick={()=>openTab()}>O</button>
+      <button onClick={() => closeTab()}>x</button>
+    </div>
+  );
 };
 
-const MessengerSidebar = props => {
+const MessengerSidebar = ({openTabIds, makeOpenTab,makeFocusTab, makeCloseTab,threads,users}) => {
   return (
     <div>
       <CollapsableList
         ListItemComponent={ThreadListItem}
-        proplist={[]}
+        proplist={Object.keys(threads).map(id=> {
+          console.log(id);
+          return {thread:threads[id], openTab:makeOpenTab(id), closeTab:makeCloseTab(id)}
+        })}
         listName={"Conversations"}
       />
-      <CollapsableList
+      {/* <CollapsableList
         ListItemComponent={UserListItem}
         proplist={[
           { item: "a", id: 1 },
@@ -40,7 +49,7 @@ const MessengerSidebar = props => {
         ListItemComponent={UserListItem}
         proplist={[]}
         listName={"Friends"}
-      />
+      /> */}
     </div>
   );
 };

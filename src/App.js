@@ -10,7 +10,11 @@ import Messenger from "./components/Messenger";
 import store from "./store";
 import { Provider } from "react-redux";
 import "./App.css";
-import { mockThreads } from "./utils/messaging-mock";
+import { mockThreads,mockMessages,mockUsers } from "./utils/messaging-mock";
+
+
+
+
 class App extends Component {
   render() {
     return (
@@ -26,7 +30,7 @@ class App extends Component {
 
       </Router> */}
 
-        <Messenger userList={[1, 2]} threads={[]} />
+        <Messenger users={mockUsers} threads={mockThreads} messages={mockMessages} />
       </Provider>
     );
   }
