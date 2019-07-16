@@ -4,6 +4,8 @@ import MessengerSidebar from "./MessengerSidebar";
 import TabContainer from "./TabDisplay/TabContainer";
 import MessageContainer from "./TabDisplay/MessageContainer";
 import InputContainer from "./TabDisplay/InputContainer";
+
+import './Messenger.css'
 // ==================================
 
 // const getThreadNames = (threads, threadIds) => {
@@ -29,12 +31,23 @@ const Messenger = props => {
     // Content currently in the input box
     // Updated on <textarea> change
   const [inputContent, setInputContent] = useState("");
-
+  const [currentMessages, setCurrentMessages] = useState([] )
   
+  useEffect(()=>{
+    if (currentTabIndex >= openTabIds.length) {
+      setCurrentTabIndex(0);
+    }
+    else{
+      const currentThread = threads[openTabIds[currentTabIndex]]
+      console.log('in effect',threads,openTabIds,currentTabIndex,currentThread)
+      setCurrentMessages(currentThread.messages.map(id=>{return messages[id]}))
+    }
+  }, [messages,currentTabIndex,openTabIds,threads])
 
   //! Yes I mean to use id here. Read the code dummy
   const makeFocusTab = id => () => {
     const tabIndex = openTabIds.indexOf(id);
+    console.log(tabIndex)
     if (tabIndex < 0) {
       console.error('Tab Id not found: ', id)
     }
@@ -45,12 +58,12 @@ const Messenger = props => {
 
   // Updates openTabIndices with a new tab
   const makeOpenTab = id => () => {
-    if (openTabIds.indexOf(id) < 0) {
+    if (openTabIds.indexOf(parseInt(id)) < 0) {
       setCurrentTabIndex(openTabIds.length)
       setOpenTabIds([...openTabIds, parseInt(id)])
     }
     else{
-      setCurrentTabIndex(openTabIds.indexOf(id))
+      setCurrentTabIndex(openTabIds.indexOf(parseInt(id)))
     }
   
   }
@@ -68,20 +81,22 @@ const Messenger = props => {
       }
       else if (closedTabIndex < currentTabIndex) {
         setCurrentTabIndex(currentTabIndex - 1)
+        console.log('closedTabIndex<currentTabIndex',currentTabIndex - 1)
       }
       // Closing currently active tab pulls up the global thread.
       else if (closedTabIndex === currentTabIndex)  {
-        setCurrentTabIndex(0)
+        setCurrentTabIndex(currentTabIndex*0)
+        console.log('closedTabIndex===currentTabIndex', 0)
       }
       setOpenTabIds(openTabIds.filter(el=>el !== parseInt(id)))
 
      }
     
-    console.log('otis',openTabIds)
-
+     console.log('completely fucky statement',openTabIds,currentTabIndex,openTabIds[currentTabIndex],threads[openTabIds[currentTabIndex]] )
 
   return (
     <div className="messanger-container">
+    <p>{currentTabIndex}</p>
       <MessengerSidebar 
       openTabIds={openTabIds} 
       makeOpenTab={makeOpenTab} 
@@ -91,13 +106,13 @@ const Messenger = props => {
       users={props.users} />
       <div className="tab-display-container">
         <TabContainer
-          threads={props.threads}
+          threads={threads}
           makeCloseTab={makeCloseTab}
           makeFocusTab={makeFocusTab}
           currentTabIndex={currentTabIndex}
           openTabIds={openTabIds}
         />
-        <MessageContainer users={props.users} messages={threads[openTabIds[currentTabIndex]].messages.map(id=>{return messages[id]})} />
+        <MessageContainer users={users} messages={currentMessages} />
         <InputContainer
           inputContent={inputContent}
           onChangeFtn={(e)=>{setInputContent(e.target.value)}}

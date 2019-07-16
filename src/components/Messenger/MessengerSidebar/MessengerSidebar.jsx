@@ -17,9 +17,9 @@ const ThreadListItem = ({ thread, openTab, closeTab }) => {
     <div
       key={"thread-list-item-" + thread.id}
     >
-      <span>{thread.name}</span>
-      <button onClick={()=>openTab()}>O</button>
-      <button onClick={() => closeTab()}>x</button>
+      <span onClick={() => openTab()}>{thread.name}</span>
+      {/* <button disabled={thread.id === 0} onClick={()=>openTab()}>O</button> */}
+      <button disabled={thread.id === 0} onClick={() => closeTab()}>x</button>
     </div>
   );
 };
@@ -30,7 +30,6 @@ const MessengerSidebar = ({openTabIds, makeOpenTab,makeFocusTab, makeCloseTab,th
       <CollapsableList
         ListItemComponent={ThreadListItem}
         proplist={Object.keys(threads).map(id=> {
-          console.log(id);
           return {thread:threads[id], openTab:makeOpenTab(id), closeTab:makeCloseTab(id)}
         })}
         listName={"Conversations"}

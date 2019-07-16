@@ -4,9 +4,9 @@ const shortenThreadName = name => {
   return name.length < 15 ? name : name.slice(0, 12).trim() + "...";
 };
 
-const ThreadTab = ({thread, closeThread, focusTab}) => {
+const ThreadTab = ({thread, closeThread, focusTab, tabActive}) => {
   return (
-    <li onClick={() => focusTab()}>
+    <div className={tabActive ? "active-tab" : "tab"} onClick={() => focusTab()}>
       <div className={thread.hasUnread ? "tab-unread" : "tab-read"} />
       <p>{shortenThreadName(thread.name)}</p>
       
@@ -14,22 +14,20 @@ const ThreadTab = ({thread, closeThread, focusTab}) => {
         // at least one thread to exist at all times, so this prevents the close button
         // to appear for the global thread.
         //! ASSUMES GLOBAL THREAD HAS ID 0!!!!!!!
-        thread.id === 0 ? (
-        <div />
-      ) : (
-        <button className="close-tab-button" onClick={()=> closeThread()}>x</button>
-      )}
-    </li>
+        <button className="close-tab-button" disabled={thread.id===0} onClick={()=> closeThread()}>x</button>
+      }
+    </div>
   );
 };
 
-export const TabContainer = ({threads,openTabIds, makeCloseTab, makeFocusTab}) => {
-  let tabs = openTabIds.map(id=>{return threads[id]}).map(th => {
+export const TabContainer = ({threads,openTabIds, makeCloseTab, makeFocusTab,currentTabIndex}) => {
+  const tabs = openTabIds.map(id=>{return threads[id]}).map(th => {
     return <ThreadTab 
-                key={th.id} 
+                key={'thread-tab-'+th.id} 
                 thread={th} 
-                closeThread={makeCloseTab(th)} 
-                focusTab={makeFocusTab(th)} />;
+                closeThread={th.id !== 0 ? makeCloseTab(parseInt(th.id)) : ()=>{}}
+                tabActive={openTabIds[currentTabIndex] === th.id} 
+                focusTab={makeFocusTab(parseInt(th.id))} />;
   });
   return <div className="tab-container">{tabs}</div>;
 };
