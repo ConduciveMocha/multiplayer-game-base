@@ -18,7 +18,7 @@ def create_thread():
     # DB code here
     try:
         payload = request.get_json()
-        thread_id = payload.get('threadId', None)
+        thread_id = payload.get('id', None)
 
         # No Thread Id
         if thread_id is None:

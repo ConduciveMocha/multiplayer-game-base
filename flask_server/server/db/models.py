@@ -1,3 +1,4 @@
+# pylint: disable=no-member
 import re
 import logging
 
@@ -12,7 +13,6 @@ from server.auth import make_thread_hash, members_from_thread_hash
 from server.logging import make_logger
 
 model_log = make_logger(__name__)
-
 
 class CreatedTimestampMixin(object):
     created = db.Column(db.DateTime, default=datetime.utcnow)
@@ -53,7 +53,7 @@ class Thread(CreatedTimestampMixin, db.Model):
     name = db.Column(db.String(100))
 
     # members = db.relationship("User",secondary=user_thread,primaryjoin=(user_thread.c.thread_id==id),lazy='dynamic')
-    def __init__(self, members, thread_hash, create, thread_name=None):
+    def __init__(self, members, thread_hash, created, thread_name=None):
         if len(members) > 10:
             raise ValueError("List of members must have fewer than 10 elements")
 

@@ -62,5 +62,6 @@ def new_thread_request(thread):
 # TODO: !!!! Add auth method for sockets !!!!
 @socketio.on("SEND_MESSAGE", namespace="/message")
 def process_message(message):
+    print(message)
     logging.info("process message")
 

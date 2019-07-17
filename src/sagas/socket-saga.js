@@ -16,7 +16,8 @@ import testAction from "../actions/debug-actions";
 import * as MessageTypes from "../constants/action-types/message-types";
 import { appendJwt } from "../api";
 
-function connect(url) {
+// Returns a socket connection to url
+export function connect(url) {
   const socket = io(url);
   return new Promise(resolve => {
     socket.on("connect", () => {
@@ -36,14 +37,20 @@ function subscribe(socket) {
       emit(data);
     });
     socket.on("SOCKET_TEST_2", data => {
-      emit("SOCKET_TEST2");
+      console.log('Emitting SOCKET_TEST2')
+      emit("SOCKET_TEST_2");
       emit(data);
     });
+
+    
     //? What is this for? Source: https://github.com/kuy/redux-saga-chat-example/blob/master/src/client/sagas.js
-    return () => {};
+    return () => {
+
+    };
   });
 }
 
+// Generator that takes all actions
 function* read(socket) {
   const channel = yield call(subscribe, socket);
   while (true) {
@@ -70,16 +77,14 @@ function* flow() {
   while (true) {
     const socket = yield call(connect, "http://localhost:5000");
     const messageSocket = yield call(connect, "http://localhost:5000/message");
-    messageSocket.emit("NAMESPACE_TEST");
-    socket.emit("SEND_MESSAGE", { data: "data" });
+    messageSocket.emit("SOCKET_TEST_2");
+    messageSocket.emit("NAMESPACE_TEST", { data: "data" });
     const task = yield fork(handleIO, socket);
     const mTask = yield fork(handleIO, messageSocket);
-    console.log("HERE!");
-    let wontBeCalled = yield take("NOTHING");
-    yield cancel(task);
-    socket.emit("NOTHING");
+    // yield cancel(task);
   }
 }
+
 
 export default function* socketSaga() {
   yield fork(flow);

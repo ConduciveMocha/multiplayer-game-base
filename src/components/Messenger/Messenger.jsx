@@ -33,21 +33,22 @@ const Messenger = props => {
   const [inputContent, setInputContent] = useState("");
   const [currentMessages, setCurrentMessages] = useState([] )
   
+  // Synchronizes the displayed messages and the currentTabIndex. 
   useEffect(()=>{
+    //! DONT TOUCH THIS IF STATEMENT. AVOIDS BUG WHERE currentTabIndex IS OUT OF RANGE
+    // If currentTabIndex is out of range, set the open tab to the global thread
     if (currentTabIndex >= openTabIds.length) {
       setCurrentTabIndex(0);
     }
     else{
       const currentThread = threads[openTabIds[currentTabIndex]]
-      console.log('in effect',threads,openTabIds,currentTabIndex,currentThread)
       setCurrentMessages(currentThread.messages.map(id=>{return messages[id]}))
     }
   }, [messages,currentTabIndex,openTabIds,threads])
 
-  //! Yes I mean to use id here. Read the code dummy
+  // Creates function to scope to a tab. Used by the thread sidebar list
   const makeFocusTab = id => () => {
     const tabIndex = openTabIds.indexOf(id);
-    console.log(tabIndex)
     if (tabIndex < 0) {
       console.error('Tab Id not found: ', id)
     }
@@ -68,7 +69,7 @@ const Messenger = props => {
   
   }
     const makeCloseTab = id => () =>{
-      
+      //? Find out where i need to parseInt and where not   
       const closedTabIndex = openTabIds.indexOf(parseInt(id));
 
       // Controls what tab will appear when the current tab is closed
@@ -92,11 +93,9 @@ const Messenger = props => {
 
      }
     
-     console.log('completely fucky statement',openTabIds,currentTabIndex,openTabIds[currentTabIndex],threads[openTabIds[currentTabIndex]] )
 
   return (
     <div className="messanger-container">
-    <p>{currentTabIndex}</p>
       <MessengerSidebar 
       openTabIds={openTabIds} 
       makeOpenTab={makeOpenTab} 
