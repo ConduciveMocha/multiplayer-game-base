@@ -16,8 +16,7 @@ from server.redis_cache.user_cache import (
     user_from_sid,
     user_from_cache,
 )
-from server.redis_cache.thread_cache import check_for_thread, new_thread, get_thread_id
-from server.redis_cache.message_cache import message_by_id
+from server.redis_cache.message_cache import get_message_by_id
 from server.logging import make_logger, log_socket
 
 try:
@@ -29,7 +28,6 @@ logger = make_logger("ConnectionEvents")
 
 
 @socketio.on("LOGIN_IDENTIFICATION")
-@log_socket
 def user_login(user_id):
 
     logged_user = query_user_by_id(user_id)
@@ -50,7 +48,6 @@ def user_login(user_id):
 
 # TODO: add persistance of messages
 @socketio.on("disconnect")
-@log_socket
 def handle_disconect():
     logger.info(f"User with SID {request.sid} has disconnected. Cleaning up.")
     try:
@@ -62,8 +59,8 @@ def handle_disconect():
 
 # ? Maybe use user_login as a callback?
 @socketio.on("connect")
-@log_socket
 def handle_connect():
-    socketio.emit("CONNECTED")
+    # socketio.emit("CONNECTED")
     logger.info(f"URL:{request.url}")
     logger.debug("Event: connect")
+    

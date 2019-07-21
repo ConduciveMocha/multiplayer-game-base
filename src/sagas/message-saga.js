@@ -12,12 +12,17 @@ import {appendJwt} from '../api'
 import {connect} from './socket-saga'
 
 
+const MESSAGING_URL = 'http://localhost:5000/message'
+
+
 function subscribeToMessageChannel(mSocket) {
     return eventChannel(emit => {
         // Socket event handlers go here
-        mSocket.on("RECIEVE_MESSAGE", (payload)=>{})
+        mSocket.on("NEW_MESSAGE", (payload)=>{
+
+        })
         mSocket.on("MESSAGE_FAILED",(payload)=>{})
-        mSocket.on("MESSAGE_SUCCESS", (payload)=>{});
+
         mSocket.on("")
         // Unsubscribe to Socket
         return () => {}
@@ -43,6 +48,6 @@ function* write(mSocket) {
 
 function* messagingFlow() {
     while(true) {
-        const socket = yield call()   
+        const socket = yield call(connect,)   
     }
 }

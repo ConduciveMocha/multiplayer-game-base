@@ -12,68 +12,41 @@ from server.cachemanager import poolman
 bp = Blueprint('message', __name__, url_prefix='/message')
 
 
-@bp.route('/createthread', methods=['POST'])
+def match_users_to_threads(user_list,thread_list):
+    for thread in thread_list:
+        if all(user in thread.users for user in user_list) \
+        and len(user_list) == len(thread.users):
+            return thread        
+    return None
+
+
+@bp.route('/requestthread', methods=['POST'])
 @require_auth
-def create_thread():
-    # DB code here
+def request_thread():
     try:
         payload = request.get_json()
-        thread_id = payload.get('id', None)
+        requesting_user_id = payload.get('user', None)
+    except AttributeError:
+        return jsonify(error="No payload passed"), 400
+    
+    if not requesting_user_id:
+        return jsonify(error='No user id'), 400
 
-        # No Thread Id
-        if thread_id is None:
-            return jsonify(error="Needs thread id")
 
-        # User needs to be a member of the thread
-        member_ids = members_from_thread_id(thread_id)
-        if int(payload.get('userId', -1)) not in member_ids:
-            return jsonify(error="Authentication error")
+    try:
+        requesting_user = db_session.query(User).filter(User.id == requesting_user).one_or_none()
+        requesting_user_threads = requesting_user.message_threads
+    except AttributeError as e:
+        return jsonify(error='User was not found'), 400
 
-        with poolman as r:
-            if r.exists(f'thread:{thread_id}'):
-                return jsonify(message="Thread active")
+    thread_members = payload.get('members', [])
+    if len(thread_members) == 0:
+        return jsonify(error='No thread members passed'), 400
 
-        # Tries to get thread from db
-        thread = db_session.query(Thread).filter(
-            Thread.id == thread_id).one_or_none()
-        if thread is None:
 
-            if len(member_ids) > 10:
-                return jsonify(error="Thread too large")
+    requested_thread = match_users_to_threads(thread_members, thread_list)
 
-            members = db_session.query(User).filter(User.id.in_(member_ids))
-
-            if len(members) != len(member_ids):
-                return jsonify(error="Invalid threadId")
-
-            thread = Thread(
-                members, thread_name=payload.get('threadName', None))
-            db_session.add(thread)
-            db_session.commit()
-
-    except Exception as e:
-        return jsonify(error=str(type(e)))
-
-    # TODO Add lock?
-    with poolman.pipe() as pipe:
-        time_created = time.time()
-
-        # Sets thread metadata
-        pipe.hmset(f'thread:{thread_id}', {'members': ':'.join(
-            member_ids), 'created': time_created})
-
-        # Creates a message Zet
-        pipe.zadd(f'thread:{thread_id}:messages', time_created, "THREAD_START")
-
-        # Adds thread to user's active threads
-        for member_id in member_ids:
-            if pipe.exists(f'user:{member_id}'):
-                pipe.zadd(f'user:{member_id}:threads', time_created, thread_id)
-
-        pipe.execute()
-
-    # TODO WEBSOCKET CREATE THREAD CODE HERE
-
+    
 
 @bp.route('/history')
 def thread_history():

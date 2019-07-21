@@ -6,21 +6,25 @@ from server.logging import make_logger, log_socket
 logger = make_logger(__name__)
 
 try:
+    # For the love of everything that is holy, do not touch 
+    # this line of code. You will fuck away another entire
+    # night trying to figure out what the fuck is wrong
     from __main__ import socketio
 except:
     from app import socketio
     logger.error("Failed to import socketio from __main__")
 
-
-@socketio.on("SOCKET_TEST", namespace="/")
-def test_connection():
+print('here')
+@socketio.on("SOCKET_TEST",namespace="/")
+def test_connection(data):
+    logger.debug('WHAT THE EVER-LIVING FLUCK')
     socketio.emit("TEST_SUCCESSFUL", "test_connection", namespace="/", broadcast=True)
-
-
+    logger.debug("FUCK FUCK FUCK")
+    
 @socketio.on("NAMESPACE_TEST", namespace="/message")
-@log_socket
 def test_namespace(data):
-    logger.debug(f"Namespace connection good")
+
+    logger.debug(f"Namespace connection good ")
 
 
     socketio.emit(

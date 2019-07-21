@@ -27,8 +27,8 @@ def get_online_users(r):
 @global_poolman
 def user_from_cache(r, user_id):
     try:
-        exists = r.exists(f"user:{user_id}")
-        if exists:
+        
+        if r.exists(f"user:{user_id}"):
             return r.hget(f"user:{user_id}", "username")
         else:
             return None

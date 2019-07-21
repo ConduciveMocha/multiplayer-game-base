@@ -3,6 +3,7 @@ import logging
 import logging.config
 import sys
 
+
 from celery import Celery
 from flask import Flask, request, make_response, redirect, g
 from flask_cors import CORS
@@ -64,7 +65,7 @@ def create_app(conf=None, log=False, return_ext=None):
     # Configures socketio function wrappers
     from server.socketevents.socketutils import configure_socket_functions
 
-    configure_socket_functions(config, logger=logger)
+    # configure_socket_functions(config, logger=logger)
 
     # Socket event imports
     #! Dont move this or it will break things

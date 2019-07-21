@@ -231,8 +231,13 @@ def log_socket(func):
         socket_logger.debug(
             f"Recieved socket event: `{func.__name__}`{print_args}{print_kwargs}"
         )
-        func_return = func(*args, **kwargs)
+        # func_return = func(*args, **kwargs)
         socket_logger.debug(f"Returning from event: `{func.__name__}`")
+    #@wraps(func)
+    #def wrapper(*args,**kwargs):
+    #   return None
+
+
 
     return wrapper
 

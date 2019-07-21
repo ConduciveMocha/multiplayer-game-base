@@ -17,22 +17,40 @@ import * as MessageTypes from "../constants/action-types/message-types";
 import { appendJwt } from "../api";
 
 // Returns a socket connection to url
-export function connect(url) {
-  const socket = io(url);
+export function connect() {
+  const socket = io.connect('http://localhost:5000')// you need to explicitly tell it to use websockets});
   return new Promise(resolve => {
     socket.on("connect", () => {
-      socket.emit("SOCKET_TEST");
+      //socket.emit("TEST",{'shouldnotappear':1, 'url':url});
       resolve(socket);
     });
   });
 }
 
+export function messageConnect() {
+  const socket = io('http://localhost:5000/message');
+  return new Promise(resolve => {
+    socket.on("connect", () => {
+      //socket.emit("TEST",{'shouldnotappear':1, 'url':url});
+      resolve(socket);
+    });
+  });
+}
+// export function connect(url) {
+//   const socket = io(url);
+//   return new Promise(resolve => {
+//     socket.on("connect", () => {
+//       //socket.emit("TEST",{'shouldnotappear':1, 'url':url});
+//       resolve(socket);
+//     });
+//   });
+// }
 function subscribe(socket) {
   return eventChannel(emit => {
-    socket.on("MESSAGE SENT", data => {
+    socket.on("test", data => {
       console.log(data);
       console.log("MESSAGE_SENT");
-      socket.emit("SEND_MESSAGE", "test");
+      // socket.emit("SEND_MESSAGE", "test");
 
       emit(data);
     });
@@ -56,7 +74,7 @@ function* read(socket) {
   while (true) {
     let action = yield take(channel);
     console.log("read:", action);
-    yield put(testAction(action));
+    // yield put(testAction(action));
   }
 }
 
@@ -74,18 +92,31 @@ function* handleIO(socket) {
 }
 
 function* flow() {
-  while (true) {
-    const socket = yield call(connect, "http://localhost:5000");
-    const messageSocket = yield call(connect, "http://localhost:5000/message");
-    messageSocket.emit("SOCKET_TEST_2");
-    messageSocket.emit("NAMESPACE_TEST", { data: "data" });
-    const task = yield fork(handleIO, socket);
-    const mTask = yield fork(handleIO, messageSocket);
-    // yield cancel(task);
+  // const task = yield fork(handleIO, socket);
+  while (true){
+    // const messageSocket = yield call(messageConnect);
+    const socket = yield call(connect);
+    console.log('here')
+    console.log('Here')
+    console.log('HERE')
+    const task = yield fork(handleIO, socket)
+    setTimeout(1000)
+    socket.emit("SOCKET_TEST",{data:'test'})
+    // const mTask = yield fork(handleIO, messageSocket);
+    
+    console.log('HERE ')
+    // messageSocket.emit('NAMESPACE_TEST', {'data':'data'})
+    yield take ("NOTHIng")
+    // messageSocket.emit('NAMESPACE_TEST', {'data':'data'})
+    // socket.emit('SOCKET_TEST')
+    // messageSocket.emit("TEST", {'test':2});
+    
   }
+
 }
 
 
 export default function* socketSaga() {
   yield fork(flow);
 }
+//

@@ -17,11 +17,6 @@ import './Messenger.css'
 
 const Messenger = props => {
   // Pulls threads, messages from redux state
-  // const { threads, messages,users } = useSelector(state => ({
-  //   threads: state.threads,
-  //   messages: state.messages,
-  //   users: state.users
-  // }));
   const {threads,messages,users} = {threads:props.threads,messages:props.messages, users:props.users}
 
   // List of the thread ids of the open tabs
@@ -68,30 +63,30 @@ const Messenger = props => {
     }
   
   }
-    const makeCloseTab = id => () =>{
-      //? Find out where i need to parseInt and where not   
-      const closedTabIndex = openTabIds.indexOf(parseInt(id));
+  const makeCloseTab = id => () =>{
+    //? Find out where i need to parseInt and where not   
+    const closedTabIndex = openTabIds.indexOf(parseInt(id));
 
-      // Controls what tab will appear when the current tab is closed
-      // Attempts to mimic chromes tab closing behavior
-      if(closedTabIndex < 0 ) {
-        console.error('Tab Id not found: ', id);
-      }
-      else if (closedTabIndex === 0) {
-        console.error('Trying to close the global thread. Youre not supposed to be able to do this...')
-      }
-      else if (closedTabIndex < currentTabIndex) {
-        setCurrentTabIndex(currentTabIndex - 1)
-        console.log('closedTabIndex<currentTabIndex',currentTabIndex - 1)
-      }
-      // Closing currently active tab pulls up the global thread.
-      else if (closedTabIndex === currentTabIndex)  {
-        setCurrentTabIndex(currentTabIndex*0)
-        console.log('closedTabIndex===currentTabIndex', 0)
-      }
-      setOpenTabIds(openTabIds.filter(el=>el !== parseInt(id)))
+    // Controls what tab will appear when the current tab is closed
+    // Attempts to mimic chromes tab closing behavior
+    if(closedTabIndex < 0 ) {
+      console.error('Tab Id not found: ', id);
+    }
+    else if (closedTabIndex === 0) {
+      console.error('Trying to close the global thread. Youre not supposed to be able to do this...')
+    }
+    else if (closedTabIndex < currentTabIndex) {
+      setCurrentTabIndex(currentTabIndex - 1)
+      console.log('closedTabIndex<currentTabIndex',currentTabIndex - 1)
+    }
+    // Closing currently active tab pulls up the global thread.
+    else if (closedTabIndex === currentTabIndex)  {
+      setCurrentTabIndex(currentTabIndex*0)
+      console.log('closedTabIndex===currentTabIndex', 0)
+    }
+    setOpenTabIds(openTabIds.filter(el=>el !== parseInt(id)))
 
-     }
+  }
     
 
   return (
