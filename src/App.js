@@ -30,7 +30,7 @@ class App extends Component {
 
       </Router> */}
 
-        <Messenger users={mockUsers} threads={mockThreads} messages={mockMessages} />
+        <Messenger />
       </Provider>
     );
   }

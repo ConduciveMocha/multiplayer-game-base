@@ -1,6 +1,6 @@
 // ActionTypes for messaging
 export const SEND_MESSAGE = "SEND_MESSAGE";
-export const RECIEVE_MESSAGE = "RECIEVE_MESSAGE";
+export const RECEIVE_MESSAGE = "RECEIVE_MESSAGE";
 export const MESSAGE_HAS_FAILED = "MESSAGE_FAILED";
 export const MESSAGE_WAS_RECIEVED = "MESSAGE_RECIEVED";
 export const MESSAGE_WAS_READ = "MESSAGE_READ";

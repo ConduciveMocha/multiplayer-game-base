@@ -225,7 +225,11 @@ class PoolManager:
 def global_poolman(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        poolman = g.poolman
+        try:
+            poolman = g.poolman
+        except AttributeError:
+            cm_logger.error(f"{dir(g)}")
+            raise AttributeError
         with poolman as r:
             return func(r, *args, **kwargs)
 
@@ -235,7 +239,11 @@ def global_poolman(func):
 def global_pipe(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        poolman = g.poolman
+        try:
+            poolman = g.poolman
+        except AttributeError:
+            cm_logger.error(f'{dir(g)}')
+            raise AttributeError
         with poolman.pipe() as pipe:
             return func(pipe, *args, **kwargs)
 

@@ -1,6 +1,7 @@
 import { eventChannel, END } from "redux-saga";
 import {
   take,
+  takeEvery,
   put,
   call,
   all,
@@ -21,23 +22,21 @@ export function connect() {
   const socket = io.connect('http://localhost:5000')// you need to explicitly tell it to use websockets});
   return new Promise(resolve => {
     socket.on("connect", () => {
-      //socket.emit("TEST",{'shouldnotappear':1, 'url':url});
       resolve(socket);
     });
   });
 }
 
 export function messageConnect() {
-  const socket = io('http://localhost:5000/message');
+  const socket = io('http://localhost:5000/message',{forceNew:true});
   return new Promise(resolve => {
     socket.on("connect", () => {
-      //socket.emit("TEST",{'shouldnotappear':1, 'url':url});
       resolve(socket);
     });
   });
 }
-// export function connect(url) {
-//   const socket = io(url);
+// export function connect(url,opts) {
+//   const socket = io(url,opts);
 //   return new Promise(resolve => {
 //     socket.on("connect", () => {
 //       //socket.emit("TEST",{'shouldnotappear':1, 'url':url});
@@ -48,20 +47,15 @@ export function messageConnect() {
 function subscribe(socket) {
   return eventChannel(emit => {
     socket.on("test", data => {
-      console.log(data);
-      console.log("MESSAGE_SENT");
-      // socket.emit("SEND_MESSAGE", "test");
 
-      emit(data);
-    });
-    socket.on("SOCKET_TEST_2", data => {
-      console.log('Emitting SOCKET_TEST2')
-      emit("SOCKET_TEST_2");
-      emit(data);
-    });
 
+      // emit(data);
+    });
+    socket.on(MessageTypes.RECEIVE_MESSAGE, message => {
+      console.log('Recieved Message')
+      emit(MessageActions.recieveMessage(message));
+    });
     
-    //? What is this for? Source: https://github.com/kuy/redux-saga-chat-example/blob/master/src/client/sagas.js
     return () => {
 
     };
@@ -73,16 +67,25 @@ function* read(socket) {
   const channel = yield call(subscribe, socket);
   while (true) {
     let action = yield take(channel);
-    console.log("read:", action);
-    // yield put(testAction(action));
+    yield put(action)
+    
   }
 }
 
 function* write(socket) {
+
+  function sendMessage(action){
+    socket.emit(MessageTypes.SEND_MESSAGE,{...action, sender:0}) ;
+    console.log('Emitted event through socket in sendMessage')
+    console.log('action object', action)
+    // yield put({type:"MESSAGE_SENT",message:action.message})
+  }
+
+
   while (true) {
-    //? Modified this, might be wrong
-    const { payload } = yield take(MessageTypes.SEND_MESSAGE);
-    socket.emit("message", payload);
+    let action = yield take(MessageTypes.SEND_MESSAGE);
+    sendMessage(action) 
+
   }
 }
 
@@ -92,25 +95,16 @@ function* handleIO(socket) {
 }
 
 function* flow() {
-  // const task = yield fork(handleIO, socket);
   while (true){
-    // const messageSocket = yield call(messageConnect);
     const socket = yield call(connect);
-    console.log('here')
-    console.log('Here')
-    console.log('HERE')
-    const task = yield fork(handleIO, socket)
-    setTimeout(1000)
+    const messageSocket = yield call(messageConnect);
+    // const task = yield fork(handleIO, socket)
+    const mTask = yield fork(handleIO, messageSocket);
+    console.log('HandleIO Forked')
     socket.emit("SOCKET_TEST",{data:'test'})
-    // const mTask = yield fork(handleIO, messageSocket);
     
-    console.log('HERE ')
-    // messageSocket.emit('NAMESPACE_TEST', {'data':'data'})
     yield take ("NOTHIng")
-    // messageSocket.emit('NAMESPACE_TEST', {'data':'data'})
-    // socket.emit('SOCKET_TEST')
-    // messageSocket.emit("TEST", {'test':2});
-    
+
   }
 
 }

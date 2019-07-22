@@ -1,4 +1,6 @@
 import * as MessageTypes from "../constants/action-types/message-types";
+import { mockThreads,mockMessages,mockUsers } from "../utils/messaging-mock";
+
 const MESSAGE_STATUS = {
   SENT: 2,
   RECIEVED: 1,
@@ -6,17 +8,21 @@ const MESSAGE_STATUS = {
 };
 
 const messengerInitialState = {
-  threads: {},
-  users: {},
-  onlineUserIds: [],
-  friendsListIds: [],
-  messages: {}
+  threads: mockThreads,
+  users: mockUsers,
+  onlineUserIds: [1,2,3,4],
+  friendsListIds: [1,2],
+  messages: mockMessages
 };
 
 export default function messagingReducer(
   state = messengerInitialState,
   action
 ) {
+  let now = new Date()
+  console.log('Messaging Reducer triggered at: ',now.getHours(),now.getMinutes(),now.getSeconds() )
+  console.log('action',action)
+
   switch (action.type) {
     case MessageTypes.USER_JOINED:
       return {
@@ -33,7 +39,7 @@ export default function messagingReducer(
       );
       return { ...removedUserState, onlineUserIds: updatedOnlineUserIds };
 
-    case MessageTypes.RECIEVE_MESSAGE:
+    case MessageTypes.RECEIVE_MESSAGE:
       return {
         ...state,
         messages: {
@@ -50,25 +56,25 @@ export default function messagingReducer(
         }
       };
 
-    case MessageTypes.SEND_MESSAGE:
-      return {
-        ...state,
-        messages: {
-          ...state.messages,
-          [action.message.messageId]: {
-            ...action.message,
-            status: MESSAGE_STATUS.SENT
-          } // Adds message to message hash
-        },
-        threads: {
-          ...state.threads,
-          [action.message.threadId]: [
-            // Adds MessageId to appropriate thread
-            ...state[action.message.threadId],
-            action.message.messageId
-          ]
-        }
-      };
+    // case MessageTypes.SEND_MESSAGE:
+    //   return {
+    //     ...state,
+    //     messages: {
+    //       ...state.messages,
+    //       [action.message.messageId]: {
+    //         ...action.message,
+    //         status: MESSAGE_STATUS.SENT
+    //       } // Adds message to message hash
+    //     },
+    //     threads: {
+    //       ...state.threads,
+    //       [action.message.threadId]: [
+    //         // Adds MessageId to appropriate thread
+    //         ...state[action.message.threadId],
+    //         action.message.messageId
+    //       ]
+    //     }
+    //   };
 
     case MessageTypes.MESSAGE_HAS_FAILED:
       return {

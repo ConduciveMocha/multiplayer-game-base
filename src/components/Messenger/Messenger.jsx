@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
+import { sendMessage } from '../../actions/message-actions'
 import MessengerSidebar from "./MessengerSidebar";
 import TabContainer from "./TabDisplay/TabContainer";
 import MessageContainer from "./TabDisplay/MessageContainer";
@@ -110,25 +111,25 @@ const Messenger = props => {
         <InputContainer
           inputContent={inputContent}
           onChangeFtn={(e)=>{setInputContent(e.target.value)}}
-          sendFtn={props.sendMessage}
+          sendFtn={()=>{
+            props.dispatchMessage(openTabIds[currentTabIndex],inputContent );
+            setInputContent("");
+          }}
         />
       </div>
     </div>
   );
 };
-export default Messenger;
-// export default connect(
-//   state=>(
-//   {
-//     messages: state.messages,
-//     threads: state.threads,
-//     users:state.users
-//   }  
-//   ),
-//   dispatch =>{
-//     return{
-//       sendMessage: (msg) => dispatch({type:'MESSAGE_SENT', message:msg})
-//     }
-//   }
 
-// )(Messenger);
+export default connect(
+  state=>({
+    messages: state.messaging.messages,
+    threads: state.messaging.threads,
+    users:state.messaging.users
+  }),
+  dispatch =>{
+    return {
+      dispatchMessage: (thread,content) => dispatch(sendMessage(thread,content))
+    }
+  }
+)(Messenger);

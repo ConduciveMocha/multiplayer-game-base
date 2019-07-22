@@ -28,8 +28,9 @@ logger = make_logger(__name__)
 logger.debug('Defining socket methods')
 
 # TODO: !!!! Add auth method for sockets !!!!
-@socketio.on("NEW_MESSAGE", namespace="/message")
+@socketio.on("SEND_MESSAGE", namespace="/message")
 def new_message(data):
+    logger.info(f'SEND_MESSAGE Recieved {data}')
     thread_id = data['thread']
     try:
         message_dict = create_message_dict(data['content'], data['sender'],thread_id)

@@ -1,18 +1,10 @@
 import * as MessageTypes from "../constants/action-types/message-types";
 
-// TODO: Add formatting info to action object
-/**
- * Dispatched when a the user sends a message to the server.
- * @param {int} threadId - id of thread message belongs to
- * @param {string} content - message text
- */
-export const sendMessage = (threadId, content, fmt, color) => {
+export const sendMessage = (thread, content,) => {
   return {
     type: MessageTypes.SEND_MESSAGE,
-    threadId,
+    thread,
     content,
-    fmt,
-    color,
     timestamp: new Date().getTime()
   };
 };
@@ -23,7 +15,8 @@ export const sendMessage = (threadId, content, fmt, color) => {
  */
 export const recieveMessage = message => {
   return {
-    type: MessageTypes.RECIEVE_MESSAGE,
+    type: MessageTypes.RECEIVE_MESSAGE,
+  
     message
   };
 };

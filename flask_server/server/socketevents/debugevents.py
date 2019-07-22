@@ -17,14 +17,13 @@ except:
 print('here')
 @socketio.on("SOCKET_TEST",namespace="/")
 def test_connection(data):
-    logger.debug('WHAT THE EVER-LIVING FLUCK')
-    socketio.emit("TEST_SUCCESSFUL", "test_connection", namespace="/", broadcast=True)
-    logger.debug("FUCK FUCK FUCK")
+    logger.debug('SOCKET_TEST Recieved')
+    socketio.emit("test", {'test':'test_successful'},  broadcast=False)
     
 @socketio.on("NAMESPACE_TEST", namespace="/message")
 def test_namespace(data):
 
-    logger.debug(f"Namespace connection good ")
+    logger.debug(f"Namespace connection good {data}")
 
 
     socketio.emit(
