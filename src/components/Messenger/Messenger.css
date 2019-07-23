@@ -27,8 +27,8 @@ div.recieved {
   overflow: auto;
   height: 250px;
 }
-.container {
-  width: 60%;
+.messanger-container {
+  width: 75%;
   display: flex;
   margin-top: 30%;
   margin-left: 20%;
@@ -71,12 +71,16 @@ div.recieved {
   margin: auto;
 }
 
-.sidebar {
-  width: 60%;
-  height: 365p;
+.messenger-sidebar {
+  width: 10%;
+  /* width: 10000px; */
+  height: 365;
   overflow: auto;
   background-color: orange;
 }
+
+
+
 [id^="friends"],
 [id^="friends"] ~ .collapse-list-items,
 [id^="friends"] + label span + span,

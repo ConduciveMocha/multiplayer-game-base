@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import { connect } from "react-redux";
 import { sendMessage } from '../../actions/message-actions'
 import MessengerSidebar from "./MessengerSidebar";
@@ -17,17 +17,20 @@ import './Messenger.css'
 
 
 const Messenger = props => {
+
+  
   // Pulls threads, messages from redux state
   const {threads,messages,users} = {threads:props.threads,messages:props.messages, users:props.users}
-
+  
   // List of the thread ids of the open tabs
   const [openTabIds, setOpenTabIds] = useState([0]);
   const [currentTabIndex,setCurrentTabIndex] = useState(0)
   
-    // Content currently in the input box
-    // Updated on <textarea> change
+  // Content currently in the input box
+  // Updated on <textarea> change
   const [inputContent, setInputContent] = useState("");
   const [currentMessages, setCurrentMessages] = useState([] )
+  const scrollRef = useRef(null)
   
   // Synchronizes the displayed messages and the currentTabIndex. 
   useEffect(()=>{
@@ -39,6 +42,11 @@ const Messenger = props => {
     else{
       const currentThread = threads[openTabIds[currentTabIndex]]
       setCurrentMessages(currentThread.messages.map(id=>{return messages[id]}))
+    }
+    try{    scrollRef.current.scrollTop(Number.MAX_SAFE_INTEGER)
+    }
+    catch (error){
+      
     }
   }, [messages,currentTabIndex,openTabIds,threads])
 
@@ -107,7 +115,7 @@ const Messenger = props => {
           currentTabIndex={currentTabIndex}
           openTabIds={openTabIds}
         />
-        <MessageContainer users={users} messages={currentMessages} />
+        <MessageContainer users={users} messages={currentMessages} scrollRef={scrollRef} />
         <InputContainer
           inputContent={inputContent}
           onChangeFtn={(e)=>{setInputContent(e.target.value)}}

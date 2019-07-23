@@ -10,10 +10,10 @@ const Message = ({text, sender}) => {
   );
 };
  
-const MessageContainer = ({users,messages}) => {
+const MessageContainer = ({users,messages, scrollRef}) => {
   
   let messageComponants =  messages.map(m => {
-    return <Message key={m.id} text={m.content} sender={m.sender} />;
+    return <Message key={m.id} text={m.content} sender={m.sender} ref={scrollRef} />;
   });
   return <div className="message-container">{messageComponants}</div>;
 };

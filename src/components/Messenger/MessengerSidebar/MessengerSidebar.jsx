@@ -26,7 +26,7 @@ const ThreadListItem = ({ thread, openTab, closeTab }) => {
 
 const MessengerSidebar = ({openTabIds, makeOpenTab,makeFocusTab, makeCloseTab,threads,users}) => {
   return (
-    <div>
+    <div className={"messenger-sidebar"}>
       <CollapsableList
         ListItemComponent={ThreadListItem}
         proplist={Object.keys(threads).map(id=> {
