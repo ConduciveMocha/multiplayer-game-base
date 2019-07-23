@@ -228,8 +228,7 @@ def global_poolman(func):
         try:
             poolman = g.poolman
         except AttributeError:
-            cm_logger.error(f"{dir(g)}")
-            raise AttributeError
+            poolman = PoolManager(host='localhost',port=6379, db=0)
         with poolman as r:
             return func(r, *args, **kwargs)
 
@@ -242,8 +241,8 @@ def global_pipe(func):
         try:
             poolman = g.poolman
         except AttributeError:
-            cm_logger.error(f'{dir(g)}')
-            raise AttributeError
+            poolman = PoolManager(host='localhost',port=6379, db=0)
+
         with poolman.pipe() as pipe:
             return func(pipe, *args, **kwargs)
 

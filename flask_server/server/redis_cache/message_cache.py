@@ -21,16 +21,19 @@ THREAD_START = "START"
 
 logger = make_logger(__name__)
 
-def create_message_dict(content,sender,thread):
-    return {'content':content,'sender':sender, 'thread':thread}
-
 @global_pipe
 def create_message(pipe,message_dict):
-    message_id = pipe.get('message:next-id')
-    pipe.incr('message:next-id')
+    message_id = message_dict['id']
     pipe.hmset(f'message:{message_id}',message_dict)
     pipe.lpush(f"thread:{message_dict['thread']}:messages", message_id)
     pipe.execute()
+
+
+@global_poolman
+def get_next_id(r):
+    message_id = int(r.get('message:next-id'))
+    r.incr('message:next-id')
+    return message_id
 
 @global_poolman
 def get_message_by_id(r,message_id):
@@ -75,3 +78,6 @@ def create_thread(pipe,thread_dict,members,messages=[]):
     pipe.lpush(f'thread:{thread_id}:messages', THREAD_START)
     pipe.execute()
     return thread_id
+
+def create_message_dict(content,sender,thread):
+    return {'content':content,'sender':sender, 'thread':thread,'id':get_next_id()}

@@ -40,41 +40,19 @@ export default function messagingReducer(
       return { ...removedUserState, onlineUserIds: updatedOnlineUserIds };
 
     case MessageTypes.RECEIVE_MESSAGE:
-      return {
-        ...state,
-        messages: {
-          ...state.messages,
-          [action.message.messageId]: action.message // Adds message to message hash
-        },
-        threads: {
-          ...state.threads,
-          [action.message.threadId]: [
-            // Adds MessageId to appropriate thread
-            ...state[action.message.threadId],
-            action.message.messageId
-          ]
-        }
-      };
+      console.log('Messaging reducer:', 'RECIEVE_MESSAGE',action)
+      console.log('state', state)
+      let message = action.message;
+      let updatedThread = {...state.threads[action.message.thread]}
+      updatedThread.messages = [...updatedThread.messages,message.id]
+      let newState = {
+        ...state, 
+        messages:{...state.messages,[message.id]:message},
+        threads:{...state.threads, [action.message.thread]:updatedThread} 
+      }
+      console.log('new state', newState) 
+      return newState
 
-    // case MessageTypes.SEND_MESSAGE:
-    //   return {
-    //     ...state,
-    //     messages: {
-    //       ...state.messages,
-    //       [action.message.messageId]: {
-    //         ...action.message,
-    //         status: MESSAGE_STATUS.SENT
-    //       } // Adds message to message hash
-    //     },
-    //     threads: {
-    //       ...state.threads,
-    //       [action.message.threadId]: [
-    //         // Adds MessageId to appropriate thread
-    //         ...state[action.message.threadId],
-    //         action.message.messageId
-    //       ]
-    //     }
-    //   };
 
     case MessageTypes.MESSAGE_HAS_FAILED:
       return {

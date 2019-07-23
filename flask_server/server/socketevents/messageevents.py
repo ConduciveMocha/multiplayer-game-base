@@ -16,7 +16,7 @@ from server.redis_cache.user_cache import (
     user_from_sid,
     user_from_cache,
 )
-from server.redis_cache.message_cache import get_message_by_id, create_message_dict,create_message,check_if_thread_exists, create_thread
+from server.redis_cache.message_cache import get_message_by_id, create_message_dict,create_message,check_if_thread_exists, create_thread,get_next_id
 from server.logging import make_logger
 
 try:
@@ -32,22 +32,21 @@ logger.debug('Defining socket methods')
 def new_message(data):
     logger.info(f'SEND_MESSAGE Recieved {data}')
     thread_id = data['thread']
+    sender_id = data['sender']
+    content = data['content']
     try:
-        message_dict = create_message_dict(data['content'], data['sender'],thread_id)
+        message_dict = create_message_dict(content,sender_id,thread_id)
         create_message(message_dict)
     except KeyError as e:
         logger.error(e)
         return jsonify(error='Malformed request'), 400
-
-    emit('NEW_MESSAGE',message_dict, room=thread_id)
+    
+    logger.info(f"{message_dict}")
+    emit('NEW_MESSAGE',message_dict)
 
 
 @socketio.on("TEST",namespace='/message')
 def test_messaging2():
     logger.debug(f'/message socket test triggered {request.sid}')
-    # logger.info(f'{request.url}')
-    # for x in dir(request):
-    #     logger.info(str(x))
-    # # logger.info(f'{request.data}')
     emit('test', {'data':'data'})
 

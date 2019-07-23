@@ -49,62 +49,62 @@ export const mockMessages = {
     1:{
         id:1,
         sender:1,
-        text:'test'
+        content:'test'
     },
     2:{
         id:2,
         sender:2,
-        text:'test2'
+        content:'test2'
     },
     3:{
         id:3,
         sender:1,
-        text:'test3'
+        content:'test3'
     },
     4:{
         id:4,
         sender:2,
-        text:'test4'
+        content:'test4'
     },
     5:{
         id:5,
         sender:3,
-        text:'test5'
+        content:'test5'
     },
     6:{
         id:6,
         sender:2,
-        text:"test6"
+        content:"test6"
     },
     7:{
         id:7,
         sender:3,
-        text:'test7'
+        content:'test7'
     },
     8:{
         id:8,
         sender:4,
-        text:'test8'
+        content:'test8'
     },
     9:{
         id:9,
         sender:5,
-        text:'test9'
+        content:'test9'
     },
     10:{
         id:10,
         sender:5,
-        text:'test10'
+        content:'test10'
     },
     11:{
         id:11,
         sender:4,
-        text:"test11"
+        content:"test11"
     },
     12:{
         id:12,
         sender:1,
-        text:'test12'
+        content:'test12'
     }
 }
 

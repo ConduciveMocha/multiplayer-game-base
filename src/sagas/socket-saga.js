@@ -47,15 +47,18 @@ export function messageConnect() {
 function subscribe(socket) {
   return eventChannel(emit => {
     socket.on("test", data => {
-
+      console.log('Test Recieved')
 
       // emit(data);
     });
-    socket.on(MessageTypes.RECEIVE_MESSAGE, message => {
-      console.log('Recieved Message')
+    socket.on(MessageTypes.NEW_MESSAGE, message => {
+      console.log(message)
       emit(MessageActions.recieveMessage(message));
     });
     
+
+
+
     return () => {
 
     };

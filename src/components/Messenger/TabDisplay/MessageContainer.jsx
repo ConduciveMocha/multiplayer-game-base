@@ -13,7 +13,7 @@ const Message = ({text, sender}) => {
 const MessageContainer = ({users,messages}) => {
   
   let messageComponants =  messages.map(m => {
-    return <Message key={m.id} text={m.text} sender={m.sender} />;
+    return <Message key={m.id} text={m.content} sender={m.sender} />;
   });
   return <div className="message-container">{messageComponants}</div>;
 };

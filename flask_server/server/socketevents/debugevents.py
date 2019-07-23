@@ -14,7 +14,6 @@ except:
     from app import socketio
     logger.error("Failed to import socketio from __main__")
 
-print('here')
 @socketio.on("SOCKET_TEST",namespace="/")
 def test_connection(data):
     logger.debug('SOCKET_TEST Recieved')
