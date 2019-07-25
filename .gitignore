@@ -12,6 +12,7 @@
 /build
 
 # misc
+**.log
 .DS_Store
 .env.local
 .env.development.local
@@ -23,6 +24,12 @@ yarn-debug.log*
 yarn-error.log*
 /fe-src
 /venv
+/flask_server/scratch.py
 **.pyc
 /server/__pycache__
 **.code-workspace
+/.vscode
+**/.pytest_cache
+**/__pycache__
+/logs
+TODOS.txt

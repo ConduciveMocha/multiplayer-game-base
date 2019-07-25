@@ -1,112 +1,119 @@
-import {eventChannel, END} from 'redux-saga';
-import {take, put, call,all,actionChannel} from 'redux-saga/effects';
-import * as SocketActions from '../actions/socket-actions'
-import * as SocketTypes from '../constants/action-types/socket-types'
-import io from 'socket.io-client';
-import * as MessageActions from '../actions/message-actions'
+import { eventChannel, END } from "redux-saga";
+import {
+  take,
+  takeEvery,
+  put,
+  call,
+  all,
+  actionChannel,
+  fork,
+  cancel
+} from "redux-saga/effects";
+import * as SocketActions from "../actions/socket-actions";
+import * as SocketTypes from "../constants/action-types/socket-types";
+import io from "socket.io-client";
+import * as MessageActions from "../actions/message-actions";
+import testAction from "../actions/debug-actions";
+import * as MessageTypes from "../constants/action-types/message-types";
+import { appendJwt } from "../api";
 
-// Makes Socket and checks connection
-const makeSocket = (url, auth) => {
-    try{
-        const socket = io(url);
-        socket.emit('connect',auth);
-        return socket;
-    }
-    catch(error){
-        return null;
-    }
+// Returns a socket connection to url
+export function connect() {
+  const socket = io.connect('http://localhost:5000')// you need to explicitly tell it to use websockets});
+  return new Promise(resolve => {
+    socket.on("connect", () => {
+      resolve(socket);
+    });
+  });
 }
 
-
-
-// Emits actions in response to server pushes
-function socketEventChannel(socket) {
-    return eventChannel(emitter=>{
-        socket.on('connect', ()=>{
-            emitter(SocketActions.socketConnected())
-        })
-
-        socket.on('error', (error) => {
-            emitter(SocketActions.socketFailed(error))
-        });
-
-        socket.on('private message', (data) => {
-            emitter(MessageActions.newMessage(data.senderId, data.content,data.timestamp,true))
-        })
-        socket.on('global message', (data) => {
-            emitter(MessageActions.newMessage(data.senderId,data.content,data.timestamp,false))
-        })
-        
-        socket.on('new gamestate', (data) =>{
-            // emitter(GameActions.newGameState(data))
-        })
-        socket.on('update gamestate', (data) => {
-            // emitter(GameActions.updateGameState(data))
-        })
-        return () => {socket.close()}        
-    })
+export function messageConnect() {
+  const socket = io('http://localhost:5000/message',{forceNew:true});
+  return new Promise(resolve => {
+    socket.on("connect", () => {
+      resolve(socket);
+    });
+  });
 }
-const createMovementHandler = socket => movement => {
-    socket.send(JSON.stringify(movement))
-}
+// export function connect(url,opts) {
+//   const socket = io(url,opts);
+//   return new Promise(resolve => {
+//     socket.on("connect", () => {
+//       //socket.emit("TEST",{'shouldnotappear':1, 'url':url});
+//       resolve(socket);
+//     });
+//   });
+// }
+function subscribe(socket) {
+  return eventChannel(emit => {
+    socket.on("test", data => {
+      console.log('Test Recieved')
 
-const createMessageHandler = socket => msg => {
-            if (msg.isPrivate)
-              socket.eemit("private message",JSON.stringify(msg));
-            else
-              socket.emit("global message", JSON.stringify(msg));}
+      // emit(data);
+    });
+    socket.on(MessageTypes.NEW_MESSAGE, message => {
+      console.log(message)
+      emit(MessageActions.recieveMessage(message));
+    });
+    
 
 
-const createMessageInterceptChannel = socket => {
-    const handler = createMessageHandler(socket);
-    return function* () {
-        const messageChan = yield actionChannel('MESSAGE_SENT')
-        while(true) {
-            const action = yield take(messageChan);
-            console.log(action)
-            yield call(handler,action)
-        }
-    }
+
+    return () => {
+
+    };
+  });
 }
 
-
-const createEventChannelSaga = socket => {
-    return function* (){
-        const channel = socketEventChannel(socket)
-        while(true) {
-
-            const action = yield take(channel);
-            yield put(action);
-        }
-    }
+// Generator that takes all actions
+function* read(socket) {
+  const channel = yield call(subscribe, socket);
+  while (true) {
+    let action = yield take(channel);
+    yield put(action)
+    
+  }
 }
 
+function* write(socket) {
 
-const createMovementChannelSaga = socket => {
-    const handler = createMovementHandler(socket);
-    return function* () {
-        const moveChan = yield actionChannel('SEND_MOVEMENT')
+  function sendMessage(action){
+    socket.emit(MessageTypes.SEND_MESSAGE,{...action, sender:0}) ;
+    console.log('Emitted event through socket in sendMessage')
+    console.log('action object', action)
+    // yield put({type:"MESSAGE_SENT",message:action.message})
+  }
 
-        while(true) {
-            const action = yield take(moveChan)
-            if (action) {yield call(handler,action.movement)};
-        }
-    }
+
+  while (true) {
+    let action = yield take(MessageTypes.SEND_MESSAGE);
+    sendMessage(action) 
+
+  }
 }
+
+function* handleIO(socket) {
+  yield fork(read, socket);
+  yield fork(write, socket);
+}
+
+function* flow() {
+  while (true){
+    const socket = yield call(connect);
+    const messageSocket = yield call(messageConnect);
+    // const task = yield fork(handleIO, socket)
+    const mTask = yield fork(handleIO, messageSocket);
+    console.log('HandleIO Forked')
+    socket.emit("SOCKET_TEST",{data:'test'})
+    
+    yield take ("NOTHIng")
+
+  }
+
+}
+
 
 export default function* socketSaga() {
-    let socket = null
-    while(!socket) {
-        let createSocketAction = yield take(SocketTypes.CREATE_SOCKET)
-        socket = makeSocket(createSocketAction.url, createSocketAction.auth)
-    }
-
-    yield put(SocketActions.socketCreated(socket,'socket'))
-    // socket.emit('private message', JSON.stringify({data:'abcd'}))
-    const movementChannel = createMovementChannelSaga(socket);
-    const messageChannel = createMessageInterceptChannel(socket);
-    const eventChannel = createEventChannelSaga(socket);
-
-    yield all([call(movementChannel),call(messageChannel), call(eventChannel)])
-    
+  yield fork(flow);
 }
+//

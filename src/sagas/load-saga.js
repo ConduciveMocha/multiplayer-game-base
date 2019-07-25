@@ -5,7 +5,7 @@ import * as SocketActions from '../actions/socket-actions'
 import {LOAD_STARTED,START_INITIAL_LOAD, LOAD_SUCCESS,LOAD_FAILED} from '../constants/action-types/load-types';
 import {GameAsset} from '../game/game-object'
 import {dispatch} from '../store';
-import {flaskServer} from '../api/urls'
+import {flaskServer} from '../constants/urls'
 
 import {ImageAsset} from '../game/game-object';
 

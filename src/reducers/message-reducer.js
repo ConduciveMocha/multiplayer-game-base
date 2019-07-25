@@ -1,126 +1,86 @@
 import * as MessageTypes from "../constants/action-types/message-types";
-const thisUser = { userId: "1", username: "username" };
+import { mockThreads,mockMessages,mockUsers } from "../utils/messaging-mock";
 
-let _users = {};
-_users[thisUser.userId] = thisUser.username;
-const messengerInitialState = {
-  users: {..._users, "0":true},
-  threads: {"0": []},
-  failed: {},
-  lastSent: "0"
+const MESSAGE_STATUS = {
+  SENT: 2,
+  RECIEVED: 1,
+  FAILED: 0
 };
 
+const messengerInitialState = {
+  threads: mockThreads,
+  users: mockUsers,
+  onlineUserIds: [1,2,3,4],
+  friendsListIds: [1,2],
+  messages: mockMessages
+};
 
-export default function messagingReducer(state = messengerInitialState, action) {
-  let newMessage, failedMessage,updatedThreads, updatedErrors;
+export default function messagingReducer(
+  state = messengerInitialState,
+  action
+) {
+  let now = new Date()
+  console.log('Messaging Reducer triggered at: ',now.getHours(),now.getMinutes(),now.getSeconds() )
+  console.log('action',action)
+
   switch (action.type) {
-
-   case MessageTypes.NEW_MESSAGE:
-
-       newMessage = {
-          senderId: action.senderId,
-          content: action.content,
-          timestamp: action.timestamp
+    case MessageTypes.USER_JOINED:
+      return {
+        ...state,
+        users: { ...state.users, [action.user.userId]: action.user },
+        onlineUserIds: [...state.onlineUserIds, action.user.userId]
       };
-      updatedThreads = { ...state.threads };
-      if (action.isPrivate) {
-          updatedThreads[action.senderId] = state.threads[action.senderId]? [newMessage, ...state.threads[action.senderId].slice(1)]: [newMessage];
-      } 
-      else if (!action.isPrivate) {
-          updatedThreads["0"] = state.threads["0"]? [newMessage, ...state.threads["0"].slice(1)]: [newMessage];
-      }  
-      return {...state,threads:updatedThreads,lastSent:action.senderId}
-  
-  case MessageTypes.MESSAGE_SENT:
-      newMessage = {
-          senderId: thisUser.userId,
-          content: action.content,
-          timestampe:action.timestamp
-      }
-      updatedThreads = {...state.threads}
-      updatedThreads[action.recipientId] = state.threads[action.recepientId] 
-        ? [newMessage,...state.threads[action.recipientId]] 
-        : [newMessage] 
-      
-      return { ...state, threads: updatedThreads, lastSent:action.recipientId };
-  
-  case MessageTypes.MESSAGE_FAILED:
-      failedMessage = {
-          senderId: thisUser.userId,
-          content: action.content,
-          timestamp:action.timestamp
-      }
 
-      updatedErrors = {...state.errors}
-      updatedErrors[action.recepientId] = state.failed[action.recepientId]
-        ? [failedMessage,...state.failed[action.recepientId]]
-        : [failedMessage]
-      return {...state, failed:updatedErrors}
-  
-  
-      default:
-    return state;
+    case MessageTypes.USER_LEFT:
+      let removedUserState = { ...state };
+      delete removedUserState[action.user.userId];
+      let updatedOnlineUserIds = state.onlineUserIds.filter(
+        el => el !== action.user.userId
+      );
+      return { ...removedUserState, onlineUserIds: updatedOnlineUserIds };
+
+    case MessageTypes.RECEIVE_MESSAGE:
+      console.log('Messaging reducer:', 'RECIEVE_MESSAGE',action)
+      console.log('state', state)
+      let message = action.message;
+      let updatedThread = {...state.threads[action.message.thread]}
+      updatedThread.messages = [...updatedThread.messages,message.id]
+      let newState = {
+        ...state, 
+        messages:{...state.messages,[message.id]:message},
+        threads:{...state.threads, [action.message.thread]:updatedThread} 
+      }
+      console.log('new state', newState) 
+      return newState
+
+
+    case MessageTypes.MESSAGE_HAS_FAILED:
+      return {
+        ...state,
+        // Sets message status to failed
+        messages: {
+          ...state.messages,
+          [action.message.messageId]: {
+            ...state.messages[action.message.messageId],
+            status: MESSAGE_STATUS.FAILED
+          }
+        }
+      };
+
+    case MessageTypes.USER_LIST_RECIEVED:
+      return {
+        ...state,
+        // Sets message status to recieved
+        messages: {
+          ...state.messages,
+          [action.message.messageId]: {
+            ...state.messages[action.message.messageId],
+            status: MESSAGE_STATUS.RECIEVED
+          }
+        }
+      };
+
+    default:
+      return state;
   }
 }
-
-
-
-
-// export default function messagingReducer(state = messengerInitialState, action) {
-//     let newMessage, failedMessage,updatedThreads, updatedErrors;
-//     switch (action.type) {
-//     // case MessageTypes.USER_JOINED:
-//     //   let updatedUsers = state.users.slice();
-//     //   updatedUsers[action.userId] = action.username;
-//     //   return { ...state, users: updatedUsers };
-//     // case MessageTypes.USER_LEFT:
-//     //   let updatedUsers = state.users.slice();
-//     //   updatedUsers[action.userId] = null;
-//     //   return { ...state, users: updatedUsers };
-//      case MessageTypes.NEW_MESSAGE:
-
-//          newMessage = {
-//             senderId: action.senderId,
-//             content: action.content,
-//             timestamp: action.timestamp
-//         };
-//         updatedThreads = { ...state.threads };
-//         if (action.isPrivate) {
-//             updatedThreads[action.senderId] = state.threads[action.senderId]? [newMessage, ...state.threads[action.senderId].slice(1)]: [newMessage];
-//         } 
-//         else if (!action.isPrivate) {
-//             updatedThreads["0"] = state.threads["0"]? [newMessage, ...state.threads["0"].slice(1)]: [newMessage];
-//         }  
-//         return {...state,threads:updatedThreads,lastSent:action.senderId}
-    
-//     case MessageTypes.MESSAGE_SENT:
-//         newMessage = {
-//             senderId: thisUser.userId,
-//             content: action.content,
-//             timestampe:action.timestamp
-//         }
-//         updatedThreads = {...state.threads}
-//         updatedThreads[action.recipientId] = state.threads[action.recepientId] 
-//           ? [newMessage,...state.threads[action.recipientId]] 
-//           : [newMessage] 
-        
-//         return { ...state, threads: updatedThreads, lastSent:action.recipientId };
-    
-//     case MessageTypes.MESSAGE_FAILED:
-//         failedMessage = {
-//             senderId: thisUser.userId,
-//             content: action.content,
-//             timestamp:action.timestamp
-//         }
-
-//         updatedErrors = {...state.errors}
-//         updatedErrors[action.recepientId] = state.failed[action.recepientId]
-//           ? [failedMessage,...state.failed[action.recepientId]]
-//           : [failedMessage]
-//         return {...state, failed:updatedErrors}
-    
-    
-//         default:
-//       return state;
-//     }
-// }

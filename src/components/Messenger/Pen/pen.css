@@ -1,0 +1,106 @@
+div.message {
+}
+
+div.recieved {
+  border-radius: 25px 25px 25px 25px;
+  padding: 5px 10px 5px 10px;
+  background-color: yellow;
+  margin: 10px 0px 10px 10px;
+}
+
+div.sent {
+  border-radius: 25px 25px 25px 25px;
+  padding: 5px 10px 5px 10px;
+  background-color: green;
+  margin-left: 50%;
+  margin-bottom: 10px;
+  display: flex;
+}
+
+p.sent-message {
+}
+
+div.sent,
+div.recieved {
+  width: 45%;
+}
+.message-container {
+  border: 2px solid black;
+  overflow: auto;
+  height: 250px;
+}
+.container {
+  width: 60%;
+  display: flex;
+  margin-top: 30%;
+  margin-left: 20%;
+}
+
+.tab-container {
+  height: 40px;
+  display: flex;
+  border: 1px solid red;
+}
+
+.tab {
+  display: flex;
+  background-color: grey;
+  padding: 0px 10px;
+  border: 1px solid red;
+  justify-content: flex-end;
+}
+.tab-name {
+  padding: 0px;
+  margin: 0px;
+  font-size: 30px;
+}
+
+.online {
+  height: 8px;
+  width: 8px;
+  background-color: green;
+  border-radius: 8px;
+  margin: auto;
+}
+
+.sidebar {
+  width: 60%;
+  height: 365p;
+  overflow: auto;
+  background-color: orange;
+}
+[id^="friends"],
+[id^="friends"] ~ .collapse-list-items,
+[id^="friends"] + label span + span,
+[id^="friends"]:checked + label span {
+  display: none;
+}
+
+[id^="friends"]:checked + label span + span {
+  display: inline-block;
+}
+
+[id^="friends"]:checked ~ .collapse-list-items {
+  display: block;
+}
+
+[id^="online"],
+[id^="online"] ~ .collapse-list-items,
+[id^="online"] + label span + span,
+[id^="online"]:checked + label span {
+  display: none;
+}
+
+[id^="online"]:checked + label span + span {
+  display: inline-block;
+}
+
+[id^="online"]:checked ~ .collapse-list-items {
+  display: block;
+}
+.input-container {
+  height: 75px;
+  width: 100%;
+  background-color: purple;
+  display: flex;
+}

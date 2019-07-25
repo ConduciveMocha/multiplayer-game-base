@@ -1,6 +1,6 @@
 import React, {useState, useEffect,useReducer} from 'react';
 import {Link} from 'react-router-dom'
-import {flaskServer} from '../../api/urls'
+import {flaskServer} from '../../constants/urls'
 
 import NO_ERROR from '../../constants/NoError'
 import FieldError from '../FieldError'
