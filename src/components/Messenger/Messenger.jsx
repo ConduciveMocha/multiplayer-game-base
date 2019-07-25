@@ -1,19 +1,27 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect,useRef,useCallback} from "react";
 import { connect } from "react-redux";
 import { sendMessage } from '../../actions/message-actions'
 import MessengerSidebar from "./MessengerSidebar";
 import TabContainer from "./TabDisplay/TabContainer";
 import MessageContainer from "./TabDisplay/MessageContainer";
 import InputContainer from "./TabDisplay/InputContainer";
-
+import CreateThread from './CreateThread';
 import './Messenger.css'
-// ==================================
 
-// const getThreadNames = (threads, threadIds) => {
-//   return threadIds.map(id => {
-//       return thread[id].name
-//   })
-// } 
+const useBool = (initial=true) => {
+  const [value,setValue] = useState(initial)
+
+  return {
+    setTrue: useCallback(()=>setValue(true), []),
+    setFalse: useCallback(()=>setValue(false), []),
+    toggle: useCallback(()=>setValue(value=>!value),[]),
+    setValue,
+    value
+  }
+
+
+}
+
 
 
 const Messenger = props => {
@@ -30,8 +38,14 @@ const Messenger = props => {
   // Updated on <textarea> change
   const [inputContent, setInputContent] = useState("");
   const [currentMessages, setCurrentMessages] = useState([] )
-  const scrollRef = useRef(null)
   
+  const [newThreadName, setNewThreadName] = useState("");
+  const [addedUsers,setAddedUsers] = useState([1,2,3]);
+  const showCreateThread = useBool(true);
+  
+
+
+  const scrollRef = useRef(null)
   // Synchronizes the displayed messages and the currentTabIndex. 
   useEffect(()=>{
     //! DONT TOUCH THIS IF STATEMENT. AVOIDS BUG WHERE currentTabIndex IS OUT OF RANGE
@@ -43,10 +57,11 @@ const Messenger = props => {
       const currentThread = threads[openTabIds[currentTabIndex]]
       setCurrentMessages(currentThread.messages.map(id=>{return messages[id]}))
     }
-    try{    scrollRef.current.scrollTop(Number.MAX_SAFE_INTEGER)
+    try{    
+      scrollRef.current.scrollTop = Number.MAX_SAFE_INTEGER
     }
     catch (error){
-      
+      console.error('Attempt to set scroll position from Messenger useEffect failed')
     }
   }, [messages,currentTabIndex,openTabIds,threads])
 
@@ -96,7 +111,31 @@ const Messenger = props => {
     setOpenTabIds(openTabIds.filter(el=>el !== parseInt(id)))
 
   }
-    
+  
+  const makeRemoveAddedUser = (id) => () => {
+    if(addedUsers.indexOf(id) >= 0) {
+      const updatedAddedUsers = addedUsers.filter(el => el !== id)
+      setAddedUsers(updatedAddedUsers)
+    }
+    else{
+      console.error('There was an attempt to remove a user not found in `addedUsers`')
+      console.debug('id', id)
+      console.debug('addedUsers',addedUsers)
+    }
+  }
+
+  const closeCreateThread = () => {
+    if(showCreateThread){
+      setAddedUsers([]);
+      setNewThreadName("")  
+      showCreateThread.setFalse();
+      setOpenTabIds(openTabs=>openTabs.slice(0,-1)) 
+    }
+    else{
+      console.error('`showCreateThread` is set to false')
+    }
+  }
+
 
   return (
     <div className="messanger-container">
@@ -105,8 +144,8 @@ const Messenger = props => {
       makeOpenTab={makeOpenTab} 
       makeCloseTab={makeCloseTab}
       makeFocusTab={makeFocusTab} 
-      threads={props.threads}
-      users={props.users} />
+      threads={threads}
+      users={users} />
       <div className="tab-display-container">
         <TabContainer
           threads={threads}
@@ -115,7 +154,17 @@ const Messenger = props => {
           currentTabIndex={currentTabIndex}
           openTabIds={openTabIds}
         />
-        <MessageContainer users={users} messages={currentMessages} scrollRef={scrollRef} />
+        {showCreateThread.value ? <CreateThread 
+                              addedUsers={addedUsers.map(id => users[id])}
+                              makeRemoveUser={makeRemoveAddedUser}
+                              closeCreateThread={closeCreateThread}
+                              /> : 
+                              <MessageContainer 
+                              users={users} 
+                              messages={currentMessages} 
+                              scrollRef={scrollRef} 
+                              />}
+        
         <InputContainer
           inputContent={inputContent}
           onChangeFtn={(e)=>{setInputContent(e.target.value)}}
@@ -125,6 +174,7 @@ const Messenger = props => {
           }}
         />
       </div>
+      <button onClick={()=>{showCreateThread.toggle()}}>SHOW CREATE THREAD DEBUG</button>
     </div>
   );
 };
