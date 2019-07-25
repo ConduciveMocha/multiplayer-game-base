@@ -231,7 +231,7 @@ def global_poolman(func):
             poolman = PoolManager(host='localhost',port=6379, db=0)
         with poolman as r:
             return func(r, *args, **kwargs)
-
+        poolman.close_pool()
     return wrapper
 
 
@@ -245,6 +245,7 @@ def global_pipe(func):
 
         with poolman.pipe() as pipe:
             return func(pipe, *args, **kwargs)
+        poolman.close_pool()
 
     return wrapper
 

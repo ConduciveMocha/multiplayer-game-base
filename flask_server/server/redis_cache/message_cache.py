@@ -32,12 +32,15 @@ def create_message(pipe,message_dict):
 @global_poolman
 def get_next_id(r):
     message_id = int(r.get('message:next-id'))
+    logger.debug(f'Next available message id: {message_id}')
     r.incr('message:next-id')
+    logger.debug(f'message:next-id Incremented')
     return message_id
 
 @global_poolman
 def get_message_by_id(r,message_id):
     try:
+        logger.debug(f'Getting message:{message_id}')
         return r.hgetall(f"message:{message_id}")
     except Exception as e:
         logger.error(e)

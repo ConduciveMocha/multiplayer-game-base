@@ -23,9 +23,10 @@ try:
     from __main__ import socketio
 except:
     from app import socketio
+
+    
 logger = make_logger(__name__)
 
-logger.debug('Defining socket methods')
 
 # TODO: !!!! Add auth method for sockets !!!!
 @socketio.on("SEND_MESSAGE", namespace="/message")
