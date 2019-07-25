@@ -2,8 +2,8 @@ import React from "react";
 import useBool from "../../../hooks/useBool";
 const CollapsableList = ({ ListItemComponent, proplist, listName }) => {
   const toggler = useBool(true);
-  let listItems = proplist.map(props => {
-    return <ListItemComponent {...props} />;
+  let listItems = proplist.map((props,index) => {
+    return <ListItemComponent {...props} key={listName + "-" + index } />;
   });
   return (
     <div className="collapsable-list-container">
