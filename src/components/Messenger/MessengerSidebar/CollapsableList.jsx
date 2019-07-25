@@ -11,7 +11,6 @@ const CollapsableList = ({ ListItemComponent, proplist, listName }) => {
         className="collapsable-list-title"
         onClick={e => {
           toggler.toggle();
-          console.log(toggler.value);
         }}
       >
         <div
