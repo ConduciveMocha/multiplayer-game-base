@@ -108,3 +108,5 @@ export const mockMessages = {
     }
 }
 
+export const mockOnlineUserIds = [1,2,3,4];
+export const mockFriendsList = [1,2];

@@ -3,7 +3,7 @@ import useBool from "../../../hooks/useBool";
 const CollapsableList = ({ ListItemComponent, proplist, listName }) => {
   const toggler = useBool(true);
   let listItems = proplist.map((props,index) => {
-    return <ListItemComponent {...props} key={listName + "-" + index } />;
+    return <ListItemComponent {...props} key={listName.replace(' ','-') + "-" + index } />;
   });
   return (
     <div className="collapsable-list-container">

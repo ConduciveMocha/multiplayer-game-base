@@ -1,5 +1,5 @@
 import * as MessageTypes from "../constants/action-types/message-types";
-import { mockThreads,mockMessages,mockUsers } from "../utils/messaging-mock";
+import { mockThreads,mockMessages,mockUsers,mockFriendsList,mockOnlineUserIds } from "../utils/messaging-mock";
 
 const MESSAGE_STATUS = {
   SENT: 2,
@@ -10,8 +10,8 @@ const MESSAGE_STATUS = {
 const messengerInitialState = {
   threads: mockThreads,
   users: mockUsers,
-  onlineUserIds: [1,2,3,4],
-  friendsListIds: [1,2],
+  onlineUserIds: mockOnlineUserIds,
+  friendsList: mockFriendsList,
   messages: mockMessages
 };
 

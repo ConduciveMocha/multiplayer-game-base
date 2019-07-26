@@ -11,11 +11,13 @@ import useBool from "../../hooks/useBool";
 import "./Messenger.css";
 
 const Messenger = props => {
-  // Pulls threads, messages from redux state
-  const { threads, messages, users } = {
+  // Renames redux state variables so i dont have to write props.* everywhere
+  const { threads, messages, users, onlineUserIds,friendsList } = {
     threads: props.threads,
     messages: props.messages,
-    users: props.users
+    users: props.users,
+    onlineUserIds: props.onlineUserIds,
+    friendsList: props.friendsList
   };
 
   /*State variables for message views*/
@@ -29,6 +31,7 @@ const Messenger = props => {
   const [newThreadName, setNewThreadName] = useState("");
   const [addedUsers, setAddedUsers] = useState([1, 2, 3]);
   const showCreateThread = useBool(false);
+  
 
   // Synchronizes the displayed messages and the currentTabIndex.
   useEffect(() => {
@@ -139,6 +142,17 @@ const Messenger = props => {
     }
   };
 
+  const onNameChange = (e) => {
+    if (e.target.value.length < 33) 
+      setNewThreadName(e.target.value);
+    
+    else {
+      console.log('Name cant exceed 32 characters ');
+      console.debug('Attempted to set to:', e.target.value);
+    }
+  }
+
+
   return (
     <div className="messanger-container">
       <MessengerSidebar
@@ -148,6 +162,7 @@ const Messenger = props => {
         makeFocusTab={makeFocusTab}
         threads={threads}
         users={users}
+        makeAddThreadUser={makeAddThreadUser}
       />
       <div className="tab-display-container">
         <TabContainer
@@ -159,10 +174,12 @@ const Messenger = props => {
         />
         {showCreateThread.value ? (
           <CreateThread
+            onNameChange={onNameChange}
             addedUsers={addedUsers.map(id => users[id])}
             makeRemoveUser={makeRemoveThreadUser}
             closeCreateThread={closeCreateThread}
           />
+       
         ) : (
           <MessageContainer users={users} messages={currentMessages} />
         )}
@@ -193,7 +210,9 @@ export default connect(
   state => ({
     messages: state.messaging.messages,
     threads: state.messaging.threads,
-    users: state.messaging.users
+    users: state.messaging.users,
+    onlineUserIds: state.messaging.onlineUserIds,
+    friendsList: state.messaging.friendsList
   }),
   dispatch => {
     return {
