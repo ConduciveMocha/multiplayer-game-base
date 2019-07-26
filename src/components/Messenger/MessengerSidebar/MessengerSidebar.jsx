@@ -1,13 +1,48 @@
 import React from "react";
 
 import CollapsableList from "./CollapsableList";
+import useBool from "../../../hooks/useBool";
 
-const UserListItem = ({ user, createNewThread }) => {
+import { makeStyles } from "@material-ui/core/styles";
+import Button from "@material-ui/core/Button";
+import AddIcon from "@material-ui/icons/Add";
+const useStyles = makeStyles(theme => ({
+  button: {
+    margin: theme.spacing(1)
+  },
+  extendedIcon: {
+    marginRight: theme.spacing(1)
+  }
+}));
+
+const UserListItem = ({ user, addThreadUser }) => {
+  const optionsOpen = useBool(false);
+  // const classes = makeStyles();
   return (
-    <div key={user.id} onClick={e => createNewThread()}>
-      <span>{user.username}</span>
-      <button className="block-user-button" />
-      <button className="open-profile-button" />
+    <div key={user.id}>
+      <span
+        onClick={() => {
+          optionsOpen.toggle();
+        }}
+      >
+        {user.username}
+      </span>
+      {optionsOpen.value ? (
+        <div className="user-list-item-actions">
+          <button className="block-user-button" />
+          <button className="open-profile-button" />
+          <Button
+            className={""}
+            onClick={() => {
+              addThreadUser();
+            }}
+          >
+            <AddIcon />
+          </Button>
+        </div>
+      ) : (
+        <></>
+      )}
     </div>
   );
 };
@@ -28,6 +63,8 @@ const MessengerSidebar = ({
   openTabIds,
   makeOpenTab,
   makeFocusTab,
+  onlineUserIds,
+  friendsList,
   makeCloseTab,
   threads,
   users,
@@ -46,17 +83,36 @@ const MessengerSidebar = ({
         })}
         listName={"Conversations"}
       />
+
+      <hr />
+
       <CollapsableList
         ListItemComponent={UserListItem}
-        proplist={[]}
+        proplist={Object.keys(users)
+          .filter(el => onlineUserIds.indexOf(parseInt(el)) >= 0)
+          .map(id => {
+            return {
+              user: users[id],
+              addThreadUser: makeAddThreadUser(id)
+            };
+          })}
         listName={"Online Users"}
       />
-      {/* 
+      <hr />
+
       <CollapsableList
         ListItemComponent={UserListItem}
-        proplist={[]}
+        proplist={Object.keys(users)
+          .filter(el => friendsList.indexOf(parseInt(el)) >= 0)
+          .map(id => {
+            return {
+              user: users[id],
+              addThreadUser: makeAddThreadUser(id)
+            };
+          })}
         listName={"Friends"}
-      /> */}
+      />
+      <hr />
     </div>
   );
 };

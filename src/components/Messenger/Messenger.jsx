@@ -11,8 +11,9 @@ import useBool from "../../hooks/useBool";
 import "./Messenger.css";
 
 const Messenger = props => {
+  const CREATE_THREAD_ID = -1;
   // Renames redux state variables so i dont have to write props.* everywhere
-  const { threads, messages, users, onlineUserIds,friendsList } = {
+  const { threads, messages, users, onlineUserIds, friendsList } = {
     threads: props.threads,
     messages: props.messages,
     users: props.users,
@@ -29,9 +30,8 @@ const Messenger = props => {
 
   /*State variables for create thread views*/
   const [newThreadName, setNewThreadName] = useState("");
-  const [addedUsers, setAddedUsers] = useState([1, 2, 3]);
+  const [addedUsers, setAddedUsers] = useState([]);
   const showCreateThread = useBool(false);
-  
 
   // Synchronizes the displayed messages and the currentTabIndex.
   useEffect(() => {
@@ -41,22 +41,28 @@ const Messenger = props => {
       setCurrentTabIndex(0);
     } else {
       const currentThread = threads[openTabIds[currentTabIndex]];
-      setCurrentMessages(
-        currentThread.messages.map(id => {
-          return messages[id];
-        })
-      );
+      if (currentThread) {
+        setCurrentMessages(
+          currentThread.messages.map(id => {
+            return messages[id];
+          })
+        );
+        showCreateThread.setFalse();
+      } else {
+        setCurrentMessages([]);
+        showCreateThread.setTrue();
+      }
     }
-    try {
-    } catch (error) {
-      console.error(
-        "Attempt to set scroll position from Messenger useEffect failed"
-      );
-    }
-  }, [messages, currentTabIndex, openTabIds, threads]);
+  }, [messages, currentTabIndex, openTabIds, threads, showCreateThread.value]);
 
   // Creates function to scope to a tab. Used by the thread sidebar list
   const makeFocusTab = id => () => {
+    if (id === CREATE_THREAD_ID) {
+      console.debug("Making a focusTab for createThread");
+      showCreateThread.setTrue();
+    } else {
+      showCreateThread.setFalse();
+    }
     const tabIndex = openTabIds.indexOf(id);
     if (tabIndex < 0) {
       console.error("Tab Id not found: ", id);
@@ -73,6 +79,11 @@ const Messenger = props => {
     } else {
       setCurrentTabIndex(openTabIds.indexOf(parseInt(id)));
     }
+    if (id === -1) {
+      showCreateThread.setTrue();
+    } else {
+      showCreateThread.setFalse();
+    }
   };
   const makeCloseTab = id => () => {
     //? Find out where i need to parseInt and where not
@@ -80,13 +91,27 @@ const Messenger = props => {
 
     // Controls what tab will appear when the current tab is closed
     // Attempts to mimic chromes tab closing behavior
-    if (closedTabIndex < 0) {
+
+    // Case if the open tab is a newly created tab
+    if (parseInt(id) === CREATE_THREAD_ID) {
+      console.log("Closing create thread");
+      setNewThreadName("");
+      setAddedUsers([]);
+      showCreateThread.setFalse();
+      setCurrentTabIndex(0);
+    }
+    // Id not found
+    else if (closedTabIndex < 0) {
       console.error("Tab Id not found: ", id);
-    } else if (closedTabIndex === 0) {
+    }
+    // Attempted to close the global thread
+    else if (closedTabIndex === 0) {
       console.error(
         "Trying to close the global thread. Youre not supposed to be able to do this..."
       );
-    } else if (closedTabIndex < currentTabIndex) {
+    }
+    // Thread id closed is some id before current id
+    else if (closedTabIndex < currentTabIndex) {
       setCurrentTabIndex(currentTabIndex - 1);
       console.log("closedTabIndex<currentTabIndex", currentTabIndex - 1);
     }
@@ -95,11 +120,12 @@ const Messenger = props => {
       setCurrentTabIndex(currentTabIndex * 0);
       console.log("closedTabIndex===currentTabIndex", 0);
     }
+    // Remove thread from openTabIds
     setOpenTabIds(openTabIds.filter(el => el !== parseInt(id)));
   };
 
   const closeCreateThread = () => {
-    if (showCreateThread) {
+    if (showCreateThread.value) {
       setAddedUsers([]);
       setNewThreadName("");
       showCreateThread.setFalse();
@@ -129,10 +155,15 @@ const Messenger = props => {
   };
 
   const makeAddThreadUser = id => () => {
+    id = parseInt(id);
     if (addedUsers.length === 0) {
+      console.log("Making a createThread tab", id);
       setAddedUsers([id]);
       setNewThreadName("");
       showCreateThread.setTrue();
+      // setCurrentTabIndex(openTabIds.length);
+      setOpenTabIds(openids => [...openTabIds, -1]);
+      setCurrentTabIndex(openTabIds.length);
     } else if (addedUsers.indexOf(id) < 0) {
       setAddedUsers([...addedUsers, id]);
     } else {
@@ -142,16 +173,17 @@ const Messenger = props => {
     }
   };
 
-  const onNameChange = (e) => {
-    if (e.target.value.length < 33) 
-      setNewThreadName(e.target.value);
-    
+  const onNameChange = e => {
+    if (e.target.value.length < 33) setNewThreadName(e.target.value);
     else {
-      console.log('Name cant exceed 32 characters ');
-      console.debug('Attempted to set to:', e.target.value);
+      console.log("Name cant exceed 32 characters ");
+      console.debug("Attempted to set to:", e.target.value);
     }
-  }
+  };
 
+  console.log("openTabIds", openTabIds);
+  console.log("currentTabIndex", currentTabIndex);
+  console.log("showCreateThread", showCreateThread);
 
   return (
     <div className="messanger-container">
@@ -163,6 +195,8 @@ const Messenger = props => {
         threads={threads}
         users={users}
         makeAddThreadUser={makeAddThreadUser}
+        onlineUserIds={onlineUserIds}
+        friendsList={friendsList}
       />
       <div className="tab-display-container">
         <TabContainer
@@ -171,15 +205,16 @@ const Messenger = props => {
           makeFocusTab={makeFocusTab}
           currentTabIndex={currentTabIndex}
           openTabIds={openTabIds}
+          showCreateThread={showCreateThread.value}
         />
         {showCreateThread.value ? (
           <CreateThread
+            newThreadName={newThreadName}
             onNameChange={onNameChange}
             addedUsers={addedUsers.map(id => users[id])}
             makeRemoveUser={makeRemoveThreadUser}
             closeCreateThread={closeCreateThread}
           />
-       
         ) : (
           <MessageContainer users={users} messages={currentMessages} />
         )}

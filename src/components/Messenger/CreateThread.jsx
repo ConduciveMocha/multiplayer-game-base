@@ -9,7 +9,13 @@ const AddedUser = ({ username, removeUser, focused }) => {
   );
 };
 
-const CreateThread = ({ addedUsers, makeRemoveUser, closeCreateThread,onNameChange }) => {
+const CreateThread = ({
+  addedUsers,
+  makeRemoveUser,
+  closeCreateThread,
+  onNameChange,
+  newThreadName
+}) => {
   const addedUserList = addedUsers.map(user => (
     <AddedUser
       username={user.username}
@@ -19,11 +25,15 @@ const CreateThread = ({ addedUsers, makeRemoveUser, closeCreateThread,onNameChan
       removeUser={makeRemoveUser(user.id)}
     />
   ));
-    
+
   return (
     <div className="create-thread-container">
       <div>
-        <input type="text"  onChange={(e)=>onNameChange(e)}/>
+        <input
+          type="text"
+          value={newThreadName}
+          onChange={e => onNameChange(e)}
+        />
         <button onClick={() => closeCreateThread()}>x</button>
       </div>
       <div className="added-users-container">{addedUserList}</div>
