@@ -1,5 +1,8 @@
 import React from "react";
-
+import {
+  CREATE_THREAD_ID,
+  GLOBAL_THREAD_ID
+} from "../../../constants/ThreadIds";
 const shortenThreadName = name => {
   return name.length < 15 ? name : name.slice(0, 12).trim() + "...";
 };
@@ -11,7 +14,11 @@ const ThreadTab = ({ thread, closeThread, focusTab, tabActive }) => {
       onClick={() => focusTab()}
     >
       <div className={thread.hasUnread ? "tab-unread" : "tab-read"} />
-      <p className={thread.id === -1 ? "thread-name-italic" : "thread-name"}>
+      <p
+        className={
+          thread.id === CREATE_THREAD_ID ? "thread-name-italic" : "thread-name"
+        }
+      >
         {shortenThreadName(thread.name)}
       </p>
 
@@ -22,7 +29,7 @@ const ThreadTab = ({ thread, closeThread, focusTab, tabActive }) => {
         //! ASSUMES GLOBAL THREAD HAS ID 0!!!!!!!
         <button
           className="close-tab-button"
-          disabled={thread.id === 0}
+          disabled={thread.id === GLOBAL_THREAD_ID}
           onClick={() => closeThread()}
         >
           x
@@ -42,9 +49,9 @@ export const TabContainer = ({
 }) => {
   const tabs = openTabIds
     .map(id => {
-      if (id === -1) {
+      if (id === CREATE_THREAD_ID) {
         return {
-          id: -1,
+          id: CREATE_THREAD_ID,
           name: "New Thread",
           messages: [],
           users: []
@@ -54,12 +61,15 @@ export const TabContainer = ({
       }
     })
     .map(th => {
-      console.log("thread", th);
       return (
         <ThreadTab
           key={"thread-tab-" + th.id}
           thread={th}
-          closeThread={th.id !== 0 ? makeCloseTab(parseInt(th.id)) : () => {}}
+          closeThread={
+            th.id !== GLOBAL_THREAD_ID
+              ? makeCloseTab(parseInt(th.id))
+              : () => {}
+          }
           tabActive={openTabIds[currentTabIndex] === th.id}
           focusTab={makeFocusTab(parseInt(th.id))}
         />

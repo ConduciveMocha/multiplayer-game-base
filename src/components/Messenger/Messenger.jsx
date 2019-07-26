@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { sendMessage } from "../../actions/message-actions";
 import MessengerSidebar from "./MessengerSidebar";
@@ -7,11 +7,10 @@ import MessageContainer from "./TabDisplay/MessageContainer";
 import InputContainer from "./TabDisplay/InputContainer";
 import CreateThread from "./CreateThread";
 import useBool from "../../hooks/useBool";
-
+import { CREATE_THREAD_ID } from "../../constants/ThreadIds";
 import "./Messenger.css";
 
 const Messenger = props => {
-  const CREATE_THREAD_ID = -1;
   // Renames redux state variables so i dont have to write props.* everywhere
   const { threads, messages, users, onlineUserIds, friendsList } = {
     threads: props.threads,
@@ -79,7 +78,7 @@ const Messenger = props => {
     } else {
       setCurrentTabIndex(openTabIds.indexOf(parseInt(id)));
     }
-    if (id === -1) {
+    if (id === CREATE_THREAD_ID) {
       showCreateThread.setTrue();
     } else {
       showCreateThread.setFalse();
@@ -117,7 +116,7 @@ const Messenger = props => {
     }
     // Closing currently active tab pulls up the global thread.
     else if (closedTabIndex === currentTabIndex) {
-      setCurrentTabIndex(currentTabIndex * 0);
+      setCurrentTabIndex(0);
       console.log("closedTabIndex===currentTabIndex", 0);
     }
     // Remove thread from openTabIds
@@ -181,10 +180,6 @@ const Messenger = props => {
     }
   };
 
-  console.log("openTabIds", openTabIds);
-  console.log("currentTabIndex", currentTabIndex);
-  console.log("showCreateThread", showCreateThread);
-
   return (
     <div className="messanger-container">
       <MessengerSidebar
@@ -230,13 +225,13 @@ const Messenger = props => {
           }}
         />
       </div>
-      <button
+      {/* <button
         onClick={() => {
           showCreateThread.toggle();
         }}
       >
         SHOW CREATE THREAD DEBUG
-      </button>
+      </button> */}
     </div>
   );
 };
