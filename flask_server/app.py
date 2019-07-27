@@ -97,14 +97,15 @@ def create_app(conf=None, log=False, return_ext=None):
     from server.blueprints.registrationbp import registrationbp
     from server.blueprints.authbp import authbp
     from server.blueprints.userbp import userbp
-
+    from server.blueprints.messagebp import message_bp
     app.register_blueprint(authbp)
     logger.debug("Added authbp")
     app.register_blueprint(registrationbp)
     logger.debug("Added registrationbp")
     app.register_blueprint(userbp)
     logger.debug("Added userbp")
-
+    app.register_blueprint(message_bp)
+    logger.debug("Added message_bp")
     logger.debug("Blueprints Added")
 
     @app.route("/", methods=["GET", "POST"])

@@ -19,9 +19,7 @@ export default function messagingReducer(
   state = messengerInitialState,
   action
 ) {
-  let now = new Date()
-  console.log('Messaging Reducer triggered at: ',now.getHours(),now.getMinutes(),now.getSeconds() )
-  console.log('action',action)
+
 
   switch (action.type) {
     case MessageTypes.USER_JOINED:

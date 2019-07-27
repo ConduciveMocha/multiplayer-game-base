@@ -171,14 +171,13 @@ export const joinThreadRequest = thread => {
  * @param {Message} initialMessage - An initial message. As of right now, not required,
  *                             but I might change that
  */
-export const requestNewThread = (members, threadName, initialMessage) => {
-  return {
+export const requestNewThread = (users, threadName, content) => ( {
     type: MessageTypes.REQUEST_NEW_THREAD,
-    threadName,
-    members,
-    initialMessage
-  };
-};
+    name:threadName,
+    users:users,
+    content:content
+  });
+
 
 export const newThreadFailed = (threadHash, error) => {
   return {

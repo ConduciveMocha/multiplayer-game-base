@@ -1,4 +1,4 @@
-import {eventChannel} from 'redux-saga'
+
 import {
     take,
     put,
@@ -6,48 +6,21 @@ import {
     fork
 } from "redux-saga/effects"
 
-import * as MessageActions from '.../actions/message-actions';
 import * as MessageTypes from '../constants/action-types/message-types';
-import {appendJwt} from '../api'
-import {connect} from './socket-saga'
+import {appendJwt,jsonPost} from '../api'
 
 
 const MESSAGING_URL = 'http://localhost:5000/message'
 
-
-function subscribeToMessageChannel(mSocket) {
-    return eventChannel(emit => {
-        // Socket event handlers go here
-        mSocket.on("NEW_MESSAGE", (payload)=>{
-
-        })
-        mSocket.on("MESSAGE_FAILED",(payload)=>{})
-
-        mSocket.on("")
-        // Unsubscribe to Socket
-        return () => {}
-    });
-
-}
-
-function* readMessageChannel(mSocket) {
-    const messageChannel = yield call(subscribeToMessageChannel, mSocket);
-    while (true) {
-        let action = yield take(messageChannel);
-        switch(action) {
-
-        }
+export default function* requestThreadSaga(action) {
+    while(true){
+        
+        const action = yield take(MessageTypes.REQUEST_NEW_THREAD);
+        console.log('requestThreadSaga:')
+        console.log('Action: ', action)
+        let requestThreadResp = yield call(jsonPost,action, '/message/requestnewthread');
+        console.log('Response: ', requestThreadResp)
     }
-}
 
-function* write(mSocket) {
-    while(true) {
-        const {payload} = yield take()
-    }
-}
 
-function* messagingFlow() {
-    while(true) {
-        const socket = yield call(connect,)   
-    }
 }

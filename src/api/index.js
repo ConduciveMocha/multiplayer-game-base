@@ -8,6 +8,8 @@ export function decodeJwt(jwt) {
   return decoded;
 }
 export async function jsonPost(payload, route) {
+  const endpoint = flaskServer + route;
+  console.log('Sending payload to',endpoint,payload)
   const resp = await fetch(flaskServer + route, {
     method: "POST",
     mode: "cors",

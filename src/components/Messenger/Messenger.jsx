@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { sendMessage } from "../../actions/message-actions";
+import { sendMessage,requestNewThread } from "../../actions/message-actions";
 import MessengerSidebar from "./MessengerSidebar";
 import TabContainer from "./TabDisplay/TabContainer";
 import MessageContainer from "./TabDisplay/MessageContainer";
@@ -179,6 +179,41 @@ const Messenger = props => {
       console.debug("Attempted to set to:", e.target.value);
     }
   };
+  const sendMessage = (e) => {
+    if (!showCreateThread.value){
+      props.dispatchMessage(openTabIds[currentTabIndex], inputContent);
+      setInputContent("");
+    }
+    else{
+      console.error('Attempt to send message to thread while create thread screen was visible')
+      console.debug('openTabIds', openTabIds)
+      console.debug('currentTabIndex', currentTabIndex)
+      console.debug('showCreateThread', showCreateThread)
+    }
+  }
+  const sendNewThreadRequest = (e) => {
+    if(!showCreateThread.value){
+      console.error('Attempt to request thread while createThread screen not visible.');
+      console.debug('openTabIds', openTabIds)
+      console.debug('currentTabIndex', currentTabIndex)
+      console.debug('showCreateThread', showCreateThread)
+    }
+    else if(openTabIds[currentTabIndex] !== CREATE_THREAD_ID){
+      console.error('Attempt to request thread from existing thread')
+      console.debug('openTabIds', openTabIds)
+      console.debug('currentTabIndex', currentTabIndex)
+      console.debug('showCreateThread', showCreateThread)
+    }
+    else{
+      props.dispatchRequestNewThread(addedUsers,newThreadName,inputContent);
+      setInputContent("")
+      setNewThreadName("")
+      setAddedUsers([])
+      showCreateThread.setFalse();
+
+
+    }
+  }
 
   return (
     <div className="messanger-container">
@@ -219,19 +254,10 @@ const Messenger = props => {
           onChangeFtn={e => {
             setInputContent(e.target.value);
           }}
-          sendFtn={() => {
-            props.dispatchMessage(openTabIds[currentTabIndex], inputContent);
-            setInputContent("");
-          }}
+          sendFtn={showCreateThread.value ? sendNewThreadRequest : sendMessage}
         />
       </div>
-      {/* <button
-        onClick={() => {
-          showCreateThread.toggle();
-        }}
-      >
-        SHOW CREATE THREAD DEBUG
-      </button> */}
+
     </div>
   );
 };
@@ -247,7 +273,8 @@ export default connect(
   dispatch => {
     return {
       dispatchMessage: (thread, content) =>
-        dispatch(sendMessage(thread, content))
+        dispatch(sendMessage(thread, content)),
+        dispatchRequestNewThread: (users,threadName,content) => dispatch(requestNewThread(users,threadName,content))
     };
   }
 )(Messenger);
