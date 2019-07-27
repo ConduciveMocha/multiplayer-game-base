@@ -2,7 +2,6 @@ import json
 import base64
 import time
 from flask import Blueprint, request, make_response, jsonify
-from flask_socketio import SocketIO, emit, send, Namespace
 
 # from server.db import db_session
 # from server.auth import make_thread_id, members_from_thread_id, require_auth
@@ -11,7 +10,11 @@ from server.logging import make_logger
 from server.redis_cache.message_cache import create_thread_dict, create_thread
 
 logger = make_logger(__name__)
-
+try:
+    from __main__ import socketio
+except:
+    from app import socketio
+    logger.error("Failed to import socketio from __main__")
 
 message_bp = Blueprint("message", __name__, url_prefix="/message")
 
@@ -31,8 +34,8 @@ def request_new_thread():
             payload["content"], payload["sender"], payload["users"], payload["name"]
         )
         if not existing:
-            new_thread_id = create_thread(thread_dict)
-
+            create_thread(thread_dict)
+        # socketio.emit("test",{'test','test_sucessful'}, broadcast=False)
         return jsonify(thread_dict), 200
     except Exception as e:
 
