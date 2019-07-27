@@ -1,6 +1,6 @@
 import * as MessageTypes from "../constants/action-types/message-types";
 
-export const sendMessage = (thread, content,) => {
+export const sendMessage = (thread, content) => {
   return {
     type: MessageTypes.SEND_MESSAGE,
     thread,
@@ -16,7 +16,7 @@ export const sendMessage = (thread, content,) => {
 export const recieveMessage = message => {
   return {
     type: MessageTypes.RECEIVE_MESSAGE,
-  
+
     message
   };
 };
@@ -171,13 +171,13 @@ export const joinThreadRequest = thread => {
  * @param {Message} initialMessage - An initial message. As of right now, not required,
  *                             but I might change that
  */
-export const requestNewThread = (users, threadName, content) => ( {
-    type: MessageTypes.REQUEST_NEW_THREAD,
-    name:threadName,
-    users:users,
-    content:content
-  });
-
+export const requestNewThread = (sender, users, threadName, content) => ({
+  type: MessageTypes.REQUEST_NEW_THREAD,
+  name: threadName,
+  sender: sender,
+  users: users,
+  content: content
+});
 
 export const newThreadFailed = (threadHash, error) => {
   return {

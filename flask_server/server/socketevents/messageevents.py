@@ -16,7 +16,14 @@ from server.redis_cache.user_cache import (
     user_from_sid,
     user_from_cache,
 )
-from server.redis_cache.message_cache import get_message_by_id, create_message_dict,create_message,check_if_thread_exists, create_thread,get_next_id
+from server.redis_cache.message_cache import (
+    get_message_by_id,
+    create_message_dict,
+    create_message,
+    check_if_thread_exists,
+    create_thread,
+    get_next_message_id,
+)
 from server.logging import make_logger
 
 try:
@@ -24,30 +31,30 @@ try:
 except:
     from app import socketio
 
-    
+
 logger = make_logger(__name__)
 
 
 # TODO: !!!! Add auth method for sockets !!!!
 @socketio.on("SEND_MESSAGE", namespace="/message")
 def new_message(data):
-    logger.info(f'SEND_MESSAGE Recieved {data}')
-    thread_id = data['thread']
-    sender_id = data['sender']
-    content = data['content']
+    logger.info(f"SEND_MESSAGE Recieved {data}")
+    thread_id = data["thread"]
+    sender_id = data["sender"]
+    content = data["content"]
     try:
-        message_dict = create_message_dict(content,sender_id,thread_id)
+        message_dict = create_message_dict(content, sender_id, thread_id)
         create_message(message_dict)
     except KeyError as e:
         logger.error(e)
-        return jsonify(error='Malformed request'), 400
-    
+        return jsonify(error="Malformed request"), 400
+
     logger.info(f"{message_dict}")
-    emit('NEW_MESSAGE',message_dict)
+    emit("NEW_MESSAGE", message_dict)
 
 
-@socketio.on("TEST",namespace='/message')
+@socketio.on("TEST", namespace="/message")
 def test_messaging2():
-    logger.debug(f'/message socket test triggered {request.sid}')
-    emit('test', {'data':'data'})
+    logger.debug(f"/message socket test triggered {request.sid}")
+    emit("test", {"data": "data"})
 
