@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { sendMessage, requestNewThread } from "../../actions/message-actions";
+import {
+  sendMessage,
+  requestNewThread,
+  clearNewThread
+} from "../../actions/message-actions";
 import MessengerSidebar from "./MessengerSidebar";
 import TabContainer from "./TabDisplay/TabContainer";
 import MessageContainer from "./TabDisplay/MessageContainer";
@@ -17,7 +21,8 @@ const Messenger = props => {
     messages: props.messages,
     users: props.users,
     onlineUserIds: props.onlineUserIds,
-    friendsList: props.friendsList
+    friendsList: props.friendsList,
+    newThreadId: props.newThreadId
   };
 
   /*State variables for message views*/
@@ -53,6 +58,22 @@ const Messenger = props => {
       }
     }
   }, [messages, currentTabIndex, openTabIds, threads, showCreateThread.value]);
+
+  useEffect(() => {
+    console.log("In effect: ", openTabIds);
+
+    const createThreadIndex = openTabIds.indexOf(CREATE_THREAD_ID);
+    if (createThreadIndex < 0) {
+      console.log(createThreadIndex);
+      console.error("createThread not found in list");
+    } else {
+      let updatedOpenTabIds = openTabIds.slice();
+      updatedOpenTabIds[createThreadIndex] = props.newThreadId;
+      setOpenTabIds(updatedOpenTabIds);
+      showCreateThread.setFalse();
+      props.dispatchClearNewThread();
+    }
+  }, [props.newThreadId]);
 
   // Creates function to scope to a tab. Used by the thread sidebar list
   const makeFocusTab = id => () => {
@@ -272,14 +293,16 @@ export default connect(
     threads: state.messaging.threads,
     users: state.messaging.users,
     onlineUserIds: state.messaging.onlineUserIds,
-    friendsList: state.messaging.friendsList
+    friendsList: state.messaging.friendsList,
+    newThreadId: state.messaging.newThreadId
   }),
   dispatch => {
     return {
       dispatchMessage: (thread, content) =>
         dispatch(sendMessage(thread, content)),
       dispatchRequestNewThread: (sender, users, threadName, content) =>
-        dispatch(requestNewThread(sender, users, threadName, content))
+        dispatch(requestNewThread(sender, users, threadName, content)),
+      dispatchClearNewThread: () => dispatch(clearNewThread())
     };
   }
 )(Messenger);

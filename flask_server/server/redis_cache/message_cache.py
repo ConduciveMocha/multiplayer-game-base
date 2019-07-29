@@ -20,6 +20,7 @@ THREAD_START = "START"
 
 logger = make_logger(__name__)
 
+
 @global_poolman
 def create_default_thread_name(r, users):
     return "TEST"
@@ -91,12 +92,11 @@ def create_thread(pipe, thread_dict):
     logger.info(f"Creating thread:{thread_id}:messages")
     pipe.lpush(f"thread:{thread_id}:messages", THREAD_START)
 
-    
-   
     logger.info("Executing pipe")
     pipe.execute()
     logger.info("Pipe executed, thread created. Returning")
     return thread_dict
+
 
 def create_message_dict(content, sender, thread):
     return {
@@ -118,6 +118,7 @@ def create_thread_dict(content, sender, users, name):
                 "users": full_users,
                 "name": name if name else create_default_thread_name(full_users),
                 "id": get_next_thread_id(),
+                "messages": [],
             },
             False,
         )

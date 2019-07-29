@@ -156,6 +156,9 @@ export const userListRecieved = userList => {
  * @param {Thread} thread - Thread that user is asked to join
  */
 export const joinThreadRequest = thread => {
+  if (!thread.messages) {
+    thread.messages = [];
+  }
   return {
     type: MessageTypes.JOIN_THREAD_REQUESTED,
     thread
@@ -186,3 +189,7 @@ export const newThreadFailed = (threadHash, error) => {
     error
   };
 };
+
+export const clearNewThread = () => ({
+  type: MessageTypes.CLEAR_NEW_THREAD
+});

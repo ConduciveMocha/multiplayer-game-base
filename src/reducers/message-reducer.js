@@ -1,5 +1,11 @@
 import * as MessageTypes from "../constants/action-types/message-types";
-import { mockThreads,mockMessages,mockUsers,mockFriendsList,mockOnlineUserIds } from "../utils/messaging-mock";
+import {
+  mockThreads,
+  mockMessages,
+  mockUsers,
+  mockFriendsList,
+  mockOnlineUserIds
+} from "../utils/messaging-mock";
 
 const MESSAGE_STATUS = {
   SENT: 2,
@@ -12,15 +18,14 @@ const messengerInitialState = {
   users: mockUsers,
   onlineUserIds: mockOnlineUserIds,
   friendsList: mockFriendsList,
-  messages: mockMessages
+  messages: mockMessages,
+  newThreadId: null
 };
 
 export default function messagingReducer(
   state = messengerInitialState,
   action
 ) {
-
-
   switch (action.type) {
     case MessageTypes.USER_JOINED:
       return {
@@ -38,19 +43,18 @@ export default function messagingReducer(
       return { ...removedUserState, onlineUserIds: updatedOnlineUserIds };
 
     case MessageTypes.RECEIVE_MESSAGE:
-      console.log('Messaging reducer:', 'RECIEVE_MESSAGE',action)
-      console.log('state', state)
+      console.log("Messaging reducer:", "RECIEVE_MESSAGE", action);
+      console.log("state", state);
       let message = action.message;
-      let updatedThread = {...state.threads[action.message.thread]}
-      updatedThread.messages = [...updatedThread.messages,message.id]
+      let updatedThread = { ...state.threads[action.message.thread] };
+      updatedThread.messages = [...updatedThread.messages, message.id];
       let newState = {
-        ...state, 
-        messages:{...state.messages,[message.id]:message},
-        threads:{...state.threads, [action.message.thread]:updatedThread} 
-      }
-      console.log('new state', newState) 
-      return newState
-
+        ...state,
+        messages: { ...state.messages, [message.id]: message },
+        threads: { ...state.threads, [action.message.thread]: updatedThread }
+      };
+      console.log("new state", newState);
+      return newState;
 
     case MessageTypes.MESSAGE_HAS_FAILED:
       return {
@@ -77,6 +81,16 @@ export default function messagingReducer(
           }
         }
       };
+
+    case MessageTypes.JOIN_THREAD_REQUESTED:
+      return {
+        ...state,
+        threads: { ...state.threads, [action.thread.id]: action.thread },
+        newThreadId: action.thread.id
+      };
+
+    case MessageTypes.CLEAR_NEW_THREAD:
+      return { ...state, newThreadId: null };
 
     default:
       return state;

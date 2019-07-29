@@ -19,7 +19,7 @@ import { appendJwt } from "../api";
 
 // Returns a socket connection to url
 export function connect() {
-  const socket = io.connect('http://localhost:5000')// you need to explicitly tell it to use websockets});
+  const socket = io.connect("http://localhost:5000"); // you need to explicitly tell it to use websockets});
   return new Promise(resolve => {
     socket.on("connect", () => {
       resolve(socket);
@@ -28,7 +28,7 @@ export function connect() {
 }
 
 export function messageConnect() {
-  const socket = io('http://localhost:5000/message',{forceNew:true});
+  const socket = io("http://localhost:5000/message", { forceNew: true });
   return new Promise(resolve => {
     socket.on("connect", () => {
       resolve(socket);
@@ -47,21 +47,21 @@ export function messageConnect() {
 function subscribe(socket) {
   return eventChannel(emit => {
     socket.on("test", data => {
-      console.log('Test Recieved')
-
-      // emit(data);
+      console.log("Test Recieved");
+      console.log("Data:", data);
     });
+
+    socket.on(MessageTypes.JOIN_THREAD_REQUESTED, payload => {
+      console.debug("Request to join thread: ", payload);
+      emit(MessageActions.joinThreadRequest(payload));
+    });
+
     socket.on(MessageTypes.NEW_MESSAGE, message => {
-      console.log(message)
+      console.log(message);
       emit(MessageActions.recieveMessage(message));
     });
-    
 
-
-
-    return () => {
-
-    };
+    return () => {};
   });
 }
 
@@ -70,25 +70,21 @@ function* read(socket) {
   const channel = yield call(subscribe, socket);
   while (true) {
     let action = yield take(channel);
-    yield put(action)
-    
+    yield put(action);
   }
 }
 
 function* write(socket) {
-
-  function sendMessage(action){
-    socket.emit(MessageTypes.SEND_MESSAGE,{...action, sender:0}) ;
-    console.log('Emitted event through socket in sendMessage')
-    console.log('action object', action)
+  function sendMessage(action) {
+    socket.emit(MessageTypes.SEND_MESSAGE, { ...action, sender: 0 });
+    console.log("Emitted event through socket in sendMessage");
+    console.log("action object", action);
     // yield put({type:"MESSAGE_SENT",message:action.message})
   }
 
-
   while (true) {
     let action = yield take(MessageTypes.SEND_MESSAGE);
-    sendMessage(action) 
-
+    sendMessage(action);
   }
 }
 
@@ -98,20 +94,17 @@ function* handleIO(socket) {
 }
 
 function* flow() {
-  while (true){
+  while (true) {
     const socket = yield call(connect);
     const messageSocket = yield call(messageConnect);
-    // const task = yield fork(handleIO, socket)
+    const task = yield fork(handleIO, socket);
     const mTask = yield fork(handleIO, messageSocket);
-    console.log('HandleIO Forked')
-    socket.emit("SOCKET_TEST",{data:'test'})
-    
-    yield take ("NOTHIng")
+    console.log("HandleIO Forked");
+    socket.emit("SOCKET_TEST", { data: "test" });
 
+    yield take("NOTHIng");
   }
-
 }
-
 
 export default function* socketSaga() {
   yield fork(flow);
