@@ -5,15 +5,12 @@ import { BrowserRouter as Router, Route } from "react-router-dom";
 import Barsign from "./components/LandingPage/Barsign";
 import LoginScreen from "./components/LoginScreen";
 import RegistrationScreen from "./components/RegistrationScreen";
-import GamePage from "./components/GamePage/GamePage";
 import Messenger from "./components/Messenger";
+import GameDisplay from "./components/GameDisplay";
 import store from "./store";
 import { Provider } from "react-redux";
 import "./App.css";
-import { mockThreads,mockMessages,mockUsers } from "./utils/messaging-mock";
-
-
-
+import { mockThreads, mockMessages, mockUsers } from "./utils/messaging-mock";
 
 class App extends Component {
   render() {
@@ -29,7 +26,7 @@ class App extends Component {
         </div>
 
       </Router> */}
-
+        <GameDisplay />
         <Messenger />
       </Provider>
     );

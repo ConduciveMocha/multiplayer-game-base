@@ -1,36 +1,15 @@
-div.recieved {
-  border-radius: 25px 25px 25px 25px;
-  padding: 5px 10px 5px 10px;
-  background-color: yellow;
-  margin: 10px 0px 10px 10px;
-}
-
-div.sent {
-  border-radius: 25px 25px 25px 25px;
-  padding: 5px 10px 5px 10px;
-  background-color: green;
-  margin-left: 50%;
-  margin-bottom: 10px;
-  display: flex;
-}
-
-p.sent-message {
-}
-
-div.sent,
-div.recieved {
-  width: 45%;
-}
-.message-container {
-  border: 2px solid black;
-  overflow: auto;
-  height: 250px;
-}
 .messanger-container {
   width: 75%;
   display: flex;
-  margin-top: 30%;
   margin-left: 20%;
+}
+
+.messenger-sidebar {
+  width: 10%;
+  /* width: 10000px; */
+  height: 365px;
+  overflow: auto;
+  background-color: grey;
 }
 
 .tab-container {
@@ -66,14 +45,6 @@ div.recieved {
   background-color: green;
   border-radius: 8px;
   margin: auto;
-}
-
-.messenger-sidebar {
-  width: 10%;
-  /* width: 10000px; */
-  height: 365px;
-  overflow: auto;
-  background-color: grey;
 }
 
 [id^="friends"],
@@ -118,4 +89,24 @@ div.recieved {
 
 .thread-name-italic {
   font-style: italic;
+}
+
+div.sent,
+div.recieved {
+  width: 45%;
+}
+div.recieved {
+  border-radius: 25px 25px 25px 25px;
+  padding: 5px 10px 5px 10px;
+  background-color: yellow;
+  margin: 10px 0px 10px 10px;
+}
+
+div.sent {
+  border-radius: 25px 25px 25px 25px;
+  padding: 5px 10px 5px 10px;
+  background-color: green;
+  margin-left: 50%;
+  margin-bottom: 10px;
+  display: flex;
 }
