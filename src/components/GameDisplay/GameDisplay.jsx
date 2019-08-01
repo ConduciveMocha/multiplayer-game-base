@@ -1,53 +1,53 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
-import {connect} from 'react-redux'
+import { connect } from "react-redux";
 import "./GameDisplay.css";
 const SQUARE = 0;
 const TRAPEZOID = 1;
 const CIRCLE = 2;
 
-function drawSquare(ctx,x,y){
+function drawSquare(ctx, x, y) {
   ctx.fillStyle = "deepskyblue";
   ctx.shadowColor = "dodgerblue";
   ctx.shadowBlur = 20;
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(x,y)
-  ctx.lineTo(x+20,y)
-  ctx.lineTo(x+20,y+20)
-  ctx.lineTo(x,y+20)
-  ctx.lineTo(x,y);
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + 20, y);
+  ctx.lineTo(x + 20, y + 20);
+  ctx.lineTo(x, y + 20);
+  ctx.lineTo(x, y);
   ctx.fill();
   ctx.stroke();
-  ctx.restore()
-} 
+  ctx.restore();
+}
 
-function drawTrapezoid(ctx,x,y){
+function drawTrapezoid(ctx, x, y) {
   ctx.fillStyle = "deeppink";
   ctx.shadowColor = "dodgerblue";
   ctx.shadowBlur = 20;
   ctx.save();
 
-  ctx.beginPath()
-  ctx.moveTo(x,y)
-  ctx.lineTo(x+50,y)
-  ctx.lineTo(x+30, y+25);
-  ctx.lineTo(x-20, y+25)
-  ctx.lineTo(x,y)
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + 50, y);
+  ctx.lineTo(x + 30, y + 25);
+  ctx.lineTo(x - 20, y + 25);
+  ctx.lineTo(x, y);
   ctx.fill();
 
   ctx.stroke();
   ctx.restore();
 }
 
-function drawCircle(ctx,x,y) {
+function drawCircle(ctx, x, y) {
   ctx.fillStyle = "salmon";
   ctx.shadowColor = "dodgerblue";
   ctx.shadowBlur = 20;
   ctx.save();
-  ctx.moveTo(x,y)
-  ctx.beginPath()
-  ctx.arc(x,y,25,0,2*Math.PI)
+  ctx.moveTo(x, y);
+  ctx.beginPath();
+  ctx.arc(x, y, 25, 0, 2 * Math.PI);
   ctx.fill();
 
   ctx.stroke();
@@ -62,29 +62,42 @@ HOOK_PATH.rect(0, 0, 100, 100);
 
 const SCALE = 0.6;
 const OFFSET = [50, 50];
-function draw(ctx, location,type) {
-  
-  switch(type){
+function draw(ctx, location, type) {
+  switch (type) {
     case CIRCLE:
-      drawCircle(ctx, location.x,location.y);
+      drawCircle(ctx, location.x, location.y);
       break;
     case TRAPEZOID:
-      drawTrapezoid(ctx,location.x,location.y);
+      drawTrapezoid(ctx, location.x, location.y);
       break;
     default:
-      drawSquare(ctx,location.x,location.y)
+      drawSquare(ctx, location.x, location.y);
   }
-
-
 }
 function GameDisplay(props) {
   const displayRef = React.useRef(null);
   const [mp, setMp] = useState([0, 0]);
-  const [shape,setShape] = useState(SQUARE)
+  const [shape, setShape] = useState(SQUARE);
+
+  useEffect(() => {
+    try {
+      const t1 = performance.now();
+      const canvas = displayRef.current;
+      const ctx = canvas.getContext("2d");
+      for (let i in props.gameObjects) {
+        let coords = props.gameObjects[i];
+        drawSquare(ctx, coords.x, coords.y);
+      }
+      const t2 = performance.now();
+      console.log("Execution time: ", t2 - t1);
+    } catch (e) {
+      console.log(e);
+    }
+  }, [props.gameObjects]);
+
   const onMM = e => {
     setMp([e.clientX, e.clientY]);
   };
-  console.log(props.gameObjects)
   return (
     <>
       <canvas
@@ -99,21 +112,52 @@ function GameDisplay(props) {
           // draw(ctx, { x: e.clientX, y: e.clientY },shape);
         }}
         tabIndex="1"
-        onKeyDown={e=> {
+        onKeyDown={e => {
           const canvas = displayRef.current;
-          const ctx = canvas.getContext("2d")
-          console.log(e)
-          draw(ctx, {x:mp[0], y:mp[1] }, shape)
+          const ctx = canvas.getContext("2d");
+          console.log(e);
+          draw(ctx, { x: mp[0], y: mp[1] }, shape);
         }}
       />
       <p>
         {mp[0]} {mp[1]}
       </p>
-        <button onClick={(e)=>{setShape(SQUARE)}}>Square</button>
-        <button onClick={(e)=>{setShape(TRAPEZOID)}}>Trapezoid</button>
-        <button onClick={(e)=>{setShape(CIRCLE)}}>Circle</button>
+      <button
+        onClick={e => {
+          setShape(SQUARE);
+        }}
+      >
+        Square
+      </button>
+      <button
+        onClick={e => {
+          setShape(TRAPEZOID);
+        }}
+      >
+        Trapezoid
+      </button>
+      <button
+        onClick={e => {
+          setShape(CIRCLE);
+        }}
+      >
+        Circle
+      </button>
+      <button
+        onClick={e => {
+          props.dispatchTest();
+          console.log("dispatch");
+        }}
+      >
+        Test
+      </button>
     </>
   );
 }
 
-export default connect(state=>({gameObjects: state.game.gameObjects}),dispatch=>({}))(GameDisplay);
+export default connect(
+  state => ({ gameObjects: state.game.gameObjects }),
+  dispatch => ({
+    dispatchTest: () => dispatch({ type: "TEST_CANVAS" })
+  })
+)(GameDisplay);
