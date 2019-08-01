@@ -1,8 +1,19 @@
 // import MovementActions, { MOVE_PLAYER } from '../constants/action-types/movement-types'
-
+import * as GameTypes from '../constants/action-types/game-types';
 const initialGameState = {
-  gameObjects: []
+  gameObjects: {},
+  inventory: []
 };
+
+const updateGameObjects = (oldState, updatedObjects) => {
+  let stateCopy = {...oldState}
+  for(let i in updatedObjects){
+    let obj = updatedObjects[i];
+    stateCopy[obj.id] = obj;
+  }
+  return {...stateCopy}
+}
+
 export default function gameReducer(state = initialGameState, action) {
   switch (action.type) {
     case "TEST_CANVAS":
@@ -16,6 +27,9 @@ export default function gameReducer(state = initialGameState, action) {
           }
         ]
       };
+
+      case GameTypes.UPDATE_GAMESTATE:
+        return {...state,gameObjects: updateGameObjects(state.gameObjects, action.updatedObjects)}
 
     default:
       return state;

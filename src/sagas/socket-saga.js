@@ -13,8 +13,10 @@ import * as SocketActions from "../actions/socket-actions";
 import * as SocketTypes from "../constants/action-types/socket-types";
 import io from "socket.io-client";
 import * as MessageActions from "../actions/message-actions";
+import * as GameActions from '../actions/game-actions';
 import testAction from "../actions/debug-actions";
 import * as MessageTypes from "../constants/action-types/message-types";
+import * as GameTypes from '../constants/action-types/game-types'
 import { appendJwt } from "../api";
 
 // Returns a socket connection to url
@@ -65,6 +67,21 @@ function subscribe(socket) {
   });
 }
 
+function moveChannelSubscribe(socket) {
+  return eventChannel(emit=> {
+    socket.on(GameTypes.UPDATE_GAMESTATE,payload=>{
+      console.debug('Updating gamestate with payload:',payload)
+
+    })
+
+    socket.on('TEST',payload=>{
+      console.log('Movement socket test recieved with payload: ',payload);
+    } )
+
+    return () => {}
+  })
+}
+
 // Generator that takes all actions
 function* read(socket) {
   const channel = yield call(subscribe, socket);
@@ -92,6 +109,25 @@ function* handleIO(socket) {
   yield fork(read, socket);
   yield fork(write, socket);
 }
+//! USES DEBUG VALUE FOR PLAYER
+function* writeMove(socket){
+  function sendMove(action) {
+    socket.emit(GameTypes.PLAYER_KEYED, {sender:0, key:action.key})
+  }
+  while(true){
+    let action = yield take(GameTypes.PLAYER_KEYED)
+    sendMove(action)
+  }
+}
+
+function* readMove(socket) {
+  const moveChannel = yield call(moveChannelSubscribe,socket);
+  while(true){
+    let action = yield take(moveChannel);
+    yield put(action)
+  }
+}
+
 
 function* flow() {
   while (true) {

@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useState } from "react";
 import { connect } from "react-redux";
+import {playerKeyed} from '../../actions/game-actions';
 import "./GameDisplay.css";
 const SQUARE = 0;
 const TRAPEZOID = 1;
@@ -95,6 +96,15 @@ function GameDisplay(props) {
     }
   }, [props.gameObjects]);
 
+  const handleKeyboardEvent = (e) => {
+    console.log(e.key)
+    if(e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "ArrowDown" || e.key==="ArrowRight" ) {
+      props.dispatchKeyPress(e.key)
+    }
+  }
+
+
+
   const onMM = e => {
     setMp([e.clientX, e.clientY]);
   };
@@ -112,12 +122,7 @@ function GameDisplay(props) {
           // draw(ctx, { x: e.clientX, y: e.clientY },shape);
         }}
         tabIndex="1"
-        onKeyDown={e => {
-          const canvas = displayRef.current;
-          const ctx = canvas.getContext("2d");
-          console.log(e);
-          draw(ctx, { x: mp[0], y: mp[1] }, shape);
-        }}
+        onKeyDown={e => handleKeyboardEvent(e)}
       />
       <p>
         {mp[0]} {mp[1]}
@@ -158,6 +163,7 @@ function GameDisplay(props) {
 export default connect(
   state => ({ gameObjects: state.game.gameObjects }),
   dispatch => ({
-    dispatchTest: () => dispatch({ type: "TEST_CANVAS" })
+    dispatchTest: () => dispatch({ type: "TEST_CANVAS" }),
+    dispatchKeyPress: (key) => dispatch(playerKeyed(key)) 
   })
 )(GameDisplay);
