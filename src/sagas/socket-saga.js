@@ -33,19 +33,22 @@ export function messageConnect() {
   const socket = io("http://localhost:5000/message", { forceNew: true });
   return new Promise(resolve => {
     socket.on("connect", () => {
+      console.log('Message Socket Connected')
       resolve(socket);
     });
   });
 }
-// export function connect(url,opts) {
-//   const socket = io(url,opts);
-//   return new Promise(resolve => {
-//     socket.on("connect", () => {
-//       //socket.emit("TEST",{'shouldnotappear':1, 'url':url});
-//       resolve(socket);
-//     });
-//   });
-// }
+
+export function gameConnect() {
+  const socket = io("http://localhost:5000/game",{forceNew:true});
+  return new Promise(resolve=> {
+    socket.on("connect", ()=>{
+      console.log('Game socket connected')
+      resolve(socket);
+    })
+  })
+}
+
 function subscribe(socket) {
   return eventChannel(emit => {
     socket.on("test", data => {
@@ -112,10 +115,13 @@ function* handleIO(socket) {
 //! USES DEBUG VALUE FOR PLAYER
 function* writeMove(socket){
   function sendMove(action) {
+    console.log('Sending move', action.key)
     socket.emit(GameTypes.PLAYER_KEYED, {sender:0, key:action.key})
   }
   while(true){
+    console.log(GameTypes.PLAYER_KEYED)
     let action = yield take(GameTypes.PLAYER_KEYED)
+    console.log('Recieved PLAYER_KEYED')
     sendMove(action)
   }
 }
@@ -128,13 +134,19 @@ function* readMove(socket) {
   }
 }
 
+function* handleGameIO(socket){
+  yield fork(readMove,socket);
+  yield fork(writeMove,socket);
+}
 
 function* flow() {
   while (true) {
     const socket = yield call(connect);
     const messageSocket = yield call(messageConnect);
+    const gameSocket = yield call(gameConnect);
     const task = yield fork(handleIO, socket);
     const mTask = yield fork(handleIO, messageSocket);
+    const gTaks = yield fork(handleGameIO, gameSocket);
     console.log("HandleIO Forked");
     socket.emit("SOCKET_TEST", { data: "test" });
 

@@ -5,8 +5,7 @@ import { BrowserRouter as Router, Route } from "react-router-dom";
 import Barsign from "./components/LandingPage/Barsign";
 import LoginScreen from "./components/LoginScreen";
 import RegistrationScreen from "./components/RegistrationScreen";
-import Messenger from "./components/Messenger";
-import GameDisplay from "./components/GameDisplay";
+import GameScreen from './components/GameScreen'
 import store from "./store";
 import { Provider } from "react-redux";
 import "./App.css";
@@ -26,8 +25,7 @@ class App extends Component {
         </div>
 
       </Router> */}
-        <GameDisplay />
-        <Messenger />
+      <GameScreen/>
       </Provider>
     );
   }
