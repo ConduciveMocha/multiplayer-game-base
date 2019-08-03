@@ -1,7 +1,6 @@
 .messanger-container {
-  width: 75%;
   display: flex;
-  margin-left: 20%;
+  /* margin-left: 20%; */
 }
 
 .messenger-sidebar {

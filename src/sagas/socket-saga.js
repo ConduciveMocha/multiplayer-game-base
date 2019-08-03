@@ -13,10 +13,10 @@ import * as SocketActions from "../actions/socket-actions";
 import * as SocketTypes from "../constants/action-types/socket-types";
 import io from "socket.io-client";
 import * as MessageActions from "../actions/message-actions";
-import * as GameActions from '../actions/game-actions';
+import * as GameActions from "../actions/game-actions";
 import testAction from "../actions/debug-actions";
 import * as MessageTypes from "../constants/action-types/message-types";
-import * as GameTypes from '../constants/action-types/game-types'
+import * as GameTypes from "../constants/action-types/game-types";
 import { appendJwt } from "../api";
 
 // Returns a socket connection to url
@@ -33,20 +33,20 @@ export function messageConnect() {
   const socket = io("http://localhost:5000/message", { forceNew: true });
   return new Promise(resolve => {
     socket.on("connect", () => {
-      console.log('Message Socket Connected')
+      console.log("Message Socket Connected");
       resolve(socket);
     });
   });
 }
 
 export function gameConnect() {
-  const socket = io("http://localhost:5000/game",{forceNew:true});
-  return new Promise(resolve=> {
-    socket.on("connect", ()=>{
-      console.log('Game socket connected')
+  const socket = io("http://localhost:5000/game", { forceNew: true });
+  return new Promise(resolve => {
+    socket.on("connect", () => {
+      console.log("Game socket connected");
       resolve(socket);
-    })
-  })
+    });
+  });
 }
 
 function subscribe(socket) {
@@ -71,18 +71,18 @@ function subscribe(socket) {
 }
 
 function moveChannelSubscribe(socket) {
-  return eventChannel(emit=> {
-    socket.on(GameTypes.UPDATE_GAMESTATE,payload=>{
-      console.debug('Updating gamestate with payload:',payload)
+  return eventChannel(emit => {
+    socket.on(GameTypes.UPDATE_GAMESTATE, payload => {
+      console.debug("Updating gamestate with payload:", payload);
+      emit(GameActions.updateGamestate(payload.updatedObjects));
+    });
 
-    })
+    socket.on("TEST", payload => {
+      console.log("Movement socket test recieved with payload: ", payload);
+    });
 
-    socket.on('TEST',payload=>{
-      console.log('Movement socket test recieved with payload: ',payload);
-    } )
-
-    return () => {}
-  })
+    return () => {};
+  });
 }
 
 // Generator that takes all actions
@@ -113,30 +113,47 @@ function* handleIO(socket) {
   yield fork(write, socket);
 }
 //! USES DEBUG VALUE FOR PLAYER
-function* writeMove(socket){
+function* writeMove(socket) {
   function sendMove(action) {
-    console.log('Sending move', action.key)
-    socket.emit(GameTypes.PLAYER_KEYED, {sender:0, key:action.key})
+    console.log("Sending move", action.key);
+    socket.emit(GameTypes.PLAYER_KEYED, { sender: 0, key: action.key });
   }
-  while(true){
-    console.log(GameTypes.PLAYER_KEYED)
-    let action = yield take(GameTypes.PLAYER_KEYED)
-    console.log('Recieved PLAYER_KEYED')
-    sendMove(action)
+  while (true) {
+    let action = yield take(GameTypes.PLAYER_KEYED);
+    console.log("Recieved PLAYER_KEYED");
+    sendMove(action);
+  }
+}
+//! USES DEBUG VALUE FOR PLAYER
+function* writeRemoveItem(socket) {
+  function sendRemoveItem(action) {
+    console.log("Sending REMOVE_ITEM", action);
+    socket.emit(GameTypes.REMOVE_INVENTORY_ITEM, {
+      sender: 0,
+      item: action.item,
+      destination: action.destination
+    });
+  }
+
+  while (true) {
+    let action = yield take(GameTypes.REMOVE_INVENTORY_ITEM);
+    console.log("Recieved REMOVE_INVENTORY_ITEM");
+    sendRemoveItem(action);
   }
 }
 
 function* readMove(socket) {
-  const moveChannel = yield call(moveChannelSubscribe,socket);
-  while(true){
+  const moveChannel = yield call(moveChannelSubscribe, socket);
+  while (true) {
     let action = yield take(moveChannel);
-    yield put(action)
+    yield put(action);
   }
 }
 
-function* handleGameIO(socket){
-  yield fork(readMove,socket);
-  yield fork(writeMove,socket);
+function* handleGameIO(socket) {
+  yield fork(readMove, socket);
+  yield fork(writeMove, socket);
+  yield fork(writeRemoveItem, socket);
 }
 
 function* flow() {

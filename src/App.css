@@ -1,10 +1,12 @@
 .App {
   text-align: center;
-  padding:0;
+  padding: 0;
   align-content: center;
   display: flex;
 }
-
+body {
+  margin: 0vw 15vw;
+}
 .App-logo {
   animation: App-logo-spin infinite 20s linear;
   height: 40vmin;
