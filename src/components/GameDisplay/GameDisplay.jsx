@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useState } from "react";
 import { connect } from "react-redux";
-import {playerKeyed} from '../../actions/game-actions';
+import { playerKeyed } from "../../actions/game-actions";
 import "./GameDisplay.css";
 const SQUARE = 0;
 const TRAPEZOID = 1;
@@ -63,51 +63,47 @@ HOOK_PATH.rect(0, 0, 100, 100);
 
 const SCALE = 0.6;
 const OFFSET = [50, 50];
-function draw(ctx, location, type) {
+function draw(ctx, gameObject) {
+  const { x, y, type } = gameObject;
   switch (type) {
     case CIRCLE:
-      drawCircle(ctx, location.x, location.y);
+      drawCircle(ctx, x, y);
       break;
     case TRAPEZOID:
-      drawTrapezoid(ctx, location.x, location.y);
+      drawTrapezoid(ctx, x, y);
       break;
     default:
-      drawSquare(ctx, location.x, location.y);
+      drawSquare(ctx, x, y);
   }
 }
 function GameDisplay(props) {
   const displayRef = React.useRef(null);
-  const [mp, setMp] = useState([0, 0]);
-  const [shape, setShape] = useState(SQUARE);
 
   useEffect(() => {
     try {
-      const t1 = performance.now();
       const canvas = displayRef.current;
       const ctx = canvas.getContext("2d");
       for (let i in props.gameObjects) {
-        let coords = props.gameObjects[i];
-        drawSquare(ctx, coords.x, coords.y);
+        console.log("In useEffect in GameDisplay. i=", i);
+        draw(ctx, props.gameObjects[i]);
       }
-      const t2 = performance.now();
-      console.log("Execution time: ", t2 - t1);
     } catch (e) {
       console.log(e);
     }
   }, [props.gameObjects]);
 
-  const handleKeyboardEvent = (e) => {
-    console.log(e.key)
-    if(e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "ArrowDown" || e.key==="ArrowRight" ) {
-      props.dispatchKeyPress(e.key)
+  const handleKeyboardEvent = e => {
+    console.log(e.key);
+    if (
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowUp" ||
+      e.key === "ArrowDown" ||
+      e.key === "ArrowRight"
+    ) {
+      props.dispatchKeyPress(e.key);
     }
-  }
-
-
-
-  const onMM = e => {
-    setMp([e.clientX, e.clientY]);
   };
+
   return (
     <>
       <canvas
@@ -115,39 +111,10 @@ function GameDisplay(props) {
         ref={displayRef}
         width={window.innerWidth * 0.65}
         height={window.innerHeight * 0.5}
-        onMouseMove={e => {
-          const canvas = displayRef.current;
-          const ctx = canvas.getContext("2d");
-          onMM(e);
-          // draw(ctx, { x: e.clientX, y: e.clientY },shape);
-        }}
         tabIndex="1"
         onKeyDown={e => handleKeyboardEvent(e)}
       />
-      <p>
-        {mp[0]} {mp[1]}
-      </p>
-      <button
-        onClick={e => {
-          setShape(SQUARE);
-        }}
-      >
-        Square
-      </button>
-      <button
-        onClick={e => {
-          setShape(TRAPEZOID);
-        }}
-      >
-        Trapezoid
-      </button>
-      <button
-        onClick={e => {
-          setShape(CIRCLE);
-        }}
-      >
-        Circle
-      </button>
+
       <button
         onClick={e => {
           props.dispatchTest();
@@ -164,6 +131,6 @@ export default connect(
   state => ({ gameObjects: state.game.gameObjects }),
   dispatch => ({
     dispatchTest: () => dispatch({ type: "TEST_CANVAS" }),
-    dispatchKeyPress: (key) => dispatch(playerKeyed(key)) 
+    dispatchKeyPress: key => dispatch(playerKeyed(key))
   })
 )(GameDisplay);

@@ -10,4 +10,6 @@ export const inventoryMock = {
 };
 // export const inventoryMock = {};
 
-export const gameObjectsMock = {};
+export const gameObjectsMock = {
+  0: { x: 0, y: 0, type: 0, id: 0 }
+};

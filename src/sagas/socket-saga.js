@@ -1,7 +1,7 @@
 import { eventChannel, END } from "redux-saga";
 import {
   take,
-  takeEvery,
+  select,
   put,
   call,
   all,
@@ -19,6 +19,12 @@ import * as MessageTypes from "../constants/action-types/message-types";
 import * as GameTypes from "../constants/action-types/game-types";
 import { appendJwt } from "../api";
 
+/**
+ * Connect Functions:
+ *
+ * Error out when I try to make a function that creates these
+ * by passing a URL arg
+ */
 // Returns a socket connection to url
 export function connect() {
   const socket = io.connect("http://localhost:5000"); // you need to explicitly tell it to use websockets});
@@ -108,24 +114,30 @@ function* write(socket) {
   }
 }
 
-function* handleIO(socket) {
-  yield fork(read, socket);
-  yield fork(write, socket);
-}
 //! USES DEBUG VALUE FOR PLAYER
 function* writeMove(socket) {
   function sendMove(action) {
     console.log("Sending move", action.key);
-    socket.emit(GameTypes.PLAYER_KEYED, { sender: 0, key: action.key });
+    socket.emit(GameTypes.PLAYER_KEYED, {
+      sender: 0,
+      key: action.key,
+      playerObject: action.playerObject
+    });
   }
   while (true) {
     let action = yield take(GameTypes.PLAYER_KEYED);
+    let playerObject = yield select(getPlayerObject);
+    console.log("Player Object before send: ", playerObject);
     console.log("Recieved PLAYER_KEYED");
-    sendMove(action);
+    sendMove({ ...action, playerObject: playerObject });
   }
 }
+
 //! USES DEBUG VALUE FOR PLAYER
-function* writeRemoveItem(socket) {
+const getPlayerObject = state => state.game.gameObjects[0];
+
+//! USES DEBUG VALUE FOR PLAYER
+function* writeInventoryAction(socket) {
   function sendRemoveItem(action) {
     console.log("Sending REMOVE_ITEM", action);
     socket.emit(GameTypes.REMOVE_INVENTORY_ITEM, {
@@ -137,6 +149,7 @@ function* writeRemoveItem(socket) {
 
   while (true) {
     let action = yield take(GameTypes.REMOVE_INVENTORY_ITEM);
+
     console.log("Recieved REMOVE_INVENTORY_ITEM");
     sendRemoveItem(action);
   }
@@ -153,7 +166,11 @@ function* readMove(socket) {
 function* handleGameIO(socket) {
   yield fork(readMove, socket);
   yield fork(writeMove, socket);
-  yield fork(writeRemoveItem, socket);
+  yield fork(writeInventoryAction, socket);
+}
+function* handleIO(socket) {
+  yield fork(read, socket);
+  yield fork(write, socket);
 }
 
 function* flow() {
