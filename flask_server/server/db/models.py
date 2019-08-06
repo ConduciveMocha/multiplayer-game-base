@@ -169,3 +169,20 @@ class Email(db.Model):
         if not valid:
             model_log.debug(f"Invalid Email ({email})")
         return valid
+
+
+class Environment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    width = db.Column(db.Integer)
+    height = db.Column(db.Integer)
+    game_objeccts=db.relationship('GameObject', backref='environment')
+    
+class GameObject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    width = db.Column(db.Integer)
+    height = db.Column(db.Integer)
+    posx = db.Column(db.Integer)
+    posy = db.Column(db.Integer)
+    environment_id = db.Column(db.Integer, db.ForeignKey('environment.id'))
+
+
