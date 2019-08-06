@@ -14,10 +14,8 @@ import * as SocketTypes from "../constants/action-types/socket-types";
 import io from "socket.io-client";
 import * as MessageActions from "../actions/message-actions";
 import * as GameActions from "../actions/game-actions";
-import testAction from "../actions/debug-actions";
 import * as MessageTypes from "../constants/action-types/message-types";
 import * as GameTypes from "../constants/action-types/game-types";
-import { appendJwt } from "../api";
 
 /**
  * Connect Functions:

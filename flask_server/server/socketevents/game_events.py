@@ -16,11 +16,13 @@ except:
     )
 
 test_movement_dict = {
-    "ArrowUp": [0, -10],
-    "ArrowLeft": [-10, 0],
-    "ArrowRight": [10, 0],
-    "ArrowDown": [0, 10],
+    "ArrowUp": [0, -1],
+    "ArrowLeft": [-1, 0],
+    "ArrowRight": [1, 0],
+    "ArrowDown": [0, 1],
 }
+
+
 
 
 def update_pos(data):

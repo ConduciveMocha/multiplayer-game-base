@@ -65,6 +65,7 @@ const SCALE = 0.6;
 const OFFSET = [50, 50];
 function draw(ctx, gameObject) {
   const { x, y, type } = gameObject;
+  ctx.clearRect(0,0,window.innerWidth * 0.65,window.innerHeight * 0.5)
   switch (type) {
     case CIRCLE:
       drawCircle(ctx, x, y);
@@ -115,14 +116,6 @@ function GameDisplay(props) {
         onKeyDown={e => handleKeyboardEvent(e)}
       />
 
-      <button
-        onClick={e => {
-          props.dispatchTest();
-          console.log("dispatch");
-        }}
-      >
-        Test
-      </button>
     </>
   );
 }
