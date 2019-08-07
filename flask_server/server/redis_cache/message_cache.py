@@ -72,6 +72,12 @@ def check_if_thread_exists(r, members):
             return th
     return None
 
+@global_poolman
+def check_if_user_in_thread(r,thread_id,user_id):
+    is_member = r.sismember(f'thread:{thread_id}:members', user_id)
+    logger.info(f'Result of sismember for user {user_id} in {thread_id}: {is_member}')
+    return is_member
+
 
 @global_pipe
 def create_thread(pipe, thread_dict):
