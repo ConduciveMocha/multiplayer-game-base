@@ -23,9 +23,12 @@ from server.redis_cache.message_cache import (
     check_if_thread_exists,
     create_thread,
     get_next_message_id,
+    check_if_user_in_thread
 )
 from server.logging import make_logger
 
+# In a try catch block to avoid exception thrown
+# during alembic migration
 try:
     from __main__ import socketio
 except:
@@ -33,6 +36,21 @@ except:
 
 
 logger = make_logger(__name__)
+
+
+
+
+@socketio.on('connect', namespace='/message')
+def message_connect():
+    logger.info('Connected to /message')
+
+@socketio.on('JOIN_THREAD_REQUEST', namespace='/message')
+def join_thread_request(data):
+    if check_if_user_in_thread(data['thread'], data['sender']):
+        join_room(f"thread-{data['thread']}")
+        emit('THREAD_JOINED', {'thread':data['thread']})
+    else:
+        emit('THREAD_JOIN_FAILED', {'thread':data['thread'], 'error':'USER NOT IN THREAD'})
 
 
 # TODO: !!!! Add auth method for sockets !!!!
@@ -50,7 +68,7 @@ def new_message(data):
         return jsonify(error="Malformed request"), 400
 
     logger.info(f"{message_dict}")
-    emit("NEW_MESSAGE", message_dict)
+    emit("NEW_MESSAGE", message_dict,room=f"thread-{data['thread']}")
 
 
 @socketio.on("TEST", namespace="/message")
