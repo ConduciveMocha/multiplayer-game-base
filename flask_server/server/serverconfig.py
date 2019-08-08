@@ -55,9 +55,9 @@ class TestingConfig(Config):
     LOG_SOCKETS_INCOMING = True
     LOG_SOCKETS_OUTGOING = True
 
-    SQLALCHEMY_DATABASE_URI = (
-        "mysql+pymysql://mgb_test:password@localhost:3306/mgb_test"
-    )
+    # SQLALCHEMY_DATABASE_URI = (
+    #     "mysql+pymysql://mgb_test:password@localhost:3306/mgb_test"
+    # )
 
 
 # TODO: Fix this. The argparser bit breaks tests

@@ -38,8 +38,15 @@ def get_wordlist(dictionary="./words.txt"):
 
 
 # Defines constant 'WORD_LIST'
-WORD_LIST = get_wordlist()
+try:
+    WORD_LIST = get_wordlist()
+except FileNotFoundError:
+    import os
 
+    print(os.getcwd())
+    WORD_LIST = get_wordlist(
+        dictionary="/home/nate/code/multiplayer-game-base/flask_server/server/utils/words.txt"
+    )
 
 # Dictionary that can be called like an object. Actually, more like
 # an object that can be called like a dictionary! Keys must be strings
@@ -245,5 +252,5 @@ for _ in range(15):
     print(generate_message_element(wordlist=WORD_LIST))
 
 
-generate_message = ValueGenerator()
-
+# generate_message = ValueGenerator()
+mock_user_list = []

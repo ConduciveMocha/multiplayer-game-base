@@ -73,6 +73,7 @@ def create_app(conf=None, log=False, return_ext=None):
     import server.socketevents.debugevents
     import server.socketevents.connectionevents
     import server.socketevents.game_events
+
     # Extention initialization
     CORS(app)
     db.init_app(app)
@@ -98,6 +99,7 @@ def create_app(conf=None, log=False, return_ext=None):
     from server.blueprints.authbp import authbp
     from server.blueprints.userbp import userbp
     from server.blueprints.messagebp import message_bp
+
     app.register_blueprint(authbp)
     logger.debug("Added authbp")
     app.register_blueprint(registrationbp)
@@ -110,6 +112,7 @@ def create_app(conf=None, log=False, return_ext=None):
 
     @app.route("/", methods=["GET", "POST"])
     def index_page():
+        import server.db.game_actions
 
         return "<h1>hello world</h1>"
 
@@ -128,6 +131,7 @@ def create_app(conf=None, log=False, return_ext=None):
     if return_ext:
         if return_ext == "socketio":
             return app, socketio
+
     return app
 
 

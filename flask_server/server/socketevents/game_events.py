@@ -11,9 +11,8 @@ logger = make_logger(__name__)
 try:
     from __main__ import socketio
 except:
-    logger.critical(
-        "Could not import socketio from __main__ (in game_events.py). Server will crash."
-    )
+    #! THIS IS USED TO PREVENT DB MIGRATION TO GO THROUGH!!!!!
+    from app import socketio
 
 test_movement_dict = {
     "ArrowUp": [0, -1],
@@ -21,8 +20,6 @@ test_movement_dict = {
     "ArrowRight": [1, 0],
     "ArrowDown": [0, 1],
 }
-
-
 
 
 def update_pos(data):

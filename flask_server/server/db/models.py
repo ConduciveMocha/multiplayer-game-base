@@ -4,17 +4,21 @@ import logging
 
 from datetime import datetime
 
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, composite
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from server.auth import make_thread_hash, members_from_thread_hash
 from server.logging import make_logger
+from server.game.geometric_types.vector import Vector
+from server.game.geometric_types.rectangle import Rectangle
 
 model_log = make_logger(__name__)
 
+
 class CreatedTimestampMixin(object):
+    model_log.info("Creating CreatedTimestampMixin")
     created = db.Column(db.DateTime, default=datetime.utcnow)
 
     @validates("created")
@@ -31,6 +35,7 @@ class CreatedTimestampMixin(object):
 
 
 # Defines the many-to-many mapping between Users and Threads
+model_log.info("Creating user_thread table")
 user_thread = db.Table(
     "user_thread",
     db.Column("user_id", db.Integer, db.ForeignKey("user.id")),
@@ -38,16 +43,8 @@ user_thread = db.Table(
 )
 
 
-class Message(CreatedTimestampMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(256))
-    color = db.Column(db.String(24))
-    mods = db.Column(db.String(256))
-    sender_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-    thread_id = db.Column(db.Integer, db.ForeignKey("thread.id"))
-
-
 class Thread(CreatedTimestampMixin, db.Model):
+    model_log.info("Creating thread table")
     id = db.Column(db.Integer, primary_key=True)
     thread_hash = db.Column(db.String(64))
     name = db.Column(db.String(100))
@@ -71,6 +68,7 @@ class Thread(CreatedTimestampMixin, db.Model):
 
 
 class User(CreatedTimestampMixin, db.Model):
+    model_log.info("Creating user table")
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(16))
     password_hash = db.Column(db.String(100))
@@ -142,7 +140,18 @@ class User(CreatedTimestampMixin, db.Model):
             return False
 
 
+class Message(CreatedTimestampMixin, db.Model):
+    model_log.info("Creating message table")
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(256))
+    color = db.Column(db.String(24))
+    mods = db.Column(db.String(256))
+    sender_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    thread_id = db.Column(db.Integer, db.ForeignKey("thread.id"))
+
+
 class Email(db.Model):
+    model_log.info("Creating email table")
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(75))
@@ -172,17 +181,26 @@ class Email(db.Model):
 
 
 class Environment(db.Model):
+    model_log.info("Creating environment table")
     id = db.Column(db.Integer, primary_key=True)
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)
-    game_objeccts=db.relationship('GameObject', backref='environment')
-    
+    game_objects = db.relationship("GameObject", back_populates="environment")
+
+    dim = composite(Vector, width, height)
+
+
 class GameObject(db.Model):
+    model_log.info("Creating game_object table")
     id = db.Column(db.Integer, primary_key=True)
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)
     posx = db.Column(db.Integer)
     posy = db.Column(db.Integer)
-    environment_id = db.Column(db.Integer, db.ForeignKey('environment.id'))
+    acquirable = db.Column(db.Boolean)
+    collidable = db.Column(db.Boolean)
+    environment_id = db.Column(db.Integer, db.ForeignKey("environment.id"))
+    environment = db.relationship("Environment", back_populates="game_objects")
 
-
+    pos = composite(Vector, posx, posy)
+    dim = composite(Vector, width, height)
