@@ -40,5 +40,6 @@ def test_rectangle_collides():
     assert r1.collides(r2)
     assert r2.collides(r1)
     assert r3.collides(r1)
+    assert r1.collides(r3)
     assert r1.collides(r1)
     assert r1.collides(r4)
