@@ -6,10 +6,10 @@ from server.db.user_actions import query_user_by_id, query_user_by_username
 from server.auth import require_auth
 from server.redis_cache.user_cache import user_from_cache, get_online_users
 
-userbp = Blueprint("user", __name__, url_prefix="/user")
+user_bp = Blueprint("user", __name__, url_prefix="/user")
 
 
-@userbp.route("/online")
+@user_bp.route("/online")
 @require_auth
 def request_userlist():
     """Gets mapping of users -> usernames for online users
@@ -17,7 +17,7 @@ def request_userlist():
     return get_online_users()
 
 
-@userbp.route("/<int:user_id>")
+@user_bp.route("/<int:user_id>")
 @require_auth
 def request_username(user_id):
     """Queries user by ID
@@ -33,7 +33,7 @@ def request_username(user_id):
             return jsonify(user={})
 
 
-@userbp.route("/<string:username>")
+@user_bp.route("/<string:username>")
 @require_auth
 def request_user_id(username):
     """Queries User by username

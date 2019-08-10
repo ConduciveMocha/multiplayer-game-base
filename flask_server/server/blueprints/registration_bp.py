@@ -11,7 +11,7 @@ from server.logging import request_log, make_logger
 
 registration_log = make_logger(__name__)
 
-registrationbp = Blueprint("register", __name__, url_prefix="/register")
+registration_bp = Blueprint("register", __name__, url_prefix="/register")
 
 
 """
@@ -19,7 +19,7 @@ registrationbp = Blueprint("register", __name__, url_prefix="/register")
 """
 
 
-@registrationbp.route("/create", methods=["POST"])
+@registration_bp.route("/create", methods=["POST"])
 @request_log(request)
 def create_account():
     try:
@@ -39,7 +39,7 @@ def create_account():
 """
 
 
-@registrationbp.route("/check-availability")
+@registration_bp.route("/check-availability")
 def check_availability():
 
     payload = request.get_json()

@@ -10,7 +10,7 @@ from server.auth import require_auth
 from server.utils.errors import required_or_400
 
 
-authbp = Blueprint("auth", __name__, url_prefix="/auth")
+auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 auth_logger = make_logger(__name__)
 """
@@ -18,7 +18,7 @@ auth_logger = make_logger(__name__)
 """
 
 
-@authbp.route("/login", methods=["POST", "GET"])
+@auth_bp.route("/login", methods=["POST", "GET"])
 @required_or_400(required=["username", "password"])
 def login():
 
@@ -37,7 +37,7 @@ def login():
     Logout endpoint
 """
 # TODO Write this method
-@authbp.route("/logout", methods=["POST"])
+@auth_bp.route("/logout", methods=["POST"])
 @request_log(request)
 @require_auth
 @required_or_400(required="userId", logger=auth_logger)

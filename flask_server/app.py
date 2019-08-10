@@ -95,16 +95,16 @@ def create_app(conf=None, log=False, return_ext=None):
     logger.debug("Extensions initialized")
 
     # Registering Blueprints
-    from server.blueprints.registrationbp import registrationbp
-    from server.blueprints.authbp import authbp
-    from server.blueprints.userbp import userbp
-    from server.blueprints.messagebp import message_bp
+    from server.blueprints.registration_bp import registration_bp
+    from server.blueprints.auth_bp import auth_bp
+    from server.blueprints.user_bp import user_bp
+    from server.blueprints.message_bp import message_bp
 
-    app.register_blueprint(authbp)
+    app.register_blueprint(auth_bp)
     logger.debug("Added authbp")
-    app.register_blueprint(registrationbp)
+    app.register_blueprint(registration_bp)
     logger.debug("Added registrationbp")
-    app.register_blueprint(userbp)
+    app.register_blueprint(user_bp)
     logger.debug("Added userbp")
     app.register_blueprint(message_bp)
     logger.debug("Added message_bp")
