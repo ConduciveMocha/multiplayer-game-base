@@ -69,9 +69,9 @@ def create_app(conf=None, log=False, return_ext=None):
 
     # Socket event imports
     #! Dont move this or it will break things
-    import server.socketevents.messageevents
-    import server.socketevents.debugevents
-    import server.socketevents.connectionevents
+    import server.socketevents.message_events
+    import server.socketevents.debug_events
+    import server.socketevents.connection_events
     import server.socketevents.game_events
 
     # Extention initialization

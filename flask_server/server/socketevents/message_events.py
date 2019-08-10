@@ -39,10 +39,11 @@ logger = make_logger(__name__)
 
 
 
-
+#! TODO: Connect to all currently open threads
 @socketio.on('connect', namespace='/message')
 def message_connect():
     logger.info('Connected to /message')
+    logger.info(f'User SID: {request.sid}')
 
 @socketio.on('JOIN_THREAD_REQUEST', namespace='/message')
 def join_thread_request(data):
@@ -63,12 +64,12 @@ def new_message(data):
     try:
         message_dict = create_message_dict(content, sender_id, thread_id)
         create_message(message_dict)
+        logger.info(f"{message_dict}")
+        emit("NEW_MESSAGE", message_dict,room=f"thread-{data['thread']}")
     except KeyError as e:
         logger.error(e)
         return jsonify(error="Malformed request"), 400
 
-    logger.info(f"{message_dict}")
-    emit("NEW_MESSAGE", message_dict,room=f"thread-{data['thread']}")
 
 
 @socketio.on("TEST", namespace="/message")
