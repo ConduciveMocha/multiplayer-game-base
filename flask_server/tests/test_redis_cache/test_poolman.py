@@ -29,6 +29,8 @@ def poolmanagers():
     pm3.close_pool()
 
 
+
+
 @log_test(logger)
 def test_poolmam_attributes(poolmanagers):
     """

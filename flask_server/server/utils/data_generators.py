@@ -27,13 +27,15 @@ EMAIL_DOMAIN_CHARS = ALPHA_LOWER + NUM_CHARS + EMAIL_DOMAIN_SPECIAL
 # Gets words from a dictionary file
 def get_wordlist(dictionary="./words.txt"):
     wordlist = []
-    with open(dictionary, "r") as f:
-        for word in f:
-            word = word.rstrip()
-            if not word:
-                continue
-            wordlist.append(word.rstrip())
-
+    try:
+        with open(dictionary, "r") as f:
+            for word in f:
+                word = word.rstrip()
+                if not word:
+                    continue
+                wordlist.append(word.rstrip())
+    except FileNotFoundError:
+        return get_wordlist(dictionary="/home/nate/code/multiplayer-game-base/flask_server/server/utils/words.txt")
     return wordlist
 
 

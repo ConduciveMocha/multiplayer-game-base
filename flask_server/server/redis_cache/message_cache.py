@@ -106,16 +106,16 @@ def create_thread(pipe, thread_dict):
     return thread_dict
 
 
-def create_message_dict(content, sender, thread):
+def create_message_dict(content, sender, thread,id=None):
     return {
-        "content": content,
-        "sender": sender,
-        "thread": thread,
-        "id": get_next_message_id(),
+        "content": str(content),
+        "sender": int(sender),
+        "thread": int(thread),
+        "id": int(id) if id else get_next_message_id(),
     }
 
 
-def create_thread_dict(content, sender, users, name):
+def create_thread_dict(content, sender, users, name,id=None):
     full_users = [sender, *users]
     existing_thread = check_if_thread_exists(full_users)
     if existing_thread:
@@ -125,7 +125,7 @@ def create_thread_dict(content, sender, users, name):
             {
                 "users": full_users,
                 "name": name if name else create_default_thread_name(full_users),
-                "id": get_next_thread_id(),
+                "id":id if id else get_next_thread_id(),
                 "messages": [],
             },
             False,

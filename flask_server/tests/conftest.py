@@ -11,7 +11,7 @@ from server.utils.data_generators import mock_user_list
 def create_mock_users(db_session):
 
     user_list = []
-    for u in mock_user_list():
+    for u in mock_user_list:
         username, password, email = u
         try:
             current_user = (
@@ -127,3 +127,5 @@ def client(app):
     client = app.test_client()
     return client
 
+
+    

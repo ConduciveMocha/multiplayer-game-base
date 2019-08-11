@@ -227,7 +227,9 @@ def global_poolman(func):
     def wrapper(*args, **kwargs):
         try:
             poolman = g.poolman
-        except AttributeError:
+        # Attribute error catches g not having poolman attribute
+        # Runtime error catches g not existing (when tests are running)
+        except (AttributeError,RuntimeError):
             poolman = PoolManager(host='localhost',port=6379, db=0)
         with poolman as r:
             return func(r, *args, **kwargs)
@@ -240,7 +242,9 @@ def global_pipe(func):
     def wrapper(*args, **kwargs):
         try:
             poolman = g.poolman
-        except AttributeError:
+        # Attribute error catches g not having poolman attribute
+        # Runtime error catches g not existing (when tests are running)
+        except (AttributeError,RuntimeError):
             poolman = PoolManager(host='localhost',port=6379, db=0)
 
         with poolman.pipe() as pipe:
