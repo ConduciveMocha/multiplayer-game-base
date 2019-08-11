@@ -2,7 +2,7 @@ import pytest
 from redis import Redis
 from server.logging import make_logger, log_test
 from server.utils.data_generators import generate_random_message
-from server.redis_cache.message_cache import create_default_thread_name,create_message_dict,create_thread_dict,get_next_thread_id,get_next_message_id
+from server.redis_cache.message_cache import create_default_thread_name,create_message_dict,create_thread_dict,get_next_thread_id,get_next_message_id,get_message_by_id,create_message
 logger = make_logger(__name__)
 
 
@@ -49,6 +49,17 @@ def test_create_message_dict(content,sender,thread,id):
         assert int(id) == message_dict['id']
     else:
         assert isinstance(message_dict['id'], int)
+
+
+def test_get_message_by_id(r_inst):
+    content,sender,thread, m_id = generate_random_message(25), 25,3,1003
+    m_dict = create_message_dict(content,sender,thread,m_id)
+    create_message(m_dict)
+    return_dict = get_message_by_id(m_id)
+    assert m_dict['content'] ==content
+    assert m_dict['sender'] == sender
+    assert m_dict['thread'] == thread
+    assert m_dict['id'] == m_id
 
 def test_create_default_thread_name():
     assert create_default_thread_name(['a']) == "TEST"
