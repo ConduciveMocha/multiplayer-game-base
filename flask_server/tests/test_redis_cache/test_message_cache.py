@@ -6,13 +6,6 @@ from server.redis_cache.message_cache import create_default_thread_name,create_m
 logger = make_logger(__name__)
 
 
-@pytest.fixture(scope='module')
-def r_inst():
-    logger.info('Creating redis instance in r_inst pytest fixture')
-    r = Redis()
-    yield r
-    logger.info('Returning from test to r_inst pytest fixture')
-
 # @pytest.fixture(scope="function")
 # def mock_messages():
 #     m1 = create_message_dict("test1", 25,5,1000)

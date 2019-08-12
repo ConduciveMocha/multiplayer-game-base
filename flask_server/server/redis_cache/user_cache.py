@@ -10,12 +10,12 @@ uc_logger = make_logger(__name__)
 
 DEFAULT_USER_EXPIRE = 60 * 60 * 2
 
-user_sig = {'id':int,'username':str,'online':int,'sid':str}
+USER_SIG = {'id':int,'username':str,'online':int,'sid':str}
 @global_poolman
 def get_online_users(r):
     try:
         user_list = {
-            int(user_id.decode('ascii')): map_dict_signature(r.hgetall(f"user:{user_id.decode('ascii')}"), user_sig)
+            int(user_id.decode('utf-8')): map_dict_signature(r.hgetall(f"user:{user_id.decode('utf-8')}"), USER_SIG)
             for user_id in r.sscan_iter("user:online")
         }
         return user_list

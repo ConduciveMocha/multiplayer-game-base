@@ -1,11 +1,18 @@
 import pytest
-
+from redis import Redis
 from app import create_app
 from app import db as _db
 
 from server.db.models import User, Email, Thread, Message, user_thread
 from server.serverconfig import TestingConfig
 from server.utils.data_generators import mock_user_list
+
+@pytest.fixture(scope='module')
+def r_inst():
+    # logger.info('Creating redis instance in r_inst pytest fixture')
+    r = Redis()
+    yield r
+    # logger.info('Returning from test to r_inst pytest fixture')
 
 
 def create_mock_users(db_session):
