@@ -53,8 +53,8 @@ def get_next_thread_id(r):
 
 # Gets the contents of the message:<id> key
 #! TODO: Add auxilary keys (i.e. message:<id>:users) to return dict
-@global_poolman
 @return_signature({'thread':int,'sender':int,'content':str,'id':int})
+@global_poolman
 def get_message_by_id(r, message_id):
     try:
         logger.debug(f"Getting message:{message_id}")
@@ -91,7 +91,8 @@ def create_thread(pipe, thread_dict):
     pipe.hmset(f"thread:{thread_id}", {"id": thread_id, "name": thread_dict["name"]})
 
     logger.info(f"Adding users to thread:{thread_id}:members")
-    pipe.sadd(f"thread:{thread_id}:members", *users)
+    for user in users:
+        pipe.sadd(f"thread:{thread_id}:members", user)
 
     logger.info("Updating users' thread list")
     # Add thread to members' thread list

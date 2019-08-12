@@ -2,7 +2,7 @@ import pytest
 from redis import Redis
 from server.logging import make_logger, log_test
 from server.utils.data_generators import generate_random_message
-from server.redis_cache.message_cache import create_default_thread_name,create_message_dict,create_thread_dict,get_next_thread_id,get_next_message_id,get_message_by_id,create_message
+from server.redis_cache.message_cache import create_default_thread_name,create_message_dict,create_thread_dict,get_next_thread_id,get_next_message_id,get_message_by_id,create_message,THREAD_START
 logger = make_logger(__name__)
 
 
@@ -10,6 +10,19 @@ logger = make_logger(__name__)
 # def mock_messages():
 #     m1 = create_message_dict("test1", 25,5,1000)
 #     m2 = create_message_dict('test2',25,5,1001)
+
+
+@pytest.fixture(scope='function')
+def mock_thread(r_inst):
+    thread_dict = {'id': 1243, 'name':'TEST_THREAD', 'members':[1,5,3434,3234]}
+    r_inst.hmset(f'thread:{thread['id']}', {'id':thread['id'], 'name':thread['name']})
+    for user in users:
+        r_inst.sadd(f'thread:{thread['id']}:members', user)
+    r_inst.lpush(f'thread:{thread['id']}:messages', THREAD_START)
+    yield thread_dict
+    r_inst.delete(f'thread:{thread['id']}')
+    r_inst.delete(f'thread:{thread['id']}:members')
+    r_inst.delete(f'thread:{thread['id']}:messages')
 
 def test_get_next_thread_id(r_inst):
     logger.info('Running test')
@@ -58,6 +71,10 @@ def test_get_message_by_id(r_inst):
     assert isinstance(return_dict['thread'],int)
     assert return_dict['id'] == m_id
     assert isinstance(return_dict['id'], int)
+
+def test_check_if_user_in_thread(r_inst):
+
+
 
 def test_create_default_thread_name():
     assert create_default_thread_name(['a']) == "TEST"
