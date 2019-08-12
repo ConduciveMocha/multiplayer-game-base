@@ -8,7 +8,7 @@ from flask import Blueprint, request, make_response, jsonify
 from server.db.models import User, Thread
 from server.logging import make_logger
 from server.redis_cache.message_cache import create_thread_dict, create_thread
-from server.redis_cache.user_cache import user_from_cache
+from server.redis_cache.user_cache import get_user_by_id
 
 logger = make_logger(__name__)
 try:

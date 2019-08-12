@@ -14,7 +14,7 @@ from server.redis_cache.user_cache import (
     set_user_online,
     set_user_offline,
     user_from_sid,
-    user_from_cache,
+    get_user_by_id,
 )
 from server.redis_cache.message_cache import (
     get_message_by_id,

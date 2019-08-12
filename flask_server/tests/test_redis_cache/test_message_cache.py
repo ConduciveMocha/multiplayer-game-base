@@ -56,10 +56,15 @@ def test_get_message_by_id(r_inst):
     m_dict = create_message_dict(content,sender,thread,m_id)
     create_message(m_dict)
     return_dict = get_message_by_id(m_id)
-    assert m_dict['content'] ==content
-    assert m_dict['sender'] == sender
-    assert m_dict['thread'] == thread
-    assert m_dict['id'] == m_id
+    logger.info(f'Return dict: {return_dict}')
+    assert return_dict['content'] ==content
+    assert isinstance(return_dict['content'],str)
+    assert return_dict['sender'] == sender
+    assert isinstance(return_dict['sender'],int)
+    assert return_dict['thread'] == thread
+    assert isinstance(return_dict['thread'],int)
+    assert return_dict['id'] == m_id
+    assert isinstance(return_dict['id'], int)
 
 def test_create_default_thread_name():
     assert create_default_thread_name(['a']) == "TEST"

@@ -1,4 +1,4 @@
-from server.redis_cache.poolmanager import global_poolman, global_pipe
+from server.redis_cache.poolmanager import global_poolman, global_pipe,return_signature
 import redis
 from redis.exceptions import LockError
 from server.logging import make_logger
@@ -54,6 +54,7 @@ def get_next_thread_id(r):
 # Gets the contents of the message:<id> key
 #! TODO: Add auxilary keys (i.e. message:<id>:users) to return dict
 @global_poolman
+@return_signature({'thread':int,'sender':int,'content':str,'id':int})
 def get_message_by_id(r, message_id):
     try:
         logger.debug(f"Getting message:{message_id}")

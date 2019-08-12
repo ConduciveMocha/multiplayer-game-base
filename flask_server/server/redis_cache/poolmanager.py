@@ -81,7 +81,7 @@ class PoolManager:
                 self.logger.debug("New connection pool created")
 
         else:
-            self.logger.warn("Unable to create pool. Missing arguments.")
+            self.logger.warning("Unable to create pool. Missing arguments.")
             self.logger.debug(f"Key: {self._key}")
             self._pool = None
 
@@ -222,6 +222,9 @@ class PoolManager:
         lock.release()
 
 
+
+
+
 def global_poolman(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -253,3 +256,20 @@ def global_pipe(func):
 
     return wrapper
 
+# Used to return the correct types when pulling a dictionary from redis
+def map_dict_signature(d,signature):
+    # 'beautiful' one liner. Maybe change to lambda to make it even more unreadable
+    return {key.decode('utf-8'):signature[key.decode('utf-8')](val.decode('utf-8')) for key,val in d.items()}
+
+
+def return_signature(signature):
+    def _return_signature(func):
+        @wraps(func)
+        def wrapper(*args,**kwargs):
+            ret = func(*args,**kwargs)
+            if isinstance(ret,dict):
+                return map_dict_signature(ret,signature)
+            else:
+                raise TypeError('Function did not return dictionary')
+        return wrapper
+    return _return_signature

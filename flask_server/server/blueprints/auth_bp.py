@@ -5,7 +5,7 @@ from flask import Blueprint, request, make_response, jsonify, current_app, g
 from server.logging import request_log, make_logger
 from server.db.models import User
 from server.db.user_actions import verify_user
-from server.redis_cache.user_cache import set_user_online, set_user_offline, user_online
+from server.redis_cache.user_cache import set_user_online, set_user_offline, user_is_online
 from server.auth import require_auth
 from server.utils.errors import required_or_400
 
@@ -44,7 +44,7 @@ def login():
 def logout():
 
     user_id = g.userId
-    if user_online(user_id):
+    if user_is_online(user_id):
         set_user_offline(user_id)
         auth_logger.info(f"User `{user_id}` successfully logged off")
         return jsonify(message="Success"), 501
