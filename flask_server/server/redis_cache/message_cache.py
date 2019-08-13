@@ -23,7 +23,8 @@ logger = make_logger(__name__)
 #! TODO: Added method that joins user names
 @global_poolman
 def create_default_thread_name(r, users):
-    return "TEST"
+    usernames = [r.hget(f'user:{user}', 'username') for user in users]
+    return ', '.join(usernames[:-1]) + ' and ' + usernames[-1]
 
 # Adds message to redis 
 @global_pipe
@@ -88,20 +89,17 @@ def check_if_user_in_thread(r,thread_id,user_id):
 # Adds the thread to redis
 @global_pipe
 def create_thread(pipe, thread_dict):
-    users = thread_dict["users"]
+    members = thread_dict["members"]
     thread_id = thread_dict["id"]
 
     logger.info(f"Making thread object: thread:{thread_id}")
     pipe.hmset(f"thread:{thread_id}", {"id": thread_id, "name": thread_dict["name"]})
 
     logger.info(f"Adding users to thread:{thread_id}:members")
-    for user in users:
+    for user in members:
         pipe.sadd(f"thread:{thread_id}:members", user)
-
-    logger.info("Updating users' thread list")
-    # Add thread to members' thread list
-    for user in users:
         pipe.sadd(f"user:{user}:threads", thread_id)
+    
 
     logger.info(f"Creating thread:{thread_id}:messages")
     pipe.lpush(f"thread:{thread_id}:messages", THREAD_START)
@@ -121,19 +119,14 @@ def create_message_dict(content, sender, thread,id=None):
     }
 
 
-def create_thread_dict(content, sender, users, name,id=None):
-    full_users = [sender, *users]
-    existing_thread = check_if_thread_exists(full_users)
-    if existing_thread:
-        return existing_thread, True
-    else:
-        return (
-            {
-                "users": full_users,
-                "name": name if name else create_default_thread_name(full_users),
-                "id":id if id else get_next_thread_id(),
-                "messages": [],
-            },
-            False,
-        )
+def create_thread_dict(sender, members, name,id=None):
+    full_members_list = list(set([sender, *members]))
+    return {
+            "members": full_members_list,
+            "name": str(name) if name else create_default_thread_name(full_users),
+            "id":int(id) if id else get_next_thread_id(),
+            "messages": [],
+        }
+        
+        
 

@@ -7,7 +7,7 @@ from flask import Blueprint, request, make_response, jsonify
 # from server.auth import make_thread_id, members_from_thread_id, require_auth
 from server.db.models import User, Thread
 from server.logging import make_logger
-from server.redis_cache.message_cache import create_thread_dict, create_thread
+from server.redis_cache.message_cache import create_thread_dict, create_thread,check_if_thread_exists
 from server.redis_cache.user_cache import get_user_by_id
 
 logger = make_logger(__name__)
@@ -31,20 +31,25 @@ def request_new_thread():
     logger.info("/message/requestnewthread accessed")
     try:
         payload = request.get_json()
-        logger.info(f"Success: {request.get_json()}")
-        thread_dict, existing = create_thread_dict(
+        
+        full_members_list = [payload['sender'], payload['users']]
+        existing = check_if_thread_exists(full_members_list)
+        # TODO Return something more useful
+        if existing:
+
+            return existing
+
+
+        thread_dict = create_thread_dict(
             payload["content"], payload["sender"], payload["users"], payload["name"]
         )
-        if not existing:
-            create_thread(thread_dict)
+        
+        create_thread(thread_dict)
 
-        #! Remove this code when login is connected to the messenger
-        socketio.emit("JOIN_THREAD_REQUEST", thread_dict, broadcast=False)
 
-        #! Uncomment when login is connected to messenger
-        # for user_id in payload["users"]:
-        #     user = user_from_cache(user_id)
-        #     socketio.emit("JOIN_THREAD_REQUEST", thread_dict, room=user["sid"])
+        for user_id in payload["users"]:
+            user = get_user_by_id(user_id)
+            socketio.emit("JOIN_THREAD_REQUEST", thread_dict, room=user["sid"])
 
         return jsonify(thread_dict), 200
     except Exception as e:

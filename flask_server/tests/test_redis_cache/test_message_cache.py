@@ -2,7 +2,7 @@ import pytest
 from redis import Redis
 from server.logging import make_logger, log_test
 from server.utils.data_generators import generate_random_message
-from server.redis_cache.message_cache import create_default_thread_name,create_message_dict,create_thread_dict,get_next_thread_id,get_next_message_id,get_message_by_id,create_message,THREAD_START,check_if_thread_exists,check_if_user_in_thread
+from server.redis_cache.message_cache import create_default_thread_name,create_message_dict,create_thread_dict,get_next_thread_id,get_next_message_id,get_message_by_id,create_message,THREAD_START,check_if_thread_exists,check_if_user_in_thread,create_thread
 logger = make_logger(__name__)
 
 
@@ -96,5 +96,20 @@ def test_check_if_user_in_thread(r_inst,mock_thread):
     assert check_if_user_in_thread(mock_thread['id'], 5234) == False
 
 def test_create_default_thread_name():
-    assert create_default_thread_name(['a']) == "TEST"
+    usernames = [1, 2,3]
+    default_thread_name = create_default_thread_name(usernames)
+    assert default_thread_name == 'user1, user2 and user3'
 
+def test_create_thread_dict():
+    sender, members,name,id = 1,[3,4,5], 'test_thread',23941923
+    t_d = create_thread_dict(sender,members,name,id=id)
+    assert sender in t_d['members']
+    for mem in members:
+        assert mem in t_d['members']
+
+    assert t_d['name'] == name
+    assert int(id) == t_d['id']
+    
+
+def test_create_thread(r_inst):
+    pass
