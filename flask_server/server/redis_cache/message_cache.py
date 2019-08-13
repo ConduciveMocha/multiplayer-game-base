@@ -70,8 +70,12 @@ def get_message_by_id(r, message_id):
 def check_if_thread_exists(r, members):
     mutual_threads = r.sinter(map(lambda mem: f"user:{mem}:threads", members))
     for th in mutual_threads:
-        if len(members) == r.llen(f"thread:{th}:members"):
+        logger.info(f'thread: {th}')
+        th = int(th.decode('utf-8'))
+        if len(members) == r.scard(f"thread:{th}:members"):
+      
             return th
+      
     return None
 
 #! TODO: Write test
