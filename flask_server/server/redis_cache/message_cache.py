@@ -1,4 +1,4 @@
-from server.redis_cache.poolmanager import global_poolman, global_pipe,return_signature
+from server.redis_cache.poolmanager import global_poolman, global_pipe, return_signature
 import redis
 from redis.exceptions import LockError
 from server.logging import make_logger
@@ -23,16 +23,18 @@ logger = make_logger(__name__)
 #! TODO: Added method that joins user names
 @global_poolman
 def create_default_thread_name(r, users):
-    usernames = [r.hget(f'user:{user}', 'username') for user in users]
-    return ', '.join(usernames[:-1]) + ' and ' + usernames[-1]
+    usernames = [r.hget(f"user:{user}", "username") for user in users]
+    return ", ".join(usernames[:-1]) + " and " + usernames[-1]
 
-# Adds message to redis 
+
+# Adds message to redis
 @global_pipe
 def create_message(pipe, message_dict):
     message_id = message_dict["id"]
     pipe.hmset(f"message:{message_id}", message_dict)
     pipe.lpush(f"thread:{message_dict['thread']}:messages", message_id)
     pipe.execute()
+
 
 # Gets next message-id and increments
 @global_poolman
@@ -43,6 +45,7 @@ def get_next_message_id(r):
     logger.debug(f"message:next-id Incremented")
     return message_id
 
+
 # Gets next thread-id and increments
 @global_poolman
 def get_next_thread_id(r):
@@ -52,9 +55,10 @@ def get_next_thread_id(r):
     logger.debug(f"thread:next-id Incremented")
     return thread_id
 
+
 # Gets the contents of the message:<id> key
 #! TODO: Add auxilary keys (i.e. message:<id>:users) to return dict
-@return_signature({'thread':int,'sender':int,'content':str,'id':int})
+@return_signature({"thread": int, "sender": int, "content": str, "id": int})
 @global_poolman
 def get_message_by_id(r, message_id):
     try:
@@ -71,20 +75,22 @@ def get_message_by_id(r, message_id):
 def check_if_thread_exists(r, members):
     mutual_threads = r.sinter(map(lambda mem: f"user:{mem}:threads", members))
     for th in mutual_threads:
-        logger.info(f'thread: {th}')
-        th = int(th.decode('utf-8'))
+        logger.info(f"thread: {th}")
+        th = int(th.decode("utf-8"))
         if len(members) == r.scard(f"thread:{th}:members"):
-      
+
             return th
-      
+
     return None
+
 
 #! TODO: Write test
 @global_poolman
-def check_if_user_in_thread(r,thread_id,user_id):
-    is_member = r.sismember(f'thread:{thread_id}:members', user_id)
-    logger.info(f'Result of sismember for user {user_id} in {thread_id}: {is_member}')
+def check_if_user_in_thread(r, thread_id, user_id):
+    is_member = r.sismember(f"thread:{thread_id}:members", user_id)
+    logger.info(f"Result of sismember for user {user_id} in {thread_id}: {is_member}")
     return is_member
+
 
 # Adds the thread to redis
 @global_pipe
@@ -99,7 +105,6 @@ def create_thread(pipe, thread_dict):
     for user in members:
         pipe.sadd(f"thread:{thread_id}:members", user)
         pipe.sadd(f"user:{user}:threads", thread_id)
-    
 
     logger.info(f"Creating thread:{thread_id}:messages")
     pipe.lpush(f"thread:{thread_id}:messages", THREAD_START)
@@ -110,7 +115,7 @@ def create_thread(pipe, thread_dict):
     return thread_dict
 
 
-def create_message_dict(content, sender, thread,id=None):
+def create_message_dict(content, sender, thread, id=None):
     return {
         "content": str(content),
         "sender": int(sender),
@@ -119,14 +124,13 @@ def create_message_dict(content, sender, thread,id=None):
     }
 
 
-def create_thread_dict(sender, members, name,id=None):
+def create_thread_dict(sender, members, name, id=None):
     full_members_list = list(set([sender, *members]))
+    logger.info("Creating Thread Dictionary")
     return {
-            "members": full_members_list,
-            "name": str(name) if name else create_default_thread_name(full_users),
-            "id":int(id) if id else get_next_thread_id(),
-            "messages": [],
-        }
-        
-        
+        "members": full_members_list,
+        "name": str(name) if name else create_default_thread_name(full_members_list),
+        "id": int(id) if id else get_next_thread_id(),
+        "messages": [],
+    }
 

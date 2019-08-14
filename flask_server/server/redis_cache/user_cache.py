@@ -3,19 +3,27 @@ import logging
 from flask import g, jsonify
 from redis.exceptions import DataError
 
-from server.redis_cache.poolmanager import global_poolman, global_pipe,map_dict_signature
+from server.redis_cache.poolmanager import (
+    global_poolman,
+    global_pipe,
+    map_dict_signature,
+)
 from server.logging import make_logger
 
 uc_logger = make_logger(__name__)
 
 DEFAULT_USER_EXPIRE = 60 * 60 * 2
 
-USER_SIG = {'id':int,'username':str,'online':int,'sid':str}
+USER_SIG = {"id": int, "username": str, "online": int, "sid": str}
+
+
 @global_poolman
 def get_online_users(r):
     try:
         user_list = {
-            int(user_id.decode('utf-8')): map_dict_signature(r.hgetall(f"user:{user_id.decode('utf-8')}"), USER_SIG)
+            int(user_id.decode("utf-8")): map_dict_signature(
+                r.hgetall(f"user:{user_id.decode('utf-8')}"), USER_SIG
+            )
             for user_id in r.sscan_iter("user:online")
         }
         return user_list
@@ -27,7 +35,7 @@ def get_online_users(r):
 @global_poolman
 def get_user_by_id(r, user_id):
     try:
-        
+
         if r.exists(f"user:{user_id}"):
             return r.hget(f"user:{user_id}", "username")
         else:
@@ -43,13 +51,16 @@ def user_is_online(r, user_id):
 
 
 @global_pipe
-def set_user_online(pipe, user, user_sid,exp=DEFAULT_USER_EXPIRE):
+def set_user_online(pipe, user, user_sid, exp=DEFAULT_USER_EXPIRE):
     pipe.sadd("user:online", user.id)
-    pipe.hmset(f"user:{user.id}", {"username": user.username, "online": 1,"id":user.id, "sid":user_sid})
+    pipe.hmset(
+        f"user:{user.id}",
+        {"username": user.username, "online": 1, "id": user.id, "sid": user_sid},
+    )
     pipe.set(f"user:sid:{user_sid}", user.id)
     pipe.expire(f"user:{user.id}", exp)
     for thread_id in user.message_threads:
-        pipe.sadd(f"user:{user.id}:threads",  thread_id)
+        pipe.sadd(f"user:{user.id}:threads", thread_id)
     pipe.expire(f"user:{user.id}:threads", exp)
     pipe.execute()
 
@@ -68,14 +79,18 @@ def set_user_offline(pipe, user_sid):
     if user_id is None:
         uc_logger.warning(f"Data missing from user:sid")
         raise DataError(f"User with sid {user_sid} was not in user:sid")
-    elif  not isinstance(user_id,int):
-        uc_logger.critical(f'Pipe returning incorrect type for user_id  (Function: set_user_offline returned {type(user_id)})')
-        raise DataError(f'Pipe returning incorrect type for user_id  (Function: set_user_offline returned {type(user_id)})')
+    elif not isinstance(user_id, int):
+        uc_logger.critical(
+            f"Pipe returning incorrect type for user_id  (Function: set_user_offline returned {type(user_id)})"
+        )
+        raise DataError(
+            f"Pipe returning incorrect type for user_id  (Function: set_user_offline returned {type(user_id)})"
+        )
     else:
         pipe.delete(f"user:sid:{user_sid}")
         pipe.srem("user:online", user_id)
         pipe.hset(f"user:{user_id}", "online", 0)
-        pipe.hset(f'user:{user_id}', 'sid', 'NONE')
+        pipe.hset(f"user:{user_id}", "sid", "NONE")
         pipe.execute()
         return user_id
 
@@ -84,3 +99,10 @@ def set_user_offline(pipe, user_sid):
 def user_from_sid(r, user_sid):
     return int(r.get(f"user:sid:{user_sid}"))
 
+
+@global_poolman
+def set_user_sid(r, user_id, user_sid):
+    if r.exists(f"user:sid:{user_sid}") or r.hget(f"user:{user_id}", "sid"):
+        raise DataError("User SID already set")
+    r.set(f"user:sid:{user_sid}", user_id)
+    r.hset(f"user:{user_id}", "sid", user_sid)

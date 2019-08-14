@@ -15,6 +15,7 @@ from server.redis_cache.user_cache import (
     set_user_offline,
     user_from_sid,
     get_user_by_id,
+    set_user_sid,
 )
 from server.redis_cache.message_cache import (
     get_message_by_id,
@@ -23,7 +24,7 @@ from server.redis_cache.message_cache import (
     check_if_thread_exists,
     create_thread,
     get_next_message_id,
-    check_if_user_in_thread
+    check_if_user_in_thread,
 )
 from server.logging import make_logger
 
@@ -38,20 +39,24 @@ except:
 logger = make_logger(__name__)
 
 
-
 #! TODO: Connect to all currently open threads
-@socketio.on('connect', namespace='/message')
+@socketio.on("connect", namespace="/message")
 def message_connect():
-    logger.info('Connected to /message')
-    logger.info(f'User SID: {request.sid}')
+    logger.info("Connected to /message")
+    logger.info(f"User SID: {request.sid}")
+    # set_user_sid()
 
-@socketio.on('JOIN_THREAD_REQUEST', namespace='/message')
+
+@socketio.on("JOIN_THREAD_REQUEST", namespace="/message")
 def join_thread_request(data):
-    if check_if_user_in_thread(data['thread'], data['sender']):
+    if check_if_user_in_thread(data["thread"], data["sender"]):
         join_room(f"thread-{data['thread']}")
-        emit('THREAD_JOINED', {'thread':data['thread']})
+        emit("THREAD_JOINED", {"thread": data["thread"]})
     else:
-        emit('THREAD_JOIN_FAILED', {'thread':data['thread'], 'error':'USER NOT IN THREAD'})
+        emit(
+            "THREAD_JOIN_FAILED",
+            {"thread": data["thread"], "error": "USER NOT IN THREAD"},
+        )
 
 
 # TODO: !!!! Add auth method for sockets !!!!
@@ -65,11 +70,10 @@ def new_message(data):
         message_dict = create_message_dict(content, sender_id, thread_id)
         create_message(message_dict)
         logger.info(f"{message_dict}")
-        emit("NEW_MESSAGE", message_dict,room=f"thread-{data['thread']}")
+        emit("NEW_MESSAGE", message_dict, room=f"thread-{data['thread']}")
     except KeyError as e:
         logger.error(e)
         return jsonify(error="Malformed request"), 400
-
 
 
 @socketio.on("TEST", namespace="/message")

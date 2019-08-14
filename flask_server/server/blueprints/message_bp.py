@@ -7,7 +7,11 @@ from flask import Blueprint, request, make_response, jsonify
 # from server.auth import make_thread_id, members_from_thread_id, require_auth
 from server.db.models import User, Thread
 from server.logging import make_logger
-from server.redis_cache.message_cache import create_thread_dict, create_thread,check_if_thread_exists
+from server.redis_cache.message_cache import (
+    create_thread_dict,
+    create_thread,
+    check_if_thread_exists,
+)
 from server.redis_cache.user_cache import get_user_by_id
 
 logger = make_logger(__name__)
@@ -31,21 +35,19 @@ def request_new_thread():
     logger.info("/message/requestnewthread accessed")
     try:
         payload = request.get_json()
-        
-        full_members_list = [payload['sender'], payload['users']]
+        logger.info(f"Payload: {payload}")
+        full_members_list = [payload["sender"], payload["users"]]
         existing = check_if_thread_exists(full_members_list)
         # TODO Return something more useful
         if existing:
-
+            logger.info("Thread Exists")
             return existing
 
-
         thread_dict = create_thread_dict(
-            payload["content"], payload["sender"], payload["users"], payload["name"]
+            payload["sender"], payload["users"], payload["name"]
         )
-        
+        logger.info("Creating thread")
         create_thread(thread_dict)
-
 
         for user_id in payload["users"]:
             user = get_user_by_id(user_id)
