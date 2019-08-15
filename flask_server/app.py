@@ -61,6 +61,11 @@ def create_app(conf=None, log=False, return_ext=None):
         logger.debug("Creating watch instance")
     else:
         logger.debug("Creating Server instance")
+    if config.DEBUG or config.TESTING:
+        # Mock Setup
+        from server.mocks import setup
+
+        setup()
 
     # Configures socketio function wrappers
     from server.socketevents.socketutils import configure_socket_functions
@@ -78,7 +83,12 @@ def create_app(conf=None, log=False, return_ext=None):
     CORS(app)
     db.init_app(app)
     migrate.init_app(app, db=db)
-    socketio.init_app(app, logger=socketio_logger, engineio_logger=engineio_logger)
+    socketio.init_app(
+        app,
+        logger=socketio_logger,
+        engineio_logger=engineio_logger,
+        cors_allowed_origins="*",
+    )
     celery.conf.update(app.config)
 
     # Helper class initialization
@@ -114,6 +124,7 @@ def create_app(conf=None, log=False, return_ext=None):
     def index_page():
         import server.db.game_actions
 
+        server.db.game_actions.test2()
         return "<h1>hello world</h1>"
 
     # Logs app initialization type for debug mode

@@ -35,7 +35,9 @@ def get_wordlist(dictionary="./words.txt"):
                     continue
                 wordlist.append(word.rstrip())
     except FileNotFoundError:
-        return get_wordlist(dictionary="/home/nate/code/multiplayer-game-base/flask_server/server/utils/words.txt")
+        return get_wordlist(
+            dictionary="/home/nate/code/multiplayer-game-base/flask_server/server/utils/words.txt"
+        )
     return wordlist
 
 
@@ -54,6 +56,14 @@ except FileNotFoundError:
 # an object that can be called like a dictionary! Keys must be strings
 # to insure thjat they are able to be called with a '.'
 class FlexDict(dict):
+    @classmethod
+    def from_dict(cls, d):
+        new_flex_dict = cls()
+        for key, value in d.items():
+            new_flex_dict[key] = value
+        print(new_flex_dict)
+        return new_flex_dict
+
     def __getattr__(self, attr):
         if attr in self:
             return self[attr]

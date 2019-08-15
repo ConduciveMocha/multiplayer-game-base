@@ -60,7 +60,9 @@ def handle_disconect():
 # ? Maybe use user_login as a callback?
 @socketio.on("connect")
 def handle_connect():
-    # socketio.emit("CONNECTED")
-    logger.info(f"URL:{request.url}")
+
+    socketio.emit("CONNECTED")
+    logger.info("Connected")
+    # logger.info(f"URL:{request.url}")
     logger.debug("Event: connect")
-    
+

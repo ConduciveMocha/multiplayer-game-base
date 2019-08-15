@@ -20,5 +20,8 @@ def test_tables():
 
 
 test_tables()
-for a in GameObject.query.all():
-    print(a.width)
+
+
+def test2():
+    for a in GameObject.query.all():
+        print(a.id)

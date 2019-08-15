@@ -26,6 +26,7 @@ import * as GameTypes from "../constants/action-types/game-types";
 // Returns a socket connection to url
 export function connect() {
   const socket = io.connect("http://localhost:5000"); // you need to explicitly tell it to use websockets});
+  console.log("Connecting to default namespace");
   return new Promise(resolve => {
     socket.on("connect", () => {
       resolve(socket);
@@ -35,6 +36,7 @@ export function connect() {
 
 export function messageConnect() {
   const socket = io("http://localhost:5000/message", { forceNew: true });
+  console.log("Connecting to messaging namespace");
   return new Promise(resolve => {
     socket.on("connect", () => {
       console.log("Message Socket Connected");
@@ -45,6 +47,7 @@ export function messageConnect() {
 
 export function gameConnect() {
   const socket = io("http://localhost:5000/game", { forceNew: true });
+  console.log("Connecting to game namespace");
   return new Promise(resolve => {
     socket.on("connect", () => {
       console.log("Game socket connected");
@@ -173,14 +176,14 @@ function* handleIO(socket) {
 
 function* flow() {
   while (true) {
-    const socket = yield call(connect);
+    // const socket = yield call(connect);
     const messageSocket = yield call(messageConnect);
     const gameSocket = yield call(gameConnect);
-    const task = yield fork(handleIO, socket);
+    // const task = yield fork(handleIO, socket);
     const mTask = yield fork(handleIO, messageSocket);
     const gTaks = yield fork(handleGameIO, gameSocket);
     console.log("HandleIO Forked");
-    socket.emit("SOCKET_TEST", { data: "test" });
+    // socket.emit("SOCKET_TEST", { data: "test" });
 
     yield take("NOTHIng");
   }

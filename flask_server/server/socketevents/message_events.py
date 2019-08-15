@@ -43,7 +43,7 @@ logger = make_logger(__name__)
 @socketio.on("connect", namespace="/message")
 def message_connect():
     logger.info("Connected to /message")
-    logger.info(f"User SID: {request.sid}")
+    # logger.info(f"User SID: {request.sid}")
     # set_user_sid()
 
 

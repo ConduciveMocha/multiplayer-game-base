@@ -12,7 +12,7 @@ from server.redis_cache.message_cache import (
     create_thread,
     check_if_thread_exists,
 )
-from server.redis_cache.user_cache import get_user_by_id
+from server.redis_cache.user_cache import get_user_by_id, NO_SID
 
 logger = make_logger(__name__)
 try:
@@ -50,9 +50,15 @@ def request_new_thread():
         create_thread(thread_dict)
 
         for user_id in payload["users"]:
-            user = get_user_by_id(user_id)
-            socketio.emit("JOIN_THREAD_REQUEST", thread_dict, room=user["sid"])
+            logger.info(f"Getting user: {user_id}")
 
+            user = get_user_by_id(user_id)
+
+            if user["sid"] != NO_SID:
+                logger.info(f"User {user_id} online. Sending thread request")
+                socketio.emit("JOIN_THREAD_REQUEST", thread_dict, room=user["sid"])
+            else:
+                logger.info(f"User {user_id} not online")
         return jsonify(thread_dict), 200
     except Exception as e:
 

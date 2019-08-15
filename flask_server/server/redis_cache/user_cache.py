@@ -7,13 +7,14 @@ from server.redis_cache.poolmanager import (
     global_poolman,
     global_pipe,
     map_dict_signature,
+    return_signature
 )
 from server.logging import make_logger
 
 uc_logger = make_logger(__name__)
 
 DEFAULT_USER_EXPIRE = 60 * 60 * 2
-
+NO_SID = "NO_SID"
 USER_SIG = {"id": int, "username": str, "online": int, "sid": str}
 
 
@@ -31,16 +32,17 @@ def get_online_users(r):
         uc_logger.error(e)
         raise type(e)
 
-
+@return_signature(USER_SIG)
 @global_poolman
 def get_user_by_id(r, user_id):
     try:
-
+        user_id = int(user_id)
         if r.exists(f"user:{user_id}"):
-            return r.hget(f"user:{user_id}", "username")
+            return r.hgetall(f"user:{user_id}")
         else:
             return None
     except Exception as e:
+        uc_logger.error("Error thrown in `get_user_by_id`")
         uc_logger.error(e)
         raise type(e)
 
@@ -51,7 +53,7 @@ def user_is_online(r, user_id):
 
 
 @global_pipe
-def set_user_online(pipe, user, user_sid, exp=DEFAULT_USER_EXPIRE):
+def set_user_online(pipe, user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
     pipe.sadd("user:online", user.id)
     pipe.hmset(
         f"user:{user.id}",
@@ -59,7 +61,7 @@ def set_user_online(pipe, user, user_sid, exp=DEFAULT_USER_EXPIRE):
     )
     pipe.set(f"user:sid:{user_sid}", user.id)
     pipe.expire(f"user:{user.id}", exp)
-    for thread_id in user.message_threads:
+    for thread_id in user.threads:
         pipe.sadd(f"user:{user.id}:threads", thread_id)
     pipe.expire(f"user:{user.id}:threads", exp)
     pipe.execute()
@@ -90,7 +92,7 @@ def set_user_offline(pipe, user_sid):
         pipe.delete(f"user:sid:{user_sid}")
         pipe.srem("user:online", user_id)
         pipe.hset(f"user:{user_id}", "online", 0)
-        pipe.hset(f"user:{user_id}", "sid", "NONE")
+        pipe.hset(f"user:{user_id}", "sid", NO_SID)
         pipe.execute()
         return user_id
 

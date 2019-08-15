@@ -12,6 +12,7 @@ from server.redis_cache.user_cache import (
     set_user_offline,
     set_user_sid,
     USER_SIG,
+    NO_SID,
 )
 
 logger = make_logger(__name__)
@@ -110,7 +111,7 @@ def test_set_user_offline(r_inst, mock_user):
     assert returned_user_object["online"] == 0
     assert returned_user_object["username"] == user.username
     assert returned_user_object["id"] == user.id
-    assert returned_user_object["sid"] == "NONE"
+    assert returned_user_object["sid"] == NO_SID
 
 
 def test_user_from_sid(r_inst, mock_user):
