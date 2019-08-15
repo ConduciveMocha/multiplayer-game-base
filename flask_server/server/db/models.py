@@ -204,3 +204,23 @@ class GameObject(db.Model):
 
     pos = composite(Vector, posx, posy)
     dim = composite(Vector, width, height)
+
+
+class InventoryObject(db.Model):
+    model_log.info("Creating inventory_object table")
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+
+
+class UserInventory(db.Model):
+    model_log.info("Creating user_inventory table")
+
+    id = db.Column(db.Integer, primary_key=True)
+    quantity = db.Column(db.Integer)
+
+    user_id = db.Column(db.Integer, db.ForeiginKey("user.id"))
+    user = db.relationship("User", back_populates="inventory_objects")
+
+    inventory_object_id = db.Column(db.Integer, db.ForeignKey("inventory_object.id"))
+    game_object = db.relationship("GameObject")
+
