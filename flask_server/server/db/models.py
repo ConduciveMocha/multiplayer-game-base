@@ -189,6 +189,10 @@ class Environment(db.Model):
 
     dim = composite(Vector, width, height)
 
+game_inventory = db.Table("game_inventory",
+    db.Column("game_object_id", db.Integer, db.ForeignKey("game_object.id")),
+    db.Column("inventory_object_id", db.Integer, db.ForeignKey("inventory_object.id")),
+)
 
 class GameObject(db.Model):
     model_log.info("Creating game_object table")
@@ -201,7 +205,8 @@ class GameObject(db.Model):
     collidable = db.Column(db.Boolean)
     environment_id = db.Column(db.Integer, db.ForeignKey("environment.id"))
     environment = db.relationship("Environment", back_populates="game_objects")
-
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    owner = db.relationship("User", back_populates="game_objects")
     pos = composite(Vector, posx, posy)
     dim = composite(Vector, width, height)
 

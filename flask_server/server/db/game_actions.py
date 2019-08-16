@@ -3,6 +3,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from app import db
 from server.db.models import GameObject, Environment, User,UserInventory
 from server.logging import make_logger
+from server.game.geometric_types.vector import Vector
 
 logger = make_logger(__name__)
 
@@ -24,6 +25,9 @@ def test_tables():
 
 
 # test_tables()
+
+
+
 
 
 def get_object_position(object_id):
@@ -51,7 +55,43 @@ def move_game_object(object_id, delta, collision_function=None):
     else:
         raise NoResultFound(f"Could not locate game object with id={object_id}")
 
+def check_user_owns_object(user_id,game_object_id):
+    game_object = GameObject.query.filter_by(id=game_object_id)
+    return user_id == game_object.owner_id
+        
+def object_in_inventory(inventory_object_id, user_id):
+    try:
+        ui = UserInventory.query.filter_by(user_id=user_id, inventory_object_id=inventory_object_id).one()
+        return ui.quantity > 0
+    except AttributeError:
+        return False
+    except NoResultFound:
+        return False
 
+def object_in_enviroment(env_id, game_object_id):
+    env_game_objects = Environment.query.filter_by(id=env_id).one().game_objects
+    return game_object_id in map(lambda game_object: game_object.id, env_game_objects)
+# TODO Fix exception types in boundary check
+def switch_environments(game_object_id,env_id, pos=Vector(0,0)):
+    new_env  = Environment.query.filter_by(id=env_id)
+    game_object = GameObject.query.filter_by(id=game_object_id)
+    if not new_env:
+        raise NoResultFound(f'No environment found with id={env_id}')
+    elif not game_object:
+        raise NoResultFound(f'No GameObject found with id={game_object_id}')
+    # Boundary Check
+    if pos.x + game_object.width > new_env.width:
+        raise ValueError('HEYCHANGETHISEXCEPIONTYPE\nGameObject out of bounds (x)')
+    elif pos.y + game_object.height > new_env.height:
+        raise ValueError('HEYCHANGETHISEXCEPIONTYPE\nGameObject out of bounds (y)')
+    # Everything peachy. Set position
+    else:
+        game_object.environment = new_env
+        game_object.pos = pos
+    
+# def pickup_item(user_id, game_object_id):
+#     game
+        
 
 
 def add_to_user_inventory(inv_obj_id, user_id,quantity=1):
@@ -73,6 +113,8 @@ def get_user_inventory(user_id):
     else:
         logger.error(f'No result found for user with id={user_id}')
         raise NoResultFound(f'User with id={user_id} does not exist.')
+
+def 
 
 
 # TODO Find better exception to throw than DataError.
