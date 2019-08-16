@@ -1,8 +1,10 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
-from server.db.models import GameObject, Environment, User
+from server.db.models import GameObject, Environment, User,UserInventory
 from server.logging import make_logger
+
+logger = make_logger(__name__)
 
 
 def test_tables():
@@ -25,24 +27,74 @@ def test_tables():
 
 
 def get_object_position(object_id):
+    logger.info(f'Getting position of object with id={object_id}')
     game_object = GameObject.query.filter_by(id=object_id).first()
     if game_object:
+        logger.info(f'Found object with id={object_id}. Position={game_object.pos}')
         return game_object.pos
     else:
+        logger.error(f"Could not locate game object with id={object_id}")
         raise NoResultFound(f"Could not locate game object with id={object_id}")
 
 
-def move_game_object(object_id, delta):
+def move_game_object(object_id, delta, collision_function=None):
     game_object = GameObject.query.filter_by(id=object_id).first()
     if game_object:
-        game_object.posx += delta.x
-        game_object.posy += delta.y
-        db.session.add(game_object)
-        db.session.commit()
-        return game_object
+        if collision_function and collision_function(game_object,delta):
+           logger.info('Player object not moved')
+           return game_object
+        else:
+            game_object.pos += delta
+            db.session.add(game_object)
+            db.session.commit()
+            return game_object
     else:
         raise NoResultFound(f"Could not locate game object with id={object_id}")
 
+
+
+
+def add_to_user_inventory(inv_obj_id, user_id,quantity=1):
+    user_inv = UserInventory.query.filter_by(user_id=user_id, inventory_object_id=inv_obj_id).first()
+
+    if user_inv is None:
+        user_inv = UserInventory(quantity=quantity, user_id=user_id, inventory_object_id=inv_obj_id)
+        
+    else:
+        user_inv.quantity += quantity
+        
+    db.session.add(user_inv)
+    db.session.commit()
+
+def get_user_inventory(user_id):
+    logger.info(f'Getting user inventory for user with id={user_id}')
+    if User.query.filter_by(id=user_id).one():
+        return UserInventory.query.filter_by(user_id=user_id)
+    else:
+        logger.error(f'No result found for user with id={user_id}')
+        raise NoResultFound(f'User with id={user_id} does not exist.')
+
+
+# TODO Find better exception to throw than DataError.
+def remove_from_user_inventory(inv_obj_id,user_id,quantity=1, raise_underflow_error=False):
+    user_inv = UserInventory.query.filter_by(user_id=user_id, inventory_object_id=inv_obj_id).first()
+    if user_inv is None:
+        logger.error(f'User does not have object with id={inv_obj_id} in inventory.')
+        if raise_underflow_error:
+            raise DataError('User does not have object')
+    else:
+        if user_inv < quantity:
+            if raise_underflow_error:
+                logger.error(f'User (id={user_id}) underflowed item (id={inv_obj_id}). Quantity in inventory= {user_inv.quantity}. Requested removal quantity={quantity}')
+                raise DataError('Underflowed inventory quantity')
+            else:
+                user_inv.quantity = 0
+                db.session.add(user_inv)
+                db.session.commit()
+        else:
+            user_inv.quantity -= quantity
+            db.session.add(user_inv)
+            db.session.commit() 
 
 def test2():
     for a in GameObject.query.all():

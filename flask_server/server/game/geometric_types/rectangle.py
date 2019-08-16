@@ -1,14 +1,19 @@
 from math import sqrt, hypot, atan
 from server.game.geometric_types.vector import Vector
-
+from sqlalchemy.ext.mutable import MutableComposite
 
 class Rectangle:
+# class Rectangle(MutableComposite):
     def __init__(self, pos, dim):
         self.pos = pos
         if dim.x >= 0 and dim.y >= 0:
             self._dim = dim
         else:
             raise ValueError("Rectangle Dimension cannot be negative")
+
+    # def __setattr__(self,key,value):
+    #     object.__setattr__(self,key,value)
+    #     self.changed()
 
     def __eq__(self, other):
         if isinstance(other, Rectangle):

@@ -1,7 +1,7 @@
 from math import cos, sin, hypot, sqrt, atan
+from sqlalchemy.ext.mutable import MutableComposite
 
-
-class Vector:
+class Vector(MutableComposite):
     def __init__(self, x, y):
         self._x = x
         self._y = y
@@ -87,3 +87,6 @@ class Vector:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __setattr__(self,key,value):
+        object.__setattr__(self,key,value)
+        self.changed()
