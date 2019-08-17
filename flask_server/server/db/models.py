@@ -231,7 +231,7 @@ class UserStatus(db.Model):
     user_id = db.Column(db.Integer,db.ForeiginKey('user.id'))
     health=db.Column(db.Integer)
     weight=db.Column(db.Integer)
-    
+
     user = db.relationship("User", back_populates="user.user_status")
 
 
@@ -247,8 +247,8 @@ class InventoryObject(db.Model):
     model_log.info("Creating inventory_object table")
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    
-
+    use_effect = db.Column(db.Integer,db.ForeignKey('object_effect.id'))
+    use_effect_id = db.relationship('ObjectEffect')
 class UserInventory(db.Model):
     model_log.info("Creating user_inventory table")
 
