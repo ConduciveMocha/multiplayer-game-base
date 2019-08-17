@@ -1,7 +1,7 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
-from server.db.models import GameObject, Environment, User,UserInventory
+from server.db.models import GameObject, Environment, User,UserInventory,UserStatus
 from server.logging import make_logger
 from server.game.geometric_types.vector import Vector
 
@@ -24,12 +24,6 @@ def test_tables():
     db.session.commit()
 
 
-# test_tables()
-
-
-
-
-
 def get_object_position(object_id):
     logger.info(f'Getting position of object with id={object_id}')
     game_object = GameObject.query.filter_by(id=object_id).first()
@@ -44,7 +38,7 @@ def get_object_position(object_id):
 def move_game_object(object_id, delta, collision_function=None):
     game_object = GameObject.query.filter_by(id=object_id).first()
     if game_object:
-        if collision_function and collision_function(game_object,delta):
+        if callable(collision_function) and collision_function(game_object,delta):
            logger.info('Player object not moved')
            return game_object
         else:
@@ -56,9 +50,25 @@ def move_game_object(object_id, delta, collision_function=None):
         raise NoResultFound(f"Could not locate game object with id={object_id}")
 
 def check_user_owns_object(user_id,game_object_id):
-    game_object = GameObject.query.filter_by(id=game_object_id)
+    game_object = GameObject.query.filter_by(id=game_object_id).one()
     return user_id == game_object.owner_id
-        
+
+def set_game_object_owner(game_object_id,user_id):
+    game_object = GameObject.query.filter_by(id=game_object_id).one()
+    user = User.query.filter_by(id=user_id).one()
+    game_object.owner = user
+    db.session.add(game_object)
+    db.session.commit()
+
+def get_user_status(user_id):
+    try:
+        return UserStatus.query.filter_by(user_id=user_id).one()
+    except NoResultFound:
+        logger.error(f'No status found for user with id={user_id}')
+        return None
+
+
+
 def object_in_inventory(inventory_object_id, user_id):
     try:
         ui = UserInventory.query.filter_by(user_id=user_id, inventory_object_id=inventory_object_id).one()
@@ -71,6 +81,8 @@ def object_in_inventory(inventory_object_id, user_id):
 def object_in_enviroment(env_id, game_object_id):
     env_game_objects = Environment.query.filter_by(id=env_id).one().game_objects
     return game_object_id in map(lambda game_object: game_object.id, env_game_objects)
+
+
 # TODO Fix exception types in boundary check
 def switch_environments(game_object_id,env_id, pos=Vector(0,0)):
     new_env  = Environment.query.filter_by(id=env_id)
@@ -89,10 +101,16 @@ def switch_environments(game_object_id,env_id, pos=Vector(0,0)):
         game_object.environment = new_env
         game_object.pos = pos
     
-# def pickup_item(user_id, game_object_id):
-#     game
-        
 
+
+
+def get_user_inventory(user_id):
+    logger.info(f'Getting user inventory for user with id={user_id}')
+    if User.query.filter_by(id=user_id).one():
+        return UserInventory.query.filter_by(user_id=user_id)
+    else:
+        logger.error(f'No result found for user with id={user_id}')
+        raise NoResultFound(f'User with id={user_id} does not exist.')
 
 def add_to_user_inventory(inv_obj_id, user_id,quantity=1):
     user_inv = UserInventory.query.filter_by(user_id=user_id, inventory_object_id=inv_obj_id).first()
@@ -105,17 +123,6 @@ def add_to_user_inventory(inv_obj_id, user_id,quantity=1):
         
     db.session.add(user_inv)
     db.session.commit()
-
-def get_user_inventory(user_id):
-    logger.info(f'Getting user inventory for user with id={user_id}')
-    if User.query.filter_by(id=user_id).one():
-        return UserInventory.query.filter_by(user_id=user_id)
-    else:
-        logger.error(f'No result found for user with id={user_id}')
-        raise NoResultFound(f'User with id={user_id} does not exist.')
-
-def 
-
 
 # TODO Find better exception to throw than DataError.
 def remove_from_user_inventory(inv_obj_id,user_id,quantity=1, raise_underflow_error=False):
@@ -140,4 +147,4 @@ def remove_from_user_inventory(inv_obj_id,user_id,quantity=1, raise_underflow_er
 
 def test2():
     for a in GameObject.query.all():
-        print(a.id)
+        print(a.to_dict())

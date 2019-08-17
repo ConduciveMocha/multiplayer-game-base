@@ -83,7 +83,7 @@ class User(CreatedTimestampMixin, db.Model):
         lazy="dynamic",
         backref=db.backref("members", lazy="dynamic"),
     )
-
+    user_status = db.relationship("UserStatus", uselist=False, back_populates="user")
     def __init__(self, username, password, email):
         self.username = username
         self.password = password
@@ -210,12 +210,44 @@ class GameObject(db.Model):
     pos = composite(Vector, posx, posy)
     dim = composite(Vector, width, height)
 
+    def to_dict(self):
+        try:
+            return {
+                'id':self.id,
+                'width':self.width,
+                'height':self.height,
+                'pos':{
+                    'x':self.posx,
+                    'y':self.posy
+                }
+            }
+        except Exception as e:
+            model_log.error('GameObject.to_dict failed.')
+            raise type(e)
+
+class UserStatus(db.Model):
+    model_log.info('Creating user_status table')
+    id = db.Column(db.Integer,primary_key=True)
+    user_id = db.Column(db.Integer,db.ForeiginKey('user.id'))
+    health=db.Column(db.Integer)
+    weight=db.Column(db.Integer)
+    
+    user = db.relationship("User", back_populates="user.user_status")
+
+
+class ObjectEffect(db.Model):
+    model_log.info('Creating object_effect table')
+    id = db.Column(db.Integer,primary_key=True)
+    health=db.Column(db.Integer,default=0)
+    weight=db.Column(db.Integer,default=1)
+
+
 
 class InventoryObject(db.Model):
     model_log.info("Creating inventory_object table")
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-
+    
 
 class UserInventory(db.Model):
     model_log.info("Creating user_inventory table")

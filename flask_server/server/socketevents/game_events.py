@@ -2,9 +2,9 @@ import json
 
 from flask import session, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect, send
-
+from server.db.game_actions import move_game_object
 from server.logging import make_logger
-
+from server.game.geometric_types.vector import Vector
 logger = make_logger(__name__)
 
 
@@ -15,18 +15,18 @@ except:
     from app import socketio
 
 test_movement_dict = {
-    "ArrowUp": [0, -1],
-    "ArrowLeft": [-1, 0],
-    "ArrowRight": [1, 0],
-    "ArrowDown": [0, 1],
+    "ArrowUp": Vector(0, -1),
+    "ArrowLeft": Vector(-1, 0),
+    "ArrowRight": Vector(1, 0),
+    "ArrowDown": Vector(0, 1),
 }
+
 
 
 def update_pos(data):
     delta = test_movement_dict[data["key"]]
-    data["playerObject"]["x"] += delta[0]
-    data["playerObject"]["y"] += delta[1]
-    return data["playerObject"]
+    
+    return move_game_object(0, delta)
 
 
 @socketio.on("PLAYER_KEYED", namespace="/game")
