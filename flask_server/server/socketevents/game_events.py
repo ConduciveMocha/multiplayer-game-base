@@ -5,13 +5,14 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect, se
 from server.db.game_actions import move_game_object
 from server.logging import make_logger
 from server.game.geometric_types.vector import Vector
+
 logger = make_logger(__name__)
 
 
 try:
     from __main__ import socketio
 except:
-    #! THIS IS USED TO PREVENT DB MIGRATION TO GO THROUGH!!!!!
+    #! THIS IS USED TO ALLOW DB MIGRATION TO GO THROUGH!!!!!
     from app import socketio
 
 test_movement_dict = {
@@ -22,11 +23,11 @@ test_movement_dict = {
 }
 
 
-
 def update_pos(data):
     delta = test_movement_dict[data["key"]]
-    
-    return move_game_object(0, delta)
+    moved_object = move_game_object(1, delta)
+
+    return moved_object.to_dict()
 
 
 @socketio.on("PLAYER_KEYED", namespace="/game")

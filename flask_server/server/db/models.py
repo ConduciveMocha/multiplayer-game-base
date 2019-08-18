@@ -84,6 +84,9 @@ class User(CreatedTimestampMixin, db.Model):
         backref=db.backref("members", lazy="dynamic"),
     )
     user_status = db.relationship("UserStatus", uselist=False, back_populates="user")
+    game_objects = db.relationship("GameObject", back_populates="owner")
+    inventory_objects = db.relationship("UserInventory", back_populates="user")
+
     def __init__(self, username, password, email):
         self.username = username
         self.password = password
@@ -189,10 +192,13 @@ class Environment(db.Model):
 
     dim = composite(Vector, width, height)
 
-game_inventory = db.Table("game_inventory",
+
+game_inventory = db.Table(
+    "game_inventory",
     db.Column("game_object_id", db.Integer, db.ForeignKey("game_object.id")),
     db.Column("inventory_object_id", db.Integer, db.ForeignKey("inventory_object.id")),
 )
+
 
 class GameObject(db.Model):
     model_log.info("Creating game_object table")
@@ -205,7 +211,7 @@ class GameObject(db.Model):
     collidable = db.Column(db.Boolean)
     environment_id = db.Column(db.Integer, db.ForeignKey("environment.id"))
     environment = db.relationship("Environment", back_populates="game_objects")
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     owner = db.relationship("User", back_populates="game_objects")
     pos = composite(Vector, posx, posy)
     dim = composite(Vector, width, height)
@@ -213,51 +219,51 @@ class GameObject(db.Model):
     def to_dict(self):
         try:
             return {
-                'id':self.id,
-                'width':self.width,
-                'height':self.height,
-                'pos':{
-                    'x':self.posx,
-                    'y':self.posy
-                }
+                "id": self.id,
+                "width": self.width,
+                "height": self.height,
+                "x": self.posx,
+                "y": self.posy,
             }
         except Exception as e:
-            model_log.error('GameObject.to_dict failed.')
+            model_log.error("GameObject.to_dict failed.")
             raise type(e)
 
-class UserStatus(db.Model):
-    model_log.info('Creating user_status table')
-    id = db.Column(db.Integer,primary_key=True)
-    user_id = db.Column(db.Integer,db.ForeiginKey('user.id'))
-    health=db.Column(db.Integer)
-    weight=db.Column(db.Integer)
 
-    user = db.relationship("User", back_populates="user.user_status")
+class UserStatus(db.Model):
+    model_log.info("Creating user_status table")
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    health = db.Column(db.Integer)
+    weight = db.Column(db.Integer)
+
+    user = db.relationship("User", back_populates="user_status")
 
 
 class ObjectEffect(db.Model):
-    model_log.info('Creating object_effect table')
-    id = db.Column(db.Integer,primary_key=True)
-    health=db.Column(db.Integer,default=0)
-    weight=db.Column(db.Integer,default=1)
-
+    model_log.info("Creating object_effect table")
+    id = db.Column(db.Integer, primary_key=True)
+    health = db.Column(db.Integer, default=0)
+    weight = db.Column(db.Integer, default=1)
 
 
 class InventoryObject(db.Model):
     model_log.info("Creating inventory_object table")
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
-    use_effect = db.Column(db.Integer,db.ForeignKey('object_effect.id'))
-    use_effect_id = db.relationship('ObjectEffect')
+    use_effect = db.Column(db.Integer, db.ForeignKey("object_effect.id"))
+    use_effect_id = db.relationship("ObjectEffect")
+
+
 class UserInventory(db.Model):
     model_log.info("Creating user_inventory table")
 
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer)
 
-    user_id = db.Column(db.Integer, db.ForeiginKey("user.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     user = db.relationship("User", back_populates="inventory_objects")
 
     inventory_object_id = db.Column(db.Integer, db.ForeignKey("inventory_object.id"))
-    game_object = db.relationship("GameObject")
+    # game_object = db.relationship("GameObject")
 

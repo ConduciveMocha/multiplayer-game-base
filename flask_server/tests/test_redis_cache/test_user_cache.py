@@ -25,7 +25,7 @@ def mock_user(r_inst):
     user.id = 5
     user.username = "test"
     user_sid = str(21341235)
-    user.message_threads = [1, 2, 3, 4]
+    user.threads = [1, 2, 3, 4]
 
     set_user_online(user, user_sid)
     yield user, user_sid
@@ -75,7 +75,7 @@ def test_set_user_online(r_inst, mock_user):
     assert int(r_inst.get(f"user:sid:{user_sid}")) == user.id
     assert r_inst.ttl(f"user:{user.id}") <= TEST_USER_EXPIRE
     assert r_inst.ttl(f"user:{user.id}:threads") <= TEST_USER_EXPIRE
-    for th_id in user.message_threads:
+    for th_id in user.threads:
         assert r_inst.sismember(f"user:{user.id}:threads", th_id) == True
 
 
@@ -84,7 +84,7 @@ def test_extend_user_data(r_inst):
     user.id = 5
     user.username = "test"
     user_sid = str(21341235)
-    user.message_threads = [1, 2, 3, 4]
+    user.threads = [1, 2, 3, 4]
 
     set_user_online(user, user_sid, exp=TEST_USER_EXPIRE)
 
