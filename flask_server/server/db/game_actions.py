@@ -160,6 +160,15 @@ def remove_from_user_inventory(
             db.session.add(user_inv)
             db.session.commit()
 
+def get_object_effect_by_id(effect_id):
+    try:
+        return ObjectEffect.query.filter_by(id=effect_id).one()
+    except NoResultFound:
+        return None
+def apply_effect(user_id,effect_id,application_function):
+    status = get_user_status(user_id)
+    effect = get_object_effect_by_id(effect_id)
+    return application_function(status,effect)
 
 def test2():
     test_tables()
