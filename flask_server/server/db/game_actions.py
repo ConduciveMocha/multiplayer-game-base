@@ -24,9 +24,15 @@ def test_tables():
     db.session.commit()
 
 
+def get_game_object_by_id(object_id):
+    try:
+        return GameObject.query.filter_by(id=object_id).first()
+    except NoResultFound:
+        return None
+
 def get_object_position(object_id):
     logger.info(f"Getting position of object with id={object_id}")
-    game_object = GameObject.query.filter_by(id=object_id).first()
+    game_object = get_game_object_by_id(object_id)
     if game_object:
         logger.info(f"Found object with id={object_id}. Position={game_object.pos}")
         return game_object.pos
@@ -36,7 +42,7 @@ def get_object_position(object_id):
 
 
 def move_game_object(object_id, delta, collision_function=None):
-    game_object = GameObject.query.filter_by(id=object_id).first()
+    game_object = get_game_object_by_id(object_id)
     if game_object:
         if callable(collision_function) and collision_function(game_object, delta):
             logger.info("Player object not moved")
@@ -51,12 +57,14 @@ def move_game_object(object_id, delta, collision_function=None):
 
 
 def check_user_owns_object(user_id, game_object_id):
-    game_object = GameObject.query.filter_by(id=game_object_id).one()
-    return user_id == game_object.owner_id
-
+    game_object = get_game_object_by_id(object_id)
+    try:
+        return user_id == game_object.owner_id
+    except AttributeError:
+        return False
 
 def set_game_object_owner(game_object_id, user_id):
-    game_object = GameObject.query.filter_by(id=game_object_id).one()
+    game_object = get_game_object_by_id(game_object_id)
     user = User.query.filter_by(id=user_id).one()
     game_object.owner = user
     db.session.add(game_object)
@@ -81,6 +89,18 @@ def object_in_inventory(inventory_object_id, user_id):
         return False
     except NoResultFound:
         return False
+
+def get_environment_by_id(env_id):
+    try:
+        return Environment.query.filter_by(id=env_id).one()
+    except NoResultFound:
+        return None
+
+def get_environment_objects(env_id):
+    try:
+        return get_environment_by_id(env_id).game_objects
+    except AttributeError:
+        return None
 
 
 def object_in_enviroment(env_id, game_object_id):
@@ -165,10 +185,26 @@ def get_object_effect_by_id(effect_id):
         return ObjectEffect.query.filter_by(id=effect_id).one()
     except NoResultFound:
         return None
-def apply_effect(user_id,effect_id,application_function):
+
+def game_object_to_inventory(game_object_id,user_id):
+    game_object = get
+
+
+
+#TODO Write this
+def _default_apply_effect(status,effect):
+    return status
+
+def apply_effect(user_id,effect_id,application_function=None):
     status = get_user_status(user_id)
     effect = get_object_effect_by_id(effect_id)
-    return application_function(status,effect)
+
+    if callable(application_function):
+        return application_function(status,effect)
+    elif application_function is None:
+        return _default_apply_effect(status,effect)
+    else: 
+        raise TypeError('Parameter `application_function` must be callable')
 
 def test2():
     test_tables()

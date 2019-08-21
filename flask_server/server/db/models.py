@@ -246,6 +246,8 @@ class ObjectEffect(db.Model):
     health = db.Column(db.Integer, default=0)
     weight = db.Column(db.Integer, default=1)
 
+    def to_dict(self):
+        return {}
 
 class InventoryObject(db.Model):
     model_log.info("Creating inventory_object table")
