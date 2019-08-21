@@ -13,6 +13,7 @@ from server.utils.data_generators import FlexDict
 logger = make_logger(__name__)
 
 mock_users = {
+    0: {"id": 0, "username": "testuser0", "threads": []},
     1: {"id": 1, "username": "testuser1", "threads": [0]},
     2: {"id": 2, "username": "testuser2", "threads": [0, 1]},
     3: {"id": 3, "username": "testuser3", "threads": [1]},
@@ -68,7 +69,8 @@ def mock_message_setup():
     logger.info("Finished Adding Mock Messages")
 
 
-def setup():
+def setup_mocks():
     mock_user_setup()
     mock_threads_setup()
     mock_message_setup()
+

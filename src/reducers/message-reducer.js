@@ -27,6 +27,29 @@ export default function messagingReducer(
   action
 ) {
   switch (action.type) {
+    case MessageTypes.USERS_LOADED:
+      console.log("USERS_LOADED", action);
+      return {
+        ...state,
+        users: { ...action.online, ...action.friends },
+        friendsList: [...Object.keys(action.friends).map(id => parseInt(id))],
+        onlineUserIds: [...Object.keys(action.online).map(id => parseInt(id))]
+      };
+
+    case MessageTypes.THREADS_LOADED:
+      return {
+        ...state,
+        threads: { ...state.threads, ...action.threads }
+      };
+
+    case MessageTypes.THREAD_MESSAGES_LOADED:
+      return {
+        ...state,
+        messages: {
+          ...state.messages,
+          ...action.messages
+        }
+      };
     case MessageTypes.USER_JOINED:
       return {
         ...state,

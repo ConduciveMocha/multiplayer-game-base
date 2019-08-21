@@ -26,7 +26,6 @@ from server.serverconfig import get_config, TestingConfig, Config, DevelopmentCo
 
 from server.auth import UserAuthenticator
 
-
 socketio_logger, engineio_logger = make_socket_loggers()
 
 socketio = SocketIO()
@@ -61,23 +60,24 @@ def create_app(conf=None, log=False, return_ext=None):
         logger.debug("Creating watch instance")
     else:
         logger.debug("Creating Server instance")
-    if config.DEBUG or config.TESTING:
-        # Mock Setup
-        from server.mocks import setup
 
-        setup()
+    # Mock Setup
+    if config.DEBUG or config.TESTING:
+        from server.mocks import setup_mocks
+
+        setup_mocks()
 
     # Configures socketio function wrappers
-    from server.socketevents.socketutils import configure_socket_functions
+    from server.socket_events.socket_utils import configure_socket_functions
 
     # configure_socket_functions(config, logger=logger)
 
     # Socket event imports
     #! Dont move this or it will break things
-    import server.socketevents.message_events
-    import server.socketevents.debug_events
-    import server.socketevents.connection_events
-    import server.socketevents.game_events
+    import server.socket_events.message_events
+    import server.socket_events.debug_events
+    import server.socket_events.connection_events
+    import server.socket_events.game_events
 
     # Extention initialization
     CORS(app)
@@ -109,6 +109,7 @@ def create_app(conf=None, log=False, return_ext=None):
     from server.blueprints.auth_bp import auth_bp
     from server.blueprints.user_bp import user_bp
     from server.blueprints.message_bp import message_bp
+    from server.blueprints.load_bp import load_bp
 
     app.register_blueprint(auth_bp)
     logger.debug("Added authbp")
@@ -118,6 +119,8 @@ def create_app(conf=None, log=False, return_ext=None):
     logger.debug("Added userbp")
     app.register_blueprint(message_bp)
     logger.debug("Added message_bp")
+    app.register_blueprint(load_bp)
+    logger.debug("Added load_bp")
     logger.debug("Blueprints Added")
 
     @app.route("/", methods=["GET", "POST"])

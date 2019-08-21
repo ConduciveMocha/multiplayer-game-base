@@ -16,7 +16,7 @@ message:<id:int> -- (hash) message data
 
 
 """
-THREAD_START = "START"
+THREAD_START = "-1"
 
 logger = make_logger(__name__)
 
@@ -27,12 +27,25 @@ def create_default_thread_name(r, users):
     return ", ".join(usernames[:-1]) + " and " + usernames[-1]
 
 
+@global_poolman
+def thread_length(r, thread_id):
+    try:
+        return int(r.zcard(f"thread:{thread_id}:messages"))
+    except TypeError:
+        return 0
+
+
 # Adds message to redis
 @global_pipe
 def create_message(pipe, message_dict):
     message_id = message_dict["id"]
+
+    thread_len = thread_length(message_dict["thread"])
+    logger.info(f'Thread Length for {message_dict["id"]} is: {thread_len}')
     pipe.hmset(f"message:{message_id}", message_dict)
-    pipe.lpush(f"thread:{message_dict['thread']}:messages", message_id)
+    pipe.zadd(
+        f"thread:{message_dict['thread']}:messages", {str(thread_len): message_id}
+    )
     pipe.execute()
 
 
@@ -107,12 +120,20 @@ def create_thread(pipe, thread_dict):
         pipe.sadd(f"user:{user}:threads", thread_id)
 
     logger.info(f"Creating thread:{thread_id}:messages")
-    pipe.lpush(f"thread:{thread_id}:messages", THREAD_START)
+    pipe.zadd(f"thread:{thread_id}:messages", {0: -1})
 
     logger.info("Executing pipe")
     pipe.execute()
     logger.info("Pipe executed, thread created. Returning")
     return thread_dict
+
+
+@global_poolman
+def get_thread_messages(r, thread_id):
+    message_ids = r.zscan(f"thread:{thread_id}:messages")
+    return {
+        int(m_id): get_message_by_id(int(m_id)) for m_id in message_ids if m_id != -1
+    }
 
 
 def create_message_dict(content, sender, thread, id=None):

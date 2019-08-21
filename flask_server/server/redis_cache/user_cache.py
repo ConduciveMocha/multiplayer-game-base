@@ -7,7 +7,7 @@ from server.redis_cache.poolmanager import (
     global_poolman,
     global_pipe,
     map_dict_signature,
-    return_signature
+    return_signature,
 )
 from server.logging import make_logger
 
@@ -32,6 +32,7 @@ def get_online_users(r):
         uc_logger.error(e)
         raise type(e)
 
+
 @return_signature(USER_SIG)
 @global_poolman
 def get_user_by_id(r, user_id):
@@ -54,6 +55,7 @@ def user_is_online(r, user_id):
 
 @global_pipe
 def set_user_online(pipe, user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
+    uc_logger.info(f"Setting user online: {user}")
     pipe.sadd("user:online", user.id)
     pipe.hmset(
         f"user:{user.id}",
@@ -65,6 +67,8 @@ def set_user_online(pipe, user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
         pipe.sadd(f"user:{user.id}:threads", thread_id)
     pipe.expire(f"user:{user.id}:threads", exp)
     pipe.execute()
+    uc_logger.info(pipe.hgetall(f"user:{user.id}").execute())
+    uc_logger.info(f"user:{user.id}")
 
 
 @global_pipe
@@ -72,6 +76,15 @@ def extend_user_data(pipe, user_id, exp=DEFAULT_USER_EXPIRE):
     pipe.expire(f"user:{user_id}", exp)
     pipe.expire(f"user:{user_id}:threads", exp)
     pipe.execute()
+
+
+@global_poolman
+def get_user_threads(r, user_id):
+    threads = r.smembers(f"user:{user_id}:threads")
+    if threads:
+        return list(map(lambda th: int(th.decode("utf-8")), threads))
+    else:
+        return []
 
 
 @global_pipe

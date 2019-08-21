@@ -1,43 +1,24 @@
-import LoadActions from '../constants/action-types/load-types';
+import {
+  THREADS_LOADED,
+  THREAD_MESSAGES_LOADED,
+  USERS_LOADED
+} from "../constants/action-types/message-types";
 
-/** Action created when asset has began loading
- * 
- * @param {string} gameAsset 
- */
-export const loadStarted = (gameAsset) => {
-    return  {
-        type: LoadActions.LOAD_STARTED,
-        gameAsset
-    }
-}
+export const threadsLoaded = threads => ({
+  type: THREADS_LOADED,
+  threads: threads
+});
 
-/** Action created when asset has loaded successfully
- * 
- * @param {string} gameAsset 
- */
-export const loadSuccess = (gameAsset) => {
-    return {
-        type: LoadActions.LOAD_SUCCESS,
-        gameAsset
-    }
-}
+export const usersLoaded = usersList => {
+  console.log(usersList);
+  return {
+    type: USERS_LOADED,
+    online: usersList.online,
+    friends: usersList.friends
+  };
+};
 
-export const loadFailed = (gameAsset,error) => {
-    return {
-        type: LoadActions.LOAD_FAILED,
-        gameAsset,
-        error
-    }
-}
-
-export const startInitialLoad = () => {
-    return{     
-        type: LoadActions.START_INITIAL_LOAD
-    }
-}
-
-export const initialLoadFinished = () => {
-    return {
-        type:LoadActions.INITIAL_LOAD_FINISHED
-    }
-}
+export const threadMessagesLoaded = messages => ({
+  type: THREAD_MESSAGES_LOADED,
+  messages: messages
+});

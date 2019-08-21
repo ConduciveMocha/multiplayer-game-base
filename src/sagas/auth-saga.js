@@ -2,7 +2,7 @@ import { put, take, call, takeEvery } from "redux-saga/effects";
 // import {submitLogin} from '../api/login'
 import { LOGIN_SUBMITTED } from "../constants/action-types/auth-types";
 import { loginSuccess, loginFailed } from "../actions/auth-actions";
-import { startInitialLoad } from "../actions/load-actions";
+// import { startInitialLoad } from "../actions/load-actions";
 
 const submitLogin = () => {
   console.error('Function "submitLogin" is not implemented');
@@ -28,5 +28,5 @@ export default function* authSaga() {
   }
 
   yield put(loginSuccess(userId));
-  yield put(startInitialLoad());
+  // yield put(startInitialLoad());
 }

@@ -5,11 +5,12 @@ import { BrowserRouter as Router, Route } from "react-router-dom";
 import Barsign from "./components/LandingPage/Barsign";
 import LoginScreen from "./components/LoginScreen";
 import RegistrationScreen from "./components/RegistrationScreen";
-import GameScreen from './components/GameScreen'
+import GameScreen from "./components/GameScreen";
 import store from "./store";
 import { Provider } from "react-redux";
 import "./App.css";
 import { mockThreads, mockMessages, mockUsers } from "./utils/messaging-mock";
+import MagicDebugButton from "./components/MagicDebugButton/MagicDebugButton";
 
 class App extends Component {
   render() {
@@ -25,7 +26,8 @@ class App extends Component {
         </div>
 
       </Router> */}
-      <GameScreen/>
+        <GameScreen />
+        <MagicDebugButton />
       </Provider>
     );
   }

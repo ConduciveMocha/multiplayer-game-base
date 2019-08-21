@@ -9,8 +9,8 @@ export function decodeJwt(jwt) {
 }
 export async function jsonPost(payload, route) {
   const endpoint = flaskServer + route;
-  console.log('Sending payload to',endpoint,payload)
-  const resp = await fetch(flaskServer + route, {
+  console.log("Sending payload to", endpoint, payload);
+  const resp = await fetch(endpoint, {
     method: "POST",
     mode: "cors",
     headers: {
@@ -21,6 +21,26 @@ export async function jsonPost(payload, route) {
     redirect: "follow",
     body: JSON.stringify(payload)
   });
+  console.log("Response: ", resp);
+  const resp_json = await resp.json();
+  return resp_json;
+}
+
+export async function jsonGet(payload, route) {
+  const endpoint = flaskServer + route;
+  console.log("Sending get request to: ", endpoint);
+  const resp = await fetch(endpoint, {
+    method: "GET",
+    mode: "no-cors",
+    headers: {
+      "Content-Type": "application/json",
+      cache: "no-cache"
+    },
+    credentials: "same-origin",
+    redirect: "follow",
+    body: JSON.stringify(payload)
+  });
+  console.log("Response: ", resp);
   const resp_json = await resp.json();
   return resp_json;
 }
