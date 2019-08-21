@@ -29,14 +29,17 @@ function* loadThreads() {
     const action = yield take(LOAD_THREADS);
     console.log("LOAD_THREADS Called", action);
     let threads = yield call(jsonPost, action, "/load/threads");
-    yield put(threadsLoaded(threads));
+    threads = threads.threads
     console.log("Threads Loaded:", threads);
     let thread_messages = yield all(
-      threads.map(th => call(jsonPost, th.id, "/load/thread-messages"))
-    );
-    for (let tm in thread_messages) {
-      yield put(threadMessagesLoaded(tm));
-    }
+      Object.values(threads).map(th => call(jsonPost, {thread:th.id}, "/load/thread-messages"))
+      );
+      console.log('Thread Messages',thread_messages)
+      for (let tm in thread_messages) {
+        console.log(threadMessagesLoaded(thread_messages[tm].messages))
+        yield put(threadMessagesLoaded(thread_messages[tm].messages));
+      }
+      yield put(threadsLoaded(threads));
   }
 }
 export default function* loadSaga() {

@@ -26,6 +26,7 @@ export default function messagingReducer(
   state = messengerInitialState,
   action
 ) {
+  let newState;
   switch (action.type) {
     case MessageTypes.USERS_LOADED:
       console.log("USERS_LOADED", action);
@@ -43,13 +44,17 @@ export default function messagingReducer(
       };
 
     case MessageTypes.THREAD_MESSAGES_LOADED:
-      return {
+      console.log('THREAD_MESSAGES_LOADED','OLD',state)
+      newState = {
         ...state,
         messages: {
           ...state.messages,
           ...action.messages
         }
-      };
+      }
+        console.log('THREAD_MESSAGES_LOADED','NEW',newState)
+      return newState;
+    
     case MessageTypes.USER_JOINED:
       return {
         ...state,

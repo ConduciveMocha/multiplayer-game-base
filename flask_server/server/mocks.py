@@ -25,7 +25,7 @@ mock_threads = {
     0: {
         "id": 0,
         "name": "mockthread1",
-        "members": [1, 2],
+        "members": [1, 2,0],
         "messages": [1, 2, 3, 4, 12],
     },
     1: {"id": 1, "name": "mockthread2", "members": [2, 3], "messages": [5, 6, 7]},
@@ -33,9 +33,9 @@ mock_threads = {
 }
 
 mock_messages = {
-    1: {"id": 1, "sender": 1, "content": "test", "thread": 0},
-    2: {"id": 2, "sender": 2, "content": "test2", "thread": 0},
-    3: {"id": 3, "sender": 1, "content": "test3", "thread": 0},
+    1: {"id": 1, "sender": 1, "content": "Hey Babe", "thread": 0},
+    2: {"id": 2, "sender": 2, "content": "How Ya Doin", "thread": 0},
+    3: {"id": 3, "sender": 1, "content": "Good, You?", "thread": 0},
     4: {"id": 4, "sender": 2, "content": "test4", "thread": 0},
     5: {"id": 5, "sender": 3, "content": "test5", "thread": 1},
     6: {"id": 6, "sender": 2, "content": "test6", "thread": 1},
@@ -70,6 +70,8 @@ def mock_message_setup():
 
 
 def setup_mocks():
+    r = Redis()
+    r.flushall()
     mock_user_setup()
     mock_threads_setup()
     mock_message_setup()

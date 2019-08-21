@@ -4,7 +4,7 @@ from flask import Blueprint, request, make_response, jsonify
 
 from server.logging import make_logger
 from server.redis_cache.user_cache import get_user_threads, get_online_users
-from server.redis_cache.message_cache import get_thread_messages
+from server.redis_cache.message_cache import get_thread_messages,get_thread_by_id
 
 
 logger = make_logger(__name__)
@@ -17,8 +17,13 @@ def load_threads():
     logger.info("Loading Thread")
     try:
         payload = request.get_json()
+        logger.info(f'Payload sent: {payload}')
         user_id = payload["user"]
-        return_payload = {"thread": {th["id"]: th for th in get_user_threads(user_id)}}
+
+        thread_list = get_user_threads(user_id)
+        logger.info(f"Thread List: {thread_list}")
+
+        return_payload = {"threads": {th_id: get_thread_by_id(th_id) for th_id in thread_list}}
         logger.info(f"Returning: {return_payload}")
         return jsonify(return_payload)
     except Exception as e:
@@ -31,9 +36,11 @@ def load_thread_messages():
     logger.info("Loading messages")
     try:
         payload = request.get_json()
+        
+        logger.info(f'Payload sent: {payload}')
         thread_id = payload["thread"]
         return_payload = {
-            "messages": {m["id"]: m for m in get_thread_messages(thread_id)}
+            "messages": get_thread_messages(thread_id)
         }
         logger.info(f"Returning: {return_payload}")
         return jsonify(return_payload)

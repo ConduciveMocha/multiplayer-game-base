@@ -44,7 +44,9 @@ const Messenger = props => {
     if (currentTabIndex >= openTabIds.length) {
       setCurrentTabIndex(0);
     } else {
+      console.log('Current Tab Index: ', currentTabIndex)
       const currentThread = threads[openTabIds[currentTabIndex]];
+      console.log('currentThread', currentThread)
       if (currentThread) {
         setCurrentMessages(
           currentThread.messages.map(id => {
@@ -63,7 +65,7 @@ const Messenger = props => {
     console.log("In effect: ", openTabIds);
 
     const createThreadIndex = openTabIds.indexOf(CREATE_THREAD_ID);
-    if (createThreadIndex < 0) {
+    if (createThreadIndex < 0 || createThreadIndex === null) {
       console.log(createThreadIndex);
       console.error("createThread not found in list");
     } else {

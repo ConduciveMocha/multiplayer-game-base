@@ -103,6 +103,7 @@ def get_environment_objects(env_id):
         return None
 
 
+
 def object_in_enviroment(env_id, game_object_id):
     env_game_objects = Environment.query.filter_by(id=env_id).one().game_objects
     return game_object_id in map(lambda game_object: game_object.id, env_game_objects)

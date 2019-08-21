@@ -269,3 +269,18 @@ class UserInventory(db.Model):
     inventory_object_id = db.Column(db.Integer, db.ForeignKey("inventory_object.id"))
     # game_object = db.relationship("GameObject")
 
+
+
+"""
+-- Display Object: Determines how something gets displayed
+-- Inventory Object: Determines how an object gets saved in the inventory
+-- Game Object: Objects that are currently in the game
+-- UserInventory: Maps Inventory object to 
+-- 
+
+
+EnvironmentObjects gets Game Objects
+InventoryObjects get Game Objects
+EVERYONE GET GAME OBJECTS!
+
+"""

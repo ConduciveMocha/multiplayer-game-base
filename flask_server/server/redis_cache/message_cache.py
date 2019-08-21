@@ -17,7 +17,8 @@ message:<id:int> -- (hash) message data
 
 """
 THREAD_START = "-1"
-
+THREAD_SIG = {'id':int, 'name':str}
+MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
 logger = make_logger(__name__)
 
 #! TODO: Added method that joins user names
@@ -71,7 +72,7 @@ def get_next_thread_id(r):
 
 # Gets the contents of the message:<id> key
 #! TODO: Add auxilary keys (i.e. message:<id>:users) to return dict
-@return_signature({"thread": int, "sender": int, "content": str, "id": int})
+@return_signature(MESSAGE_SIG)
 @global_poolman
 def get_message_by_id(r, message_id):
     try:
@@ -127,14 +128,41 @@ def create_thread(pipe, thread_dict):
     logger.info("Pipe executed, thread created. Returning")
     return thread_dict
 
+@global_poolman
+def get_thread_message_ids(r,thread_id):
+    logger.info(f'Message ids for {thread_id}')
+    logger.info(r.zscan(f'thread:{thread_id}:messages'))
+    id_list = map(lambda zmem: int(zmem[1]), r.zscan(f'thread:{thread_id}:messages')[1])
+    return list(filter(lambda x: x != -1, id_list))
 
+# Allows the thread object to get signature mapped
+@return_signature(THREAD_SIG)
+@global_poolman
+def _get_thread_by_id(r,thread_id):
+    try:
+        logger.info(f'Getting thread:{thread_id}')
+        thread = r.hgetall(f'thread:{thread_id}')
+        logger.info(f'thread:{thread_id} = {thread}')
+        return thread
+    except Exception as e:
+        return {}
+def get_thread_by_id(thread_id):
+    thread = _get_thread_by_id(thread_id)
+    if thread:
+        thread['messages'] = get_thread_message_ids(thread_id)
+        return thread
+    else:
+        return None
 @global_poolman
 def get_thread_messages(r, thread_id):
-    message_ids = r.zscan(f"thread:{thread_id}:messages")
-    return {
-        int(m_id): get_message_by_id(int(m_id)) for m_id in message_ids if m_id != -1
+    message_ids = r.zscan(f"thread:{thread_id}:messages")[1]
+    logger.info(f'Message Ids: {message_ids}')
+    thread_messages ={
+        int(m_id[1]): get_message_by_id(int(m_id[1])) for m_id in message_ids if m_id[1] != -1
     }
 
+    logger.info(f'Thread messages: {thread_messages}')
+    return thread_messages
 
 def create_message_dict(content, sender, thread, id=None):
     return {

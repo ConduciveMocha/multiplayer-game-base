@@ -20,5 +20,5 @@ export const usersLoaded = usersList => {
 
 export const threadMessagesLoaded = messages => ({
   type: THREAD_MESSAGES_LOADED,
-  messages: messages
+  messages
 });

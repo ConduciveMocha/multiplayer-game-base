@@ -259,6 +259,7 @@ def global_pipe(func):
 # Used to return the correct types when pulling a dictionary from redis
 def map_dict_signature(d,signature):
     # 'beautiful' one liner. Maybe change to lambda to make it even more unreadable
+    cm_logger.info(f'Dictionary {d} mapped by {signature}')
     return {key.decode('utf-8'):signature[key.decode('utf-8')](val.decode('utf-8')) for key,val in d.items()}
 
 
