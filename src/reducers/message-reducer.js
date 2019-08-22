@@ -110,7 +110,7 @@ export default function messagingReducer(
         }
       };
 
-    case MessageTypes.JOIN_THREAD_REQUESTED:
+    case MessageTypes.SERVER_THREAD_REQUEST:
       return {
         ...state,
         threads: { ...state.threads, [action.thread.id]: action.thread },

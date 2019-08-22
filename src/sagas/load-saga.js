@@ -3,7 +3,10 @@ import { take, put, call, all, fork } from "redux-saga/effects";
 import {
   LOAD_USERS,
   LOAD_THREADS,
-  LOAD_THREAD_MESSAGES
+  LOAD_THREAD_MESSAGES,
+  REQUEST_THREAD_JOIN,
+  SERVER_THREAD_REQUEST,
+  CLIENT_THREAD_REQUEST
 } from "../constants/action-types/message-types";
 import {
   threadsLoaded,
@@ -34,6 +37,11 @@ function* loadThreads() {
     let thread_messages = yield all(
       Object.values(threads).map(th => call(jsonPost, {thread:th.id}, "/load/thread-messages"))
       );
+
+      for(let th in threads){
+        console.log('Th in threads', th)
+        yield put({type:CLIENT_THREAD_REQUEST, thread:threads[th].id})
+      }
       console.log('Thread Messages',thread_messages)
       for (let tm in thread_messages) {
         console.log(threadMessagesLoaded(thread_messages[tm].messages))

@@ -63,9 +63,9 @@ function subscribe(socket) {
       console.log("Data:", data);
     });
 
-    socket.on(MessageTypes.JOIN_THREAD_REQUESTED, payload => {
+    socket.on(MessageTypes.SERVER_THREAD_REQUEST, payload => {
       console.debug("Request to join thread: ", payload);
-      emit(MessageActions.joinThreadRequest(payload));
+      emit(MessageActions.serverThreadRequest(payload));
     });
 
     socket.on(MessageTypes.NEW_MESSAGE, message => {
@@ -100,6 +100,19 @@ function* read(socket) {
     yield put(action);
   }
 }
+
+function* writeRequestThreadJoin(socket){
+  function sendRequestThreadJoin(action){
+    socket.emit(MessageTypes.CLIENT_THREAD_REQUEST, {...action,sender:0})
+    console.log('Sent request to join thread: ', {...action, sender:0})
+  }
+
+  while(true){
+    let action = yield take(MessageTypes.CLIENT_THREAD_REQUEST)
+    sendRequestThreadJoin(action)
+  }
+}
+
 
 function* write(socket) {
   function sendMessage(action) {
@@ -172,6 +185,7 @@ function* handleGameIO(socket) {
 function* handleIO(socket) {
   yield fork(read, socket);
   yield fork(write, socket);
+  yield fork(writeRequestThreadJoin,socket)
 }
 
 function* flow() {

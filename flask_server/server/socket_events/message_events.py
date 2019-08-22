@@ -58,6 +58,17 @@ def join_thread_request(data):
             {"thread": data["thread"], "error": "USER NOT IN THREAD"},
         )
 
+@socketio.on('CLIENT_THREAD_REQUEST', namespace='/message')
+def client_thread_request(data):
+    logger.info(f'Client requested thread {data}')
+    if check_if_user_in_thread(data['thread'],data['sender']):
+        join_room(f"thread-{data['thread']}")
+        emit('THREAD_JOINED',{'thread':data['thread']})
+    else:
+        emit(
+            "THREAD_JOIN_FAILED",
+            {"thread": data["thread"], "error": "USER NOT IN THREAD"},
+        )
 
 # TODO: !!!! Add auth method for sockets !!!!
 @socketio.on("SEND_MESSAGE", namespace="/message")

@@ -72,6 +72,8 @@ def mock_message_setup():
 def setup_mocks():
     r = Redis()
     r.flushall()
+    r.set('message:next-id', 13)
+    r.set('thread:next-id',3)
     mock_user_setup()
     mock_threads_setup()
     mock_message_setup()
