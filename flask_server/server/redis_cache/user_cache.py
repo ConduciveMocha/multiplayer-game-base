@@ -11,7 +11,7 @@ from server.redis_cache.poolmanager import (
 )
 from server.logging import make_logger
 
-uc_logger = make_logger(__name__)
+logger = make_logger(__name__)
 
 DEFAULT_USER_EXPIRE = 60 * 60 * 2
 NO_SID = "NO_SID"
@@ -29,7 +29,7 @@ def get_online_users(r):
         }
         return user_list
     except Exception as e:
-        uc_logger.error(e)
+        logger.error(e)
         raise type(e)
 
 
@@ -41,10 +41,11 @@ def get_user_by_id(r, user_id):
         if r.exists(f"user:{user_id}"):
             return r.hgetall(f"user:{user_id}")
         else:
-            return None
+            logger.error(f'User {user_id} does not exist')
+            return {}
     except Exception as e:
-        uc_logger.error("Error thrown in `get_user_by_id`")
-        uc_logger.error(e)
+        logger.error("Error thrown in `get_user_by_id`")
+        logger.error(e)
         raise type(e)
 
 
@@ -55,7 +56,7 @@ def user_is_online(r, user_id):
 
 @global_pipe
 def set_user_online(pipe, user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
-    uc_logger.info(f"Setting user online: {user}")
+    logger.info(f"Setting user online: {user}")
     pipe.sadd("user:online", user.id)
     pipe.hmset(
         f"user:{user.id}",
@@ -67,8 +68,8 @@ def set_user_online(pipe, user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
         pipe.sadd(f"user:{user.id}:threads", thread_id)
     pipe.expire(f"user:{user.id}:threads", exp)
     pipe.execute()
-    uc_logger.info(pipe.hgetall(f"user:{user.id}").execute())
-    uc_logger.info(f"user:{user.id}")
+    logger.info(pipe.hgetall(f"user:{user.id}").execute())
+    logger.info(f"user:{user.id}")
 
 
 @global_pipe
@@ -92,10 +93,10 @@ def set_user_offline(pipe, user_sid):
     pipe.get(f"user:sid:{user_sid}")
     user_id = int(pipe.execute()[0])
     if user_id is None:
-        uc_logger.warning(f"Data missing from user:sid")
+        logger.warning(f"Data missing from user:sid")
         raise DataError(f"User with sid {user_sid} was not in user:sid")
     elif not isinstance(user_id, int):
-        uc_logger.critical(
+        logger.critical(
             f"Pipe returning incorrect type for user_id  (Function: set_user_offline returned {type(user_id)})"
         )
         raise DataError(
@@ -118,6 +119,11 @@ def user_from_sid(r, user_sid):
 @global_poolman
 def set_user_sid(r, user_id, user_sid):
     if r.exists(f"user:sid:{user_sid}") or r.hget(f"user:{user_id}", "sid"):
-        raise DataError("User SID already set")
+        logger.debug(r.hget(f"user:{user_id}", "sid").decode('utf-8') == NO_SID)
+        logger.debug(NO_SID)
+        if r.hget(f"user:{user_id}", "sid").decode('utf-8') != NO_SID: 
+            raise DataError("User SID already set")
+        
     r.set(f"user:sid:{user_sid}", user_id)
     r.hset(f"user:{user_id}", "sid", user_sid)
+    logger.info(f'user:{user_id} sid set to {user_sid}')

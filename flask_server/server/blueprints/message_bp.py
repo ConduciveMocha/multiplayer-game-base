@@ -49,14 +49,15 @@ def request_new_thread():
         logger.info("Creating thread")
         create_thread(thread_dict)
 
-        for user_id in payload["users"]:
+        for user_id in thread_dict['members']:
             logger.info(f"Getting user: {user_id}")
 
             user = get_user_by_id(user_id)
 
             if user["sid"] != NO_SID:
                 logger.info(f"User {user_id} online. Sending thread request")
-                socketio.emit("JOIN_THREAD_REQUEST", thread_dict, room=user["sid"])
+                logger.info(f"User {user_id} has sid: {user['sid']}")
+                socketio.emit("SERVER_THREAD_REQUEST", thread_dict, room=user["sid"])
             else:
                 logger.info(f"User {user_id} not online")
         return jsonify(thread_dict), 200

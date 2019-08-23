@@ -10,15 +10,20 @@ Messaging Structures:
 thread:next-id -- (int) Next id to be created
 thread:<id:int> -- (hash) meta data of thread
 thread:<id:int>:members -- (set) list of ids of members in the thread
-thread:<id:int>:messages -- (list) list of ids of messages sent in the thread
+thread:<id:int>:messages -- (zet) list of ids of messages sent in the thread
 message:next-id -- (int) Next id to be created
 message:<id:int> -- (hash) message data
 
 
 """
+
+# CONSTANTS
+
+# TODO: See if this can be changed to something userful
 THREAD_START = "-1"
 THREAD_SIG = {'id':int, 'name':str}
 MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
+
 logger = make_logger(__name__)
 
 #! TODO: Added method that joins user names
@@ -54,9 +59,9 @@ def create_message(pipe, message_dict):
 @global_poolman
 def get_next_message_id(r):
     message_id = int(r.get("message:next-id"))
-    logger.debug(f"Next available message id: {message_id}")
+    logger.info(f"Next available message id: {message_id}")
     r.incr("message:next-id")
-    logger.debug(f"message:next-id Incremented")
+    logger.info(f"message:next-id Incremented")
     return message_id
 
 
@@ -64,9 +69,9 @@ def get_next_message_id(r):
 @global_poolman
 def get_next_thread_id(r):
     thread_id = int(r.get("thread:next-id"))
-    logger.debug(f"Next available thread id: {thread_id}")
+    logger.info(f"Next available thread id: {thread_id}")
     r.incr("thread:next-id")
-    logger.debug(f"thread:next-id Incremented")
+    logger.info(f"thread:next-id Incremented")
     return thread_id
 
 
@@ -76,7 +81,7 @@ def get_next_thread_id(r):
 @global_poolman
 def get_message_by_id(r, message_id):
     try:
-        logger.debug(f"Getting message:{message_id}")
+        logger.info(f"Getting message:{message_id}")
         return r.hgetall(f"message:{message_id}")
     except Exception as e:
         logger.error(e)
@@ -98,7 +103,6 @@ def check_if_thread_exists(r, members):
     return None
 
 
-#! TODO: Write test
 @global_poolman
 def check_if_user_in_thread(r, thread_id, user_id):
     is_member = r.sismember(f"thread:{thread_id}:members", user_id)
@@ -123,9 +127,8 @@ def create_thread(pipe, thread_dict):
     logger.info(f"Creating thread:{thread_id}:messages")
     pipe.zadd(f"thread:{thread_id}:messages", {0: -1})
 
-    logger.info("Executing pipe")
+    logger.info("Executing pipe in `create_thread`")
     pipe.execute()
-    logger.info("Pipe executed, thread created. Returning")
     return thread_dict
 
 @global_poolman
@@ -145,6 +148,7 @@ def _get_thread_by_id(r,thread_id):
         logger.info(f'thread:{thread_id} = {thread}')
         return thread
     except Exception as e:
+        logger.error('Error thrown in _get_thread_by_id')
         return {}
 def get_thread_by_id(thread_id):
     thread = _get_thread_by_id(thread_id)
@@ -172,10 +176,9 @@ def create_message_dict(content, sender, thread, id=None):
         "id": int(id) if id else get_next_message_id(),
     }
 
-
+# TODO Rename members
 def create_thread_dict(sender, members, name, id=None):
     full_members_list = list(set([sender, *members]))
-    logger.info("Creating Thread Dictionary")
     return {
         "members": full_members_list,
         "name": str(name) if name else create_default_thread_name(full_members_list),

@@ -72,6 +72,13 @@ function subscribe(socket) {
       console.log(message);
       emit(MessageActions.recieveMessage(message));
     });
+    // TODO FIX
+    //! USES DEBUG VALUE FOR USER ID. DOES NOT ACTUALLY READ VALUE
+    socket.on("REQUEST_USER_IDENTIFICATION", payload=>{
+      console.log('Sending user identification')
+      socket.emit('USER_IDENTIFICATION', {user:{'id':0, 'username':'testUSER'}})
+      
+    })
 
     return () => {};
   });
