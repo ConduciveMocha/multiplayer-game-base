@@ -15,6 +15,7 @@ logger = make_logger(__name__)
 
 DEFAULT_USER_EXPIRE = 60 * 60 * 2
 NO_SID = "NO_SID"
+
 USER_SIG = {"id": int, "username": str, "online": int, "sid": str}
 
 
@@ -64,9 +65,13 @@ def set_user_online(pipe, user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
     )
     pipe.set(f"user:sid:{user_sid}", user.id)
     pipe.expire(f"user:{user.id}", exp)
-    for thread_id in user.threads:
-        pipe.sadd(f"user:{user.id}:threads", thread_id)
-    pipe.expire(f"user:{user.id}:threads", exp)
+    try:
+        for thread_id in user.threads:
+            pipe.sadd(f"user:{user.id}:threads", thread_id)
+        pipe.expire(f"user:{user.id}:threads", exp)
+    except AttributeError:
+        logger.error(f'No threads attached to user object: {user}')
+    
     pipe.execute()
     logger.info(pipe.hgetall(f"user:{user.id}").execute())
     logger.info(f"user:{user.id}")

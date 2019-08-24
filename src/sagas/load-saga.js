@@ -13,8 +13,8 @@ import {
   usersLoaded,
   threadMessagesLoaded
 } from "../actions/load-actions";
+import {LOAD_GAME_OBJECTS} from '../constants/action-types/load-types'
 
-import { flaskServer } from "../constants/urls";
 import { jsonPost } from "../api";
 
 function* loadUsers() {
@@ -50,6 +50,19 @@ function* loadThreads() {
       yield put(threadsLoaded(threads));
   }
 }
+
+function* loadGameObjects() {
+  while(true){
+    const action = yield take(LOAD_GAME_OBJECTS)
+    console.log('LOAD_GAME_OBJECTS CALLED')
+    let game_objects_resp = yield call(jsonPost,action,'/load/game-objects')
+    console.log('Game objects response: ', game_objects_resp)
+    
+
+  }
+}
+
+
 export default function* loadSaga() {
   yield fork(loadUsers);
   yield fork(loadThreads);

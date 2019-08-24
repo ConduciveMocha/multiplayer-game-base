@@ -1,7 +1,7 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
-from server.db.models import GameObject, Environment, User, UserInventory, UserStatus
+from server.db.models import GameObject, Environment, User, UserInventory, UserStatus,ObjectEffect
 from server.logging import make_logger
 from server.game.geometric_types.vector import Vector
 
@@ -9,7 +9,7 @@ logger = make_logger(__name__)
 
 
 def test_tables():
-    new_env = Environment(width=20, height=50)
+    new_env = Environment(width=5000, height=2000)
     new_go = GameObject(
         width=5,
         height=5,
@@ -182,13 +182,12 @@ def remove_from_user_inventory(
             db.session.commit()
 
 def get_object_effect_by_id(effect_id):
-    try:
-        return ObjectEffect.query.filter_by(id=effect_id).one()
-    except NoResultFound:
-        return None
-
+    
+    return ObjectEffect.query.filter_by(id=effect_id).first()
+    
 def game_object_to_inventory(game_object_id,user_id):
-    game_object = get
+    game_object = get_game_object_by_id(game_object_id)
+
 
 
 
@@ -206,6 +205,40 @@ def apply_effect(user_id,effect_id,application_function=None):
         return _default_apply_effect(status,effect)
     else: 
         raise TypeError('Parameter `application_function` must be callable')
+
+def test3():
+    import random
+    if Environment.query.filter_by(id=3).first():
+        return
+    new_env = Environment(width=5000, height=2000)
+    new_go = GameObject(
+        width=5,
+        height=5,
+        posx=0,
+        posy=0,
+        acquirable=True,
+        collidable=False,
+        environment=new_env,
+    )
+    db.session.add(new_env)
+    db.session.add(new_go)
+    db.session.commit()
+
+    logger.info(f'New Environment id: {new_env.id}')
+    for i in range(100):
+        go = GameObject(
+            width=5,
+            height=5,
+            posx=random.randint(0,1000),
+            posy=random.randint(0,500),
+            acquirable=True,
+            collidable=False,
+            environment=new_env,
+        )
+        logger.info(f'New game_object: {go}')
+        db.session.add(go)
+    db.session.commit()   
+
 
 def test2():
     test_tables()

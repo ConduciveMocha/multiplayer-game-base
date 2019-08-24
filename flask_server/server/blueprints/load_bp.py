@@ -61,3 +61,17 @@ def load_user_list():
         logger.error(f"ERROR: {e}")
         return jsonify(error="Error loading users")
 
+
+@load_bp.route('game-objects', methods=["GET", "POST"])
+def load_game_objects():
+    logger.info('Loading game objects')
+    try:
+        payload = reqeust.get_json()
+        env_id = payload['env']
+    except AttributeError:
+        return jsonify(error='Malformed request: `env` was not specified')
+    try:
+        return get_environment_objects(env_id)
+    except Exception:
+        logger.error('Error thrown getting environment id')
+        return jsonify(error='Error retrieving game objects')

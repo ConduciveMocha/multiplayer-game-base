@@ -14,7 +14,7 @@ def make_redis_url(host, port, db):
     return f"redis://{host}:{port}/{db}"
 
 
-cm_logger = make_logger(name=__name__)
+cm_logger = make_logger(__name__)
 
 
 class PoolManager:

@@ -127,7 +127,7 @@ def create_app(conf=None, log=False, return_ext=None):
     def index_page():
         import server.db.game_actions
 
-        server.db.game_actions.test2()
+        server.db.game_actions.test3()
         return "<h1>hello world</h1>"
 
     # Logs app initialization type for debug mode

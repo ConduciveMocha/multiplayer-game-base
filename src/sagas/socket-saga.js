@@ -56,7 +56,7 @@ export function gameConnect() {
   });
 }
 
-function subscribe(socket) {
+function messageChannelSubscribe(socket) {
   return eventChannel(emit => {
     socket.on("test", data => {
       console.log("Test Recieved");
@@ -100,8 +100,8 @@ function moveChannelSubscribe(socket) {
 }
 
 // Generator that takes all actions
-function* read(socket) {
-  const channel = yield call(subscribe, socket);
+function* readMessageChannel(socket) {
+  const channel = yield call(messageChannelSubscribe, socket);
   while (true) {
     let action = yield take(channel);
     yield put(action);
@@ -121,7 +121,7 @@ function* writeRequestThreadJoin(socket){
 }
 
 
-function* write(socket) {
+function* writeMessageEvent(socket) {
   function sendMessage(action) {
     socket.emit(MessageTypes.SEND_MESSAGE, { ...action, sender: 0 });
     console.log("Emitted event through socket in sendMessage");
@@ -136,7 +136,7 @@ function* write(socket) {
 }
 
 //! USES DEBUG VALUE FOR PLAYER
-function* writeMove(socket) {
+function* writeMoveEvent(socket) {
   function sendMove(action) {
     console.log("Sending move", action.key);
     socket.emit(GameTypes.PLAYER_KEYED, {
@@ -158,7 +158,7 @@ function* writeMove(socket) {
 const getPlayerObject = state => state.game.gameObjects[0];
 
 //! USES DEBUG VALUE FOR PLAYER
-function* writeInventoryAction(socket) {
+function* writeInventoryEvent(socket) {
   function sendRemoveItem(action) {
     console.log("Sending REMOVE_ITEM", action);
     socket.emit(GameTypes.REMOVE_INVENTORY_ITEM, {
@@ -186,27 +186,24 @@ function* readMove(socket) {
 
 function* handleGameIO(socket) {
   yield fork(readMove, socket);
-  yield fork(writeMove, socket);
-  yield fork(writeInventoryAction, socket);
+  yield fork(writeMoveEvent, socket);
+  yield fork(writeInventoryEvent, socket);
 }
 function* handleIO(socket) {
-  yield fork(read, socket);
-  yield fork(write, socket);
+  yield fork(readMessageChannel, socket);
+  yield fork(writeMessageEvent, socket);
   yield fork(writeRequestThreadJoin,socket)
 }
 
 function* flow() {
   while (true) {
-    // const socket = yield call(connect);
     const messageSocket = yield call(messageConnect);
     const gameSocket = yield call(gameConnect);
-    // const task = yield fork(handleIO, socket);
     const mTask = yield fork(handleIO, messageSocket);
     const gTaks = yield fork(handleGameIO, gameSocket);
     console.log("HandleIO Forked");
-    // socket.emit("SOCKET_TEST", { data: "test" });
 
-    yield take("NOTHIng");
+    yield take("NOTHING");
   }
 }
 

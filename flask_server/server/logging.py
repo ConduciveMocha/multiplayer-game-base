@@ -76,18 +76,22 @@ def make_logger(name, console_level=logging.DEBUG, console_format=default_consol
     """
     Creates a logger with specified name and correct format.
     """
+    print(f'!!        Making logger {name}')
     # Cast to log objects
     if isinstance(console_format, str):
         console_format = logging.Formatter(console_format)
 
     logger = logging.getLogger(name)
-
-    # Prevents double logging
+    logger.propagate = False
+    # PrEvEnts DoUbLe LoGgInG
     if not logger.handlers:
         console_handler = logging.StreamHandler()
         console_handler.setLevel(console_level)
         console_handler.setFormatter(console_format)
         logger.addHandler(console_handler)
+
+    logger.debug(f'Created logger {name}')
+    logger.debug(f'Handlers added: {logger.handlers}')
     return logger
 
 
