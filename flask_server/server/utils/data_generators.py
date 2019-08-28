@@ -47,7 +47,6 @@ try:
 except FileNotFoundError:
     import os
 
-    print(os.getcwd())
     WORD_LIST = get_wordlist(
         dictionary="/home/nate/code/multiplayer-game-base/flask_server/server/utils/words.txt"
     )
@@ -61,7 +60,7 @@ class FlexDict(dict):
         new_flex_dict = cls()
         for key, value in d.items():
             new_flex_dict[key] = value
-        print(new_flex_dict)
+
         return new_flex_dict
 
     def __getattr__(self, attr):
@@ -258,10 +257,6 @@ def generate_message_element(min_len=5, max_len=50, sender=None, wordlist=None):
 
     wrapped = f"<div class='message'>\n\t<div class='{sender}'>\n\t\t<p class='{sender}-message'>\n\t\t{generate_random_message(floor(uniform(min_len,max_len)), wordlist=wordlist)}\n\t\t</p>\n\t</div>\n</div>"
     return wrapped
-
-
-for _ in range(15):
-    print(generate_message_element(wordlist=WORD_LIST))
 
 
 # generate_message = ValueGenerator()

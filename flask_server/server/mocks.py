@@ -25,7 +25,7 @@ mock_threads = {
     0: {
         "id": 0,
         "name": "mockthread1",
-        "members": [1, 2,0],
+        "members": [1, 2, 0],
         "messages": [1, 2, 3, 4, 12],
     },
     1: {"id": 1, "name": "mockthread2", "members": [2, 3], "messages": [5, 6, 7]},
@@ -72,8 +72,8 @@ def mock_message_setup():
 def setup_mocks():
     r = Redis()
     r.flushall()
-    r.set('message:next-id', 13)
-    r.set('thread:next-id',3)
+    r.set("message:next-id", 13)
+    r.set("thread:next-id", 3)
     mock_user_setup()
     mock_threads_setup()
     mock_message_setup()
