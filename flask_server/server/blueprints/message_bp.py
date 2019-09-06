@@ -49,11 +49,11 @@ def request_new_thread():
         logger.info("Creating thread")
         create_thread(thread_dict)
 
-        for user_id in thread_dict['members']:
+        for user_id in thread_dict["members"]:
             logger.info(f"Getting user: {user_id}")
 
             user = get_user_by_id(user_id)
-
+            logger.debug(f'user sid type : {type(user["sid"])}')
             if user["sid"] != NO_SID:
                 logger.info(f"User {user_id} online. Sending thread request")
                 logger.info(f"User {user_id} has sid: {user['sid']}")

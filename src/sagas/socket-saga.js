@@ -74,11 +74,12 @@ function messageChannelSubscribe(socket) {
     });
     // TODO FIX
     //! USES DEBUG VALUE FOR USER ID. DOES NOT ACTUALLY READ VALUE
-    socket.on("REQUEST_USER_IDENTIFICATION", payload=>{
-      console.log('Sending user identification')
-      socket.emit('USER_IDENTIFICATION', {user:{'id':0, 'username':'testUSER'}})
-      
-    })
+    socket.on("SEND_IDENTIFICATION", payload => {
+      console.log("Sending user identification");
+      socket.emit("USER_IDENTIFICATION", {
+        user: { id: 1, username: "testUSER" }
+      });
+    });
 
     return () => {};
   });
@@ -108,22 +109,21 @@ function* readMessageChannel(socket) {
   }
 }
 
-function* writeRequestThreadJoin(socket){
-  function sendRequestThreadJoin(action){
-    socket.emit(MessageTypes.CLIENT_THREAD_REQUEST, {...action,sender:0})
-    console.log('Sent request to join thread: ', {...action, sender:0})
+function* writeRequestThreadJoin(socket) {
+  function sendRequestThreadJoin(action) {
+    socket.emit(MessageTypes.CLIENT_THREAD_REQUEST, { ...action, sender: 0 });
+    console.log("Sent request to join thread: ", { ...action, sender: 0 });
   }
 
-  while(true){
-    let action = yield take(MessageTypes.CLIENT_THREAD_REQUEST)
-    sendRequestThreadJoin(action)
+  while (true) {
+    let action = yield take(MessageTypes.CLIENT_THREAD_REQUEST);
+    sendRequestThreadJoin(action);
   }
 }
 
-
 function* writeMessageEvent(socket) {
   function sendMessage(action) {
-    socket.emit(MessageTypes.SEND_MESSAGE, { ...action, sender: 0 });
+    socket.emit(MessageTypes.SEND_MESSAGE, { ...action, sender: 1 });
     console.log("Emitted event through socket in sendMessage");
     console.log("action object", action);
     // yield put({type:"MESSAGE_SENT",message:action.message})
@@ -189,16 +189,24 @@ function* handleGameIO(socket) {
   yield fork(writeMoveEvent, socket);
   yield fork(writeInventoryEvent, socket);
 }
+
 function* handleIO(socket) {
   yield fork(readMessageChannel, socket);
   yield fork(writeMessageEvent, socket);
-  yield fork(writeRequestThreadJoin,socket)
+  yield fork(writeRequestThreadJoin, socket);
 }
 
 function* flow() {
   while (true) {
     const messageSocket = yield call(messageConnect);
     const gameSocket = yield call(gameConnect);
+
+    let idEvent = yield take("SEND_IDENTIFICATION");
+    console.log("Id event read");
+    messageSocket.emit("SEND_IDENTIFICATION", {
+      user: { id: 1, username: "TestUser" }
+    });
+
     const mTask = yield fork(handleIO, messageSocket);
     const gTaks = yield fork(handleGameIO, gameSocket);
     console.log("HandleIO Forked");

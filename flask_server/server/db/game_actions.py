@@ -1,7 +1,14 @@
 from sqlalchemy.orm.exc import NoResultFound
 
 from app import db
-from server.db.models import GameObject, Environment, User, UserInventory, UserStatus,ObjectEffect
+from server.db.models import (
+    GameObject,
+    Environment,
+    User,
+    UserInventory,
+    UserStatus,
+    ObjectEffect,
+)
 from server.logging import make_logger
 from server.game.geometric_types.vector import Vector
 
@@ -30,6 +37,7 @@ def get_game_object_by_id(object_id):
     except NoResultFound:
         return None
 
+
 def get_object_position(object_id):
     logger.info(f"Getting position of object with id={object_id}")
     game_object = get_game_object_by_id(object_id)
@@ -57,11 +65,12 @@ def move_game_object(object_id, delta, collision_function=None):
 
 
 def check_user_owns_object(user_id, game_object_id):
-    game_object = get_game_object_by_id(object_id)
+    game_object = get_game_object_by_id(game_object_id)
     try:
         return user_id == game_object.owner_id
     except AttributeError:
         return False
+
 
 def set_game_object_owner(game_object_id, user_id):
     game_object = get_game_object_by_id(game_object_id)
@@ -90,18 +99,19 @@ def object_in_inventory(inventory_object_id, user_id):
     except NoResultFound:
         return False
 
+
 def get_environment_by_id(env_id):
     try:
         return Environment.query.filter_by(id=env_id).one()
     except NoResultFound:
         return None
 
+
 def get_environment_objects(env_id):
     try:
         return get_environment_by_id(env_id).game_objects
     except AttributeError:
         return None
-
 
 
 def object_in_enviroment(env_id, game_object_id):
@@ -181,33 +191,36 @@ def remove_from_user_inventory(
             db.session.add(user_inv)
             db.session.commit()
 
+
 def get_object_effect_by_id(effect_id):
-    
+
     return ObjectEffect.query.filter_by(id=effect_id).first()
-    
-def game_object_to_inventory(game_object_id,user_id):
+
+
+def game_object_to_inventory(game_object_id, user_id):
     game_object = get_game_object_by_id(game_object_id)
 
 
-
-
-#TODO Write this
-def _default_apply_effect(status,effect):
+# TODO Write this
+def _default_apply_effect(status, effect):
     return status
 
-def apply_effect(user_id,effect_id,application_function=None):
+
+def apply_effect(user_id, effect_id, application_function=None):
     status = get_user_status(user_id)
     effect = get_object_effect_by_id(effect_id)
 
     if callable(application_function):
-        return application_function(status,effect)
+        return application_function(status, effect)
     elif application_function is None:
-        return _default_apply_effect(status,effect)
-    else: 
-        raise TypeError('Parameter `application_function` must be callable')
+        return _default_apply_effect(status, effect)
+    else:
+        raise TypeError("Parameter `application_function` must be callable")
+
 
 def test3():
     import random
+
     if Environment.query.filter_by(id=3).first():
         return
     new_env = Environment(width=5000, height=2000)
@@ -224,20 +237,20 @@ def test3():
     db.session.add(new_go)
     db.session.commit()
 
-    logger.info(f'New Environment id: {new_env.id}')
+    logger.info(f"New Environment id: {new_env.id}")
     for i in range(100):
         go = GameObject(
             width=5,
             height=5,
-            posx=random.randint(0,1000),
-            posy=random.randint(0,500),
+            posx=random.randint(0, 1000),
+            posy=random.randint(0, 500),
             acquirable=True,
             collidable=False,
             environment=new_env,
         )
-        logger.info(f'New game_object: {go}')
+        logger.info(f"New game_object: {go}")
         db.session.add(go)
-    db.session.commit()   
+    db.session.commit()
 
 
 def test2():
