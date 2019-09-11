@@ -9,16 +9,17 @@ import {
   fork,
   cancel
 } from "redux-saga/effects";
-import * as SocketActions from "../actions/socket-actions";
-import * as SocketTypes from "../constants/action-types/socket-types";
 import io from "socket.io-client";
-import * as MessageActions from "../actions/message-actions";
-import * as GameActions from "../actions/game-actions";
-import * as MessageTypes from "../constants/action-types/message-types";
-import * as GameTypes from "../constants/action-types/game-types";
+
+import * as SocketActions from "../../actions/socket-actions";
+import * as SocketTypes from "../../constants/action-types/socket-types";
+import * as MessageActions from "../../actions/message-actions";
+import * as GameActions from "../../actions/game-actions";
+import * as MessageTypes from "../../constants/action-types/message-types";
+import * as GameTypes from "../../constants/action-types/game-types";
 
 //! USES DEBUG VALUE FOR PLAYER
-const getPlayerObject = state => state.game.gameObjects[0];
+export const getPlayerObject = state => state.game.gameObjects[0];
 
 export function gameConnect() {
   const socket = io("http://localhost:5000/game", { forceNew: true });
@@ -70,6 +71,25 @@ function* readMove(socket) {
   while (true) {
     let action = yield take(moveChannel);
     yield put(action);
+  }
+}
+
+//! USES DEBUG VALUE FOR PLAYER
+function* writeMoveEvent(socket) {
+  function sendMove(action) {
+    console.log("Sending move", action.key);
+    socket.emit(GameTypes.PLAYER_KEYED, {
+      sender: 0,
+      key: action.key,
+      playerObject: action.playerObject
+    });
+  }
+  while (true) {
+    let action = yield take(GameTypes.PLAYER_KEYED);
+    let playerObject = yield select(getPlayerObject);
+    console.log("Player Object before send: ", playerObject);
+    console.log("Recieved PLAYER_KEYED");
+    sendMove({ ...action, playerObject: playerObject });
   }
 }
 

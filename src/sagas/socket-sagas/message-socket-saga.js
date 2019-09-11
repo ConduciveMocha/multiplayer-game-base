@@ -9,14 +9,14 @@ import {
   fork,
   cancel
 } from "redux-saga/effects";
-import * as SocketActions from "../actions/socket-actions";
-import * as SocketTypes from "../constants/action-types/socket-types";
+import * as SocketActions from "../../actions/socket-actions";
+import * as SocketTypes from "../../constants/action-types/socket-types";
 import io from "socket.io-client";
-import * as MessageActions from "../actions/message-actions";
-import * as GameActions from "../actions/game-actions";
-import * as MessageTypes from "../constants/action-types/message-types";
-import * as GameTypes from "../constants/action-types/game-types";
-
+import * as MessageActions from "../../actions/message-actions";
+import * as GameActions from "../../actions/game-actions";
+import * as MessageTypes from "../../constants/action-types/message-types";
+import * as GameTypes from "../../constants/action-types/game-types";
+import { getPlayerObject } from "./game-socket-saga";
 export function messageConnect() {
   const socket = io("http://localhost:5000/message", { forceNew: true });
   console.log("Connecting to messaging namespace");

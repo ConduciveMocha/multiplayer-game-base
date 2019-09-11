@@ -9,13 +9,12 @@ import {
   fork,
   cancel
 } from "redux-saga/effects";
-import * as SocketActions from "../actions/socket-actions";
-import * as SocketTypes from "../constants/action-types/socket-types";
 import io from "socket.io-client";
-import * as MessageActions from "../actions/message-actions";
-import * as GameActions from "../actions/game-actions";
-import * as MessageTypes from "../constants/action-types/message-types";
-import * as GameTypes from "../constants/action-types/game-types";
+import {
+  handleMessageIO,
+  messageConnect
+} from "./socket-sagas/message-socket-saga";
+import { handleGameIO, gameConnect } from "./socket-sagas/game-socket-saga";
 
 /**
  * Connect Functions:
@@ -34,168 +33,6 @@ export function connect() {
   });
 }
 
-export function messageConnect() {
-  const socket = io("http://localhost:5000/message", { forceNew: true });
-  console.log("Connecting to messaging namespace");
-  return new Promise(resolve => {
-    socket.on("connect", () => {
-      console.log("Message Socket Connected");
-      resolve(socket);
-    });
-  });
-}
-
-export function gameConnect() {
-  const socket = io("http://localhost:5000/game", { forceNew: true });
-  console.log("Connecting to game namespace");
-  return new Promise(resolve => {
-    socket.on("connect", () => {
-      console.log("Game socket connected");
-      resolve(socket);
-    });
-  });
-}
-
-function messageChannelSubscribe(socket) {
-  return eventChannel(emit => {
-    socket.on("test", data => {
-      console.log("Test Recieved");
-      console.log("Data:", data);
-    });
-
-    socket.on(MessageTypes.SERVER_THREAD_REQUEST, payload => {
-      console.debug("Request to join thread: ", payload);
-      emit(MessageActions.serverThreadRequest(payload));
-    });
-
-    socket.on(MessageTypes.NEW_MESSAGE, message => {
-      console.log(message);
-      emit(MessageActions.recieveMessage(message));
-    });
-    // TODO FIX
-    //! USES DEBUG VALUE FOR USER ID. DOES NOT ACTUALLY READ VALUE
-    socket.on("SEND_IDENTIFICATION", payload => {
-      console.log("Sending user identification");
-      socket.emit("USER_IDENTIFICATION", {
-        user: { id: 1, username: "testUSER" }
-      });
-    });
-
-    return () => {};
-  });
-}
-
-function moveChannelSubscribe(socket) {
-  return eventChannel(emit => {
-    socket.on(GameTypes.UPDATE_GAMESTATE, payload => {
-      console.debug("Updating gamestate with payload:", payload);
-      emit(GameActions.updateGamestate(payload.updatedObjects));
-    });
-
-    socket.on("TEST", payload => {
-      console.log("Movement socket test recieved with payload: ", payload);
-    });
-
-    return () => {};
-  });
-}
-
-// Generator that takes all actions
-function* readMessageChannel(socket) {
-  const channel = yield call(messageChannelSubscribe, socket);
-  while (true) {
-    let action = yield take(channel);
-    yield put(action);
-  }
-}
-
-function* writeRequestThreadJoin(socket) {
-  function sendRequestThreadJoin(action) {
-    socket.emit(MessageTypes.CLIENT_THREAD_REQUEST, { ...action, sender: 0 });
-    console.log("Sent request to join thread: ", { ...action, sender: 0 });
-  }
-
-  while (true) {
-    let action = yield take(MessageTypes.CLIENT_THREAD_REQUEST);
-    sendRequestThreadJoin(action);
-  }
-}
-
-function* writeMessageEvent(socket) {
-  function sendMessage(action) {
-    socket.emit(MessageTypes.SEND_MESSAGE, { ...action, sender: 1 });
-    console.log("Emitted event through socket in sendMessage");
-    console.log("action object", action);
-    // yield put({type:"MESSAGE_SENT",message:action.message})
-  }
-
-  while (true) {
-    let action = yield take(MessageTypes.SEND_MESSAGE);
-    sendMessage(action);
-  }
-}
-
-//! USES DEBUG VALUE FOR PLAYER
-function* writeMoveEvent(socket) {
-  function sendMove(action) {
-    console.log("Sending move", action.key);
-    socket.emit(GameTypes.PLAYER_KEYED, {
-      sender: 0,
-      key: action.key,
-      playerObject: action.playerObject
-    });
-  }
-  while (true) {
-    let action = yield take(GameTypes.PLAYER_KEYED);
-    let playerObject = yield select(getPlayerObject);
-    console.log("Player Object before send: ", playerObject);
-    console.log("Recieved PLAYER_KEYED");
-    sendMove({ ...action, playerObject: playerObject });
-  }
-}
-
-//! USES DEBUG VALUE FOR PLAYER
-const getPlayerObject = state => state.game.gameObjects[0];
-
-//! USES DEBUG VALUE FOR PLAYER
-function* writeInventoryEvent(socket) {
-  function sendRemoveItem(action) {
-    console.log("Sending REMOVE_ITEM", action);
-    socket.emit(GameTypes.REMOVE_INVENTORY_ITEM, {
-      sender: 0,
-      item: action.item,
-      destination: action.destination
-    });
-  }
-
-  while (true) {
-    let action = yield take(GameTypes.REMOVE_INVENTORY_ITEM);
-
-    console.log("Recieved REMOVE_INVENTORY_ITEM");
-    sendRemoveItem(action);
-  }
-}
-
-function* readMove(socket) {
-  const moveChannel = yield call(moveChannelSubscribe, socket);
-  while (true) {
-    let action = yield take(moveChannel);
-    yield put(action);
-  }
-}
-
-function* handleGameIO(socket) {
-  yield fork(readMove, socket);
-  yield fork(writeMoveEvent, socket);
-  yield fork(writeInventoryEvent, socket);
-}
-
-function* handleIO(socket) {
-  yield fork(readMessageChannel, socket);
-  yield fork(writeMessageEvent, socket);
-  yield fork(writeRequestThreadJoin, socket);
-}
-
 function* flow() {
   while (true) {
     const messageSocket = yield call(messageConnect);
@@ -207,7 +44,7 @@ function* flow() {
       user: { id: 1, username: "TestUser" }
     });
 
-    const mTask = yield fork(handleIO, messageSocket);
+    const mTask = yield fork(handleMessageIO, messageSocket);
     const gTaks = yield fork(handleGameIO, gameSocket);
     console.log("HandleIO Forked");
 
