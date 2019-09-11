@@ -2,6 +2,7 @@ import json
 import base64
 import time
 from flask import Blueprint, request, make_response, jsonify
+from flask_socketio import join_room
 
 # from server.db import db_session
 # from server.auth import make_thread_id, members_from_thread_id, require_auth
@@ -58,6 +59,7 @@ def request_new_thread():
                 logger.info(f"User {user_id} online. Sending thread request")
                 logger.info(f"User {user_id} has sid: {user['sid']}")
                 socketio.emit("SERVER_THREAD_REQUEST", thread_dict, room=user["sid"])
+                join_room(room=f'thread-{thread_dict["id"]}', sid=user["sid"])
             else:
                 logger.info(f"User {user_id} not online")
         return jsonify(thread_dict), 200
