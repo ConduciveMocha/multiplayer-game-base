@@ -2,7 +2,7 @@ import logging
 
 from flask import g, jsonify
 from redis.exceptions import DataError
-
+import redis
 from server.redis_cache.poolmanager import (
     global_poolman,
     global_pipe,
@@ -17,6 +17,12 @@ DEFAULT_USER_EXPIRE = 60 * 60 * 2
 NO_SID = "NO_SID"
 
 USER_SIG = {"id": int, "username": str, "online": int, "sid": str}
+
+
+class UserEntry:
+    def __init__(self, user_id, username, online, sid=None):
+        self.r = redis.Redis()
+        self.has_been_read = False
 
 
 @global_poolman
@@ -42,7 +48,7 @@ def get_user_by_id(r, user_id):
         if r.exists(f"user:{user_id}"):
             return r.hgetall(f"user:{user_id}")
         else:
-            logger.error(f'User {user_id} does not exist')
+            logger.error(f"User {user_id} does not exist")
             return {}
     except Exception as e:
         logger.error("Error thrown in `get_user_by_id`")
@@ -70,8 +76,8 @@ def set_user_online(pipe, user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
             pipe.sadd(f"user:{user.id}:threads", thread_id)
         pipe.expire(f"user:{user.id}:threads", exp)
     except AttributeError:
-        logger.error(f'No threads attached to user object: {user}')
-    
+        logger.error(f"No threads attached to user object: {user}")
+
     pipe.execute()
     logger.info(pipe.hgetall(f"user:{user.id}").execute())
     logger.info(f"user:{user.id}")
@@ -124,11 +130,12 @@ def user_from_sid(r, user_sid):
 @global_poolman
 def set_user_sid(r, user_id, user_sid):
     if r.exists(f"user:sid:{user_sid}") or r.hget(f"user:{user_id}", "sid"):
-        logger.debug(r.hget(f"user:{user_id}", "sid").decode('utf-8') == NO_SID)
+        logger.debug(r.hget(f"user:{user_id}", "sid").decode("utf-8") == NO_SID)
         logger.debug(NO_SID)
-        if r.hget(f"user:{user_id}", "sid").decode('utf-8') != NO_SID: 
+        if r.hget(f"user:{user_id}", "sid").decode("utf-8") != NO_SID:
             raise DataError("User SID already set")
-        
+
     r.set(f"user:sid:{user_sid}", user_id)
     r.hset(f"user:{user_id}", "sid", user_sid)
-    logger.info(f'user:{user_id} sid set to {user_sid}')
+    logger.info(f"user:{user_id} sid set to {user_sid}")
+
