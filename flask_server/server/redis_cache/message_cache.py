@@ -2,7 +2,7 @@ from server.redis_cache.poolmanager import global_poolman, global_pipe, return_s
 import redis
 from redis.exceptions import LockError
 from server.logging import make_logger
-
+from server.redis_cache.redis_model import RedisEntry
 DEFAULT_MESSAGE_EXPIRE = 7200
 
 """
@@ -27,10 +27,18 @@ MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
 logger = make_logger(__name__)
 
 
-class ThreadEntry:
+class ThreadEntry(RedisEntry):
+    THREAD_SIG = {"id":int, "name":str}
     def __init__(self, thread_id, users, messages=[]):
-        self.r = redis.Redis()
-        self.has_been_read = False
+        self.messages = messages
+        self.thread_id = thread_id
+        self.users = users
+
+        super().__init__(self)
+    
+    @classmethod
+    def fix_thread_signature(cls, returned_thread):
+        return cls.fix_hash_signature(returned_thread, cls.THREAD_SIG)
 
     def get_thread_length(self):
         if len(self.messages):
@@ -42,15 +50,27 @@ class ThreadEntry:
         return self.get_thread_length()
 
     def create_default_thread_name(self):
-        pass
+        usernames = [user.username for user in self.users]
+        return ", ".join(usernames[:-1]) + " and " + usernames[-1]
 
 
-class MessageEntry:
-    def __init__(self, message_id, thread_id, user_id, content):
-        self.r = redis.Redis()
+class MessageEntry(RedisEntry):
+    MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
 
+    def __init__(self, message_id, thread, user_id, content):
+        self.message_id = message_id
+        self.thread = thread
+        self.user_id = user_id
+        self.content = content
+        super().__init__(self)
+    
+    @classmethod
+    def fix_message_signature(cls,returned_message):
+        return cls.fix_hash_signature(returned_message,cls.MESSAGE_SIG)
+    
 
-#! TODO: Added method that joins user names
+    
+# Added
 @global_poolman
 def create_default_thread_name(r, users):
     usernames = [r.hget(f"user:{user}", "username") for user in users]
