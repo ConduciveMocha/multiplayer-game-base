@@ -3,6 +3,7 @@ import redis
 from redis.exceptions import LockError
 from server.logging import make_logger
 from server.redis_cache.redis_model import RedisEntry
+
 DEFAULT_MESSAGE_EXPIRE = 7200
 
 """
@@ -28,14 +29,15 @@ logger = make_logger(__name__)
 
 
 class ThreadEntry(RedisEntry):
-    THREAD_SIG = {"id":int, "name":str}
+    THREAD_SIG = {"id": int, "name": str}
+
     def __init__(self, thread_id, users, messages=[]):
         self.messages = messages
         self.thread_id = thread_id
         self.users = users
 
         super().__init__(self)
-    
+
     @classmethod
     def fix_thread_signature(cls, returned_thread):
         return cls.fix_hash_signature(returned_thread, cls.THREAD_SIG)
@@ -53,6 +55,15 @@ class ThreadEntry(RedisEntry):
         usernames = [user.username for user in self.users]
         return ", ".join(usernames[:-1]) + " and " + usernames[-1]
 
+    #! !!does not increment!!
+    @classmethod
+    def next_id(cls):
+        thread_id = int(cls._R.get("thread:next-id"))
+        logger.info(f"Next available thread id: {thread_id}")
+        # cls._R.incr("thread:next-id")
+        logger.info(f"thread:next-id Incremented")
+        return thread_id
+
 
 class MessageEntry(RedisEntry):
     MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
@@ -63,13 +74,20 @@ class MessageEntry(RedisEntry):
         self.user_id = user_id
         self.content = content
         super().__init__(self)
-    
-    @classmethod
-    def fix_message_signature(cls,returned_message):
-        return cls.fix_hash_signature(returned_message,cls.MESSAGE_SIG)
-    
 
-    
+    @classmethod
+    def fix_message_signature(cls, returned_message):
+        return cls.fix_hash_signature(returned_message, cls.MESSAGE_SIG)
+
+    @classmethod
+    def next_id(cls):
+        message_id = int(cls._R.get("message:next-id"))
+        logger.info(f"Next available message id: {message_id}")
+        # cls._R.incr("message:next-id")
+        logger.info(f"message:next-id Incremented")
+        return message_id
+
+
 # Added
 @global_poolman
 def create_default_thread_name(r, users):
@@ -100,6 +118,7 @@ def create_message(pipe, message_dict):
     pipe.execute()
 
 
+# Added
 # Gets next message-id and increments
 @global_poolman
 def get_next_message_id(r):
@@ -110,6 +129,7 @@ def get_next_message_id(r):
     return message_id
 
 
+# Added
 # Gets next thread-id and increments
 @global_poolman
 def get_next_thread_id(r):
