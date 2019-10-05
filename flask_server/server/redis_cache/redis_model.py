@@ -19,3 +19,5 @@ class RedisEntry:
     def make_key(self, *args):
         return ":".join([prefix] + args)
 
+    def commit(self):
+        raise NotImplementedError

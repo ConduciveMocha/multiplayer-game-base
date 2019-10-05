@@ -150,6 +150,11 @@ class UserEntry(RedisEntry):
             pipe.expire(f"user:{user_id}:threads", SELF.DEFAULT_USER_EXPIRE)
             pipe.execute()
 
+    def __eq__(self,other):
+        return self.user_id == other.user_id
+        
+    def __ne__(self,other):
+        return not self.__eq__(other)
 
 # Added
 @global_poolman
