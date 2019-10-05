@@ -15,6 +15,7 @@ from server.redis_cache.poolmanager import (
 from server.logging import make_logger
 
 logger = make_logger(__name__)
+DEFAULT_USER_EXPIRE = 60 * 60 * 2
 
 NO_SID = "NO_SID"
 
@@ -34,6 +35,16 @@ class UserEntry(RedisEntry):
         self.sid = sid
 
         super().__init__(self)
+
+    def get_threads(self):
+        from server.redis_cache.message_cache import ThreadEntry
+
+        raw_thread_ids = self._R.smembers(f"user:{self.user_id}:threads")
+        if raw_thread_ids:
+            thread_ids = list(map(lambda th: int(th.decode("utf-8")), threads))
+            self.threads = [ThreadEntry.from_id(thread_id) for thread_id in thread_ids]
+        else:
+            self.threads = []
 
     @classmethod
     def from_user_id(cls, user_id):
@@ -120,8 +131,8 @@ class UserEntry(RedisEntry):
                 logger.error(f"No threads attached to user object: {self.user_id}")
 
             pipe.execute()
-            logger.info(pipe.hgetall(f"user:{user.id}").execute())
-            logger.info(f"user:{user.id}")
+            logger.info(pipe.hgetall(f"user:{self.user_id}").execute())
+            logger.info(f"user:{self.user_id}")
 
     #! UNFINISHED
     def commit(self):
@@ -150,11 +161,12 @@ class UserEntry(RedisEntry):
             pipe.expire(f"user:{user_id}:threads", SELF.DEFAULT_USER_EXPIRE)
             pipe.execute()
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         return self.user_id == other.user_id
-        
-    def __ne__(self,other):
+
+    def __ne__(self, other):
         return not self.__eq__(other)
+
 
 # Added
 @global_poolman
@@ -226,7 +238,7 @@ def extend_user_data(pipe, user_id, exp=DEFAULT_USER_EXPIRE):
     pipe.execute()
 
 
-# Implicit
+# Added
 @global_poolman
 def get_user_threads(r, user_id):
     threads = r.smembers(f"user:{user_id}:threads")

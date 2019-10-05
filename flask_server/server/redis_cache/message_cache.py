@@ -4,6 +4,7 @@ from redis.exceptions import LockError
 from server.logging import make_logger
 from server.redis_cache.redis_model import RedisEntry
 from server.redis_cache.user_cache import UserEntry
+
 DEFAULT_MESSAGE_EXPIRE = 7200
 
 """
@@ -37,11 +38,10 @@ class ThreadEntry(RedisEntry):
         self.users = users
 
         super().__init__(self)
-    
-    @classmethod
-    def from_id(cls,thread_id):
-        raise NotImplementedError
 
+    @classmethod
+    def from_id(cls, thread_id):
+        raise NotImplementedError
 
     @classmethod
     def fix_thread_signature(cls, returned_thread):
@@ -59,15 +59,28 @@ class ThreadEntry(RedisEntry):
     def create_default_thread_name(self):
         usernames = [user.username for user in self.users]
         return ", ".join(usernames[:-1]) + " and " + usernames[-1]
-    
+
     #! Must create a __eq__ operator for UserEntry
-    def is_user_in_thread(self,user):
-        if isinstance(user, str) or isinstance(user,int):
+    def is_user_in_thread(self, user):
+        if isinstance(user, str) or isinstance(user, int):
             user = UserEntry.from_user_id(user)
         for member in self.users:
             if member == user:
                 return True
         return False
+
+    @classmethod
+    def check_if_thread_exists(cls, members):
+        mutual_threads = cls._R.sinter(
+            map(lambda mem: f"user:{mem.user_id}:threads", members)
+        )
+        for th in mutual_threads:
+            logger.info(f"thread: {th}")
+            th = int(th.decode("utf-8"))
+            if len(members) == cls._R.scard(f"thread:{th}:members"):
+                return cls.from_id(th)
+        return None
+
     #! !!does not increment!!
     @classmethod
     def next_id(cls):
@@ -76,6 +89,9 @@ class ThreadEntry(RedisEntry):
         # cls._R.incr("thread:next-id")
         logger.info(f"thread:next-id Incremented")
         return thread_id
+
+    def commit(self):
+        pass
 
 
 class MessageEntry(RedisEntry):
@@ -89,16 +105,20 @@ class MessageEntry(RedisEntry):
         super().__init__(self)
 
     @classmethod
-    def from_id(cls,message_id):
+    def from_id(cls, message_id):
         try:
             logger.info(f"Getting message:{message_id}")
             raw_message_data = cls._R.hgetall(f"message:{message_id}")
             message_data = cls.fix_message_signature(raw_message_data)
-            return cls(message_data['id'], ThreadEntry.from_id(message_data['thread']), UserEntry.from_id(message_data['sender']), message_data['content'])
+            return cls(
+                message_data["id"],
+                ThreadEntry.from_id(message_data["thread"]),
+                UserEntry.from_id(message_data["sender"]),
+                message_data["content"],
+            )
         except Exception as e:
             logger.error(e)
             raise type(e)
-
 
     @classmethod
     def fix_message_signature(cls, returned_message):
@@ -116,12 +136,22 @@ class MessageEntry(RedisEntry):
         # Add Message
 
         with self._R.pipeline() as pipe:
-            logger.info(f'Thread Length for {self.message_id} is: {len(self.thread)}')
-            pipe.hmset(f"message:{self.message_id}", {"content": self.content, "sender": self.user_id, "thread":self.thread.id, "id":self.message_id})
+            logger.info(f"Thread Length for {self.message_id} is: {len(self.thread)}")
+            pipe.hmset(
+                f"message:{self.message_id}",
+                {
+                    "content": self.content,
+                    "sender": self.user_id,
+                    "thread": self.thread.id,
+                    "id": self.message_id,
+                },
+            )
             pipe.zadd(
-                f"thread:{self.thread.id}:messages", {str(len(self.thread)): self.message_id}
+                f"thread:{self.thread.id}:messages",
+                {str(len(self.thread)): self.message_id},
             )
             pipe.execute()
+
 
 # Added
 @global_poolman
@@ -137,6 +167,7 @@ def thread_length(r, thread_id):
         return int(r.zcard(f"thread:{thread_id}:messages"))
     except TypeError:
         return 0
+
 
 # Added
 # Adds message to redis
@@ -174,6 +205,7 @@ def get_next_thread_id(r):
     logger.info(f"thread:next-id Incremented")
     return thread_id
 
+
 # Added
 # Gets the contents of the message:<id> key
 #! TODO: Add auxilary keys (i.e. message:<id>:users) to return dict
@@ -188,6 +220,7 @@ def get_message_by_id(r, message_id):
         raise type(e)
 
 
+# Added
 # Ugly. Ugly, ugly, ugly.
 #! Function only works if no race condition created when creating threads with the same members...
 @global_poolman
@@ -201,6 +234,7 @@ def check_if_thread_exists(r, members):
             return th
 
     return None
+
 
 # Added
 @global_poolman
