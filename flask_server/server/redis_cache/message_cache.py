@@ -21,7 +21,7 @@ message:<id:int> -- (hash) message data
 
 # CONSTANTS
 
-# TODO: See if this can be changed to something userful
+# TODO: See if this can be changed to something useful
 THREAD_START = "-1"
 THREAD_SIG = {"id": int, "name": str}
 MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
@@ -36,7 +36,6 @@ class ThreadEntry(RedisEntry):
         self.messages = messages
         self.thread_id = thread_id
         self.users = users
-
         super().__init__(self)
 
     @classmethod
@@ -60,7 +59,6 @@ class ThreadEntry(RedisEntry):
         usernames = [user.username for user in self.users]
         return ", ".join(usernames[:-1]) + " and " + usernames[-1]
 
-    #! Must create a __eq__ operator for UserEntry
     def is_user_in_thread(self, user):
         if isinstance(user, str) or isinstance(user, int):
             user = UserEntry.from_user_id(user)
@@ -79,6 +77,7 @@ class ThreadEntry(RedisEntry):
             th = int(th.decode("utf-8"))
             if len(members) == cls._R.scard(f"thread:{th}:members"):
                 return cls.from_id(th)
+        
         return None
 
     #! !!does not increment!!
@@ -91,7 +90,14 @@ class ThreadEntry(RedisEntry):
         return thread_id
 
     def commit(self):
-        pass
+        with self._R.pipeline() as pipe:
+            pipe.hmset(f"thread:{self.thread_id}", {"id":self.thread_id, "name":self.thread_name })
+            for user in self.users:
+                pipe.sadd(f"thread:{self.thread_id}:members",user.id)
+                pipe.sadd(f"user:{user.id}.threads", self.thread_id)
+            pipe.zadd(f"thread:{thread_id}:messages", {0:-1})
+            pipe.execute()
+
 
 
 class MessageEntry(RedisEntry):
@@ -243,7 +249,7 @@ def check_if_user_in_thread(r, thread_id, user_id):
     logger.info(f"Result of sismember for user {user_id} in {thread_id}: {is_member}")
     return is_member
 
-
+# Added
 # Adds the thread to redis
 @global_pipe
 def create_thread(pipe, thread_dict):
