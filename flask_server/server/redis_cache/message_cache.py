@@ -77,27 +77,29 @@ class ThreadEntry(RedisEntry):
             th = int(th.decode("utf-8"))
             if len(members) == cls._R.scard(f"thread:{th}:members"):
                 return cls.from_id(th)
-        
+
         return None
 
-    #! !!does not increment!!
     @classmethod
-    def next_id(cls):
+    def next_id(cls, incr=False):
         thread_id = int(cls._R.get("thread:next-id"))
         logger.info(f"Next available thread id: {thread_id}")
-        # cls._R.incr("thread:next-id")
+        if incr:
+            cls._R.incr("thread:next-id")
         logger.info(f"thread:next-id Incremented")
         return thread_id
 
     def commit(self):
         with self._R.pipeline() as pipe:
-            pipe.hmset(f"thread:{self.thread_id}", {"id":self.thread_id, "name":self.thread_name })
+            pipe.hmset(
+                f"thread:{self.thread_id}",
+                {"id": self.thread_id, "name": self.thread_name},
+            )
             for user in self.users:
-                pipe.sadd(f"thread:{self.thread_id}:members",user.id)
+                pipe.sadd(f"thread:{self.thread_id}:members", user.id)
                 pipe.sadd(f"user:{user.id}.threads", self.thread_id)
-            pipe.zadd(f"thread:{thread_id}:messages", {0:-1})
+            pipe.zadd(f"thread:{thread_id}:messages", {0: -1})
             pipe.execute()
-
 
 
 class MessageEntry(RedisEntry):
@@ -248,6 +250,7 @@ def check_if_user_in_thread(r, thread_id, user_id):
     is_member = r.sismember(f"thread:{thread_id}:members", user_id)
     logger.info(f"Result of sismember for user {user_id} in {thread_id}: {is_member}")
     return is_member
+
 
 # Added
 # Adds the thread to redis
