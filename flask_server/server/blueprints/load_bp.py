@@ -3,8 +3,13 @@ from flask import Blueprint, request, make_response, jsonify
 
 
 from server.logging import make_logger
-from server.redis_cache.user_cache import get_user_threads, get_online_users
-from server.redis_cache.message_cache import get_thread_messages,get_thread_by_id
+from server.redis_cache.user_cache import get_user_threads, get_online_users, UserEntry
+from server.redis_cache.message_cache import (
+    get_thread_messages,
+    get_thread_by_id,
+    ThreadEntry,
+    MessageEntry,
+)
 
 
 logger = make_logger(__name__)
@@ -17,17 +22,23 @@ def load_threads():
     logger.info("Loading Thread")
     try:
         payload = request.get_json()
-        logger.info(f'Payload sent: {payload}')
-        user_id = payload["user"]
-
-        thread_list = get_user_threads(user_id)
+        logger.info(f"Payload sent: {payload}")
+        user = UserEntry.from_user_id(payload["user"])
+        logger.debug("Loaded user")
+        # thread_list = get_user_threads(user.user_id)
+        thread_list = user.threads
         logger.info(f"Thread List: {thread_list}")
 
-        return_payload = {"threads": {th_id: get_thread_by_id(th_id) for th_id in thread_list}}
+        return_payload = {
+            "threads": {
+                th_id: ThreadEntry.from_id(th_id).to_dict() for th_id in thread_list
+            }
+        }
         logger.info(f"Returning: {return_payload}")
         return jsonify(return_payload)
     except Exception as e:
-        logger.error(f"ERROR: {e}")
+        logger.info("Hey Nate!")
+        logger.error(f"ERROR: {type(e)}")
         return jsonify(error="Could not load threads")
 
 
@@ -36,12 +47,10 @@ def load_thread_messages():
     logger.info("Loading messages")
     try:
         payload = request.get_json()
-        
-        logger.info(f'Payload sent: {payload}')
+
+        logger.info(f"Payload sent: {payload}")
         thread_id = payload["thread"]
-        return_payload = {
-            "messages": get_thread_messages(thread_id)
-        }
+        return_payload = {"messages": get_thread_messages(thread_id)}
         logger.info(f"Returning: {return_payload}")
         return jsonify(return_payload)
     except Exception as e:
@@ -53,8 +62,9 @@ def load_thread_messages():
 def load_user_list():
     logger.info("Loading user list")
     try:
-        return_payload = {"friends": {}, "online": get_online_users()}
-        logger.info(f"Returning: {return_payload}")
+        # logger.info(f"Return value of get_online_users: {UserEntry.get_online_users()}")
+        return_payload = {"friends": {}, "online": UserEntry.get_online_users()}
+        # logger.info(f"Returning: {return_payload}")
         return jsonify(return_payload)
 
     except Exception as e:
@@ -62,16 +72,17 @@ def load_user_list():
         return jsonify(error="Error loading users")
 
 
-@load_bp.route('game-objects', methods=["GET", "POST"])
+@load_bp.route("game-objects", methods=["GET", "POST"])
 def load_game_objects():
-    logger.info('Loading game objects')
+    logger.info("Loading game objects")
     try:
         payload = reqeust.get_json()
-        env_id = payload['env']
+        env_id = payload["env"]
     except AttributeError:
-        return jsonify(error='Malformed request: `env` was not specified')
+        return jsonify(error="Malformed request: `env` was not specified")
     try:
         return get_environment_objects(env_id)
     except Exception:
-        logger.error('Error thrown getting environment id')
-        return jsonify(error='Error retrieving game objects')
+        logger.error("Error thrown getting environment id")
+        return jsonify(error="Error retrieving game objects")
+

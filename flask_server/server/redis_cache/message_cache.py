@@ -32,22 +32,56 @@ logger = make_logger(__name__)
 class ThreadEntry(RedisEntry):
     THREAD_SIG = {"id": int, "name": str}
 
-    def __init__(self, thread_id, users, messages=[]):
-        self.messages = messages
+    def __init__(self, thread_id, thread_name=None, users=None, messages=None):
+        self._messages = messages
         self.thread_id = thread_id
-        self.users = users
+        self._users = users
         self.room_name = f"thread-{thread_id}"
         super().__init__(self)
 
+    # This class variable needs a setter to prevent recursively calling itself
+    # when getting messages (which themselves will try to get this thread by id).
+    @property
+    def messages(self):
+        if self._messages is None:
+
+            self._messages = self._read_messages_from_cache()
+
+        return self._messages
+
+    @messages.setter
+    def messages(self, messages):
+        self._messages = messages
+        self.commit()
+
+    @property
+    def users(self):
+        if self._users is None:
+            self._users = self._read_users_from_cache()
+        return self._users
+
+    @users.setter
+    def users(self, users):
+        self._users = users
+        self.dirty = True
+
+    def _read_users_from_cache(self):
+        member_ids = self._R.smembers(f"thread:{thread_id}:members")
+        self._users = [
+            UserEntry.from_user_id(int(member_id)) for member_id in member_ids
+        ]
+
     def _read_messages_from_cache(self):
-        id_list = map(lambda zmem: int(zmem[1]), self._R.zscan(f"thread:{self.thread_id}:messages")[1])
+        id_list = map(
+            lambda zmem: int(zmem[1]),
+            self._R.zscan(f"thread:{self.thread_id}:messages")[1],
+        )
         id_list = filter(lambda x: x != -1, id_list)
 
-        self.messages = [MessageEntry.from_id(message_id) for message_id in id_list]
-        return self.messages
-
-
-
+        self._messages = [
+            MessageEntry.from_id(message_id, thread=self) for message_id in id_list
+        ]
+        return self._messages
 
     @classmethod
     def from_id(cls, thread_id):
@@ -55,14 +89,13 @@ class ThreadEntry(RedisEntry):
             logger.info(f"Getting thread:{thread_id}")
             raw_thread_data = cls._R.hgetall(f"thread:{thread_id}")
             thread_data = cls.fix_thread_signature(raw_thread_data)
-            logger.debug(f"Thread data = {thread_data}")
-            thread_obj = cls(thread_data['id'], thread_data['users'])
-            thread_obj._read_messages_from_cache()
-            return thread_obj
-        
             
+            thread_obj = cls(thread_data["id"])
+
+            return thread_obj
+
         except Exception as e:
-            logger.error("Error thrown in _get_thread_by_id")
+            logger.error(f"Error thrown in ThreadEntry.from_id: {e}")
             return None
 
     @classmethod
@@ -115,7 +148,7 @@ class ThreadEntry(RedisEntry):
     def commit(self):
         with self._R.pipeline() as pipe:
             pipe.hmset(
-                f"thread:{self.thread_id}",
+                f"threaget_user_d:{self.thread_id}",
                 {"id": self.thread_id, "name": self.thread_name},
             )
             for user in self.users:
@@ -124,9 +157,21 @@ class ThreadEntry(RedisEntry):
             pipe.zadd(f"thread:{thread_id}:messages", {0: -1})
             pipe.execute()
 
+    def to_dict(self):
+        logger.info("In tget_user_o dict")
+        try:
+            logger.info(f"{self.messages}")
+        except:
+            pass
+        return {
+            "id": self.thread_id,
+            "users": [member.user_id for member in self.users],
+            "messages": [message.message_id for message in self.messages],
+        }
 
-class MessageEntry(RedisEntry):
-    MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
+get_user_
+class MessageEntry(RedisEntrget_user_y):
+    MESSAGE_SIG = {"thread":get_user_ int, "sender": int, "content": str, "id": int}
 
     def __init__(self, message_id, thread, sender, content):
         self.message_id = message_id
@@ -136,15 +181,17 @@ class MessageEntry(RedisEntry):
         super().__init__(self)
 
     @classmethod
-    def from_id(cls, message_id):
+    def from_id(cls, message_id, thread=None):
         try:
             logger.info(f"Getting message:{message_id}")
             raw_message_data = cls._R.hgetall(f"message:{message_id}")
             message_data = cls.fix_message_signature(raw_message_data)
             return cls(
                 message_data["id"],
-                ThreadEntry.from_id(message_data["thread"]),
-                UserEntry.from_id(message_data["sender"]),
+                ThreadEntry.from_id(message_data["thread"])
+                if thread is None
+                else thread,
+                UserEntry.from_user_id(message_data["sender"]),
                 message_data["content"],
             )
         except Exception as e:
@@ -156,7 +203,7 @@ class MessageEntry(RedisEntry):
         return cls.fix_hash_signature(returned_message, cls.MESSAGE_SIG)
 
     @classmethod
-    def next_id(cls,incr=False):
+    def next_id(cls, incr=False):
         message_id = int(cls._R.get("message:next-id"))
         logger.info(f"Next available message id: {message_id}")
         if incr:
@@ -168,23 +215,29 @@ class MessageEntry(RedisEntry):
         # Add Message
 
         with self._R.pipeline() as pipe:
-            logger.info(f"Thread Length for {self.message_id} is: {len(self.thread)}")
             pipe.hmset(
                 f"message:{self.message_id}",
                 {
                     "content": self.content,
                     "sender": self.sender.user_id,
-                    "thread": self.thread.id,
+                    "thread": self.thread.thread_id,
                     "id": self.message_id,
                 },
             )
             pipe.zadd(
-                f"thread:{self.thread.id}:messages",
+                f"thread:{self.thread.thread_id}:messages",
                 {str(len(self.thread)): self.message_id},
             )
             pipe.execute()
+
     def to_dict(self):
-        return {"content":self.content, "sender":self.sender.user_id, "thread":self.thread.thread_id, "id":self.message_id}
+        return {
+            "content": self.content,
+            "sender": self.sender.user_id,
+            "thread": self.thread.thread_id,
+            "id": self.message_id,
+        }
+
 
 # Added
 @global_poolman
@@ -299,6 +352,7 @@ def create_thread(pipe, thread_dict):
     pipe.execute()
     return thread_dict
 
+
 # Added
 @global_poolman
 def get_thread_message_ids(r, thread_id):
@@ -306,6 +360,7 @@ def get_thread_message_ids(r, thread_id):
     logger.info(r.zscan(f"thread:{thread_id}:messages"))
     id_list = map(lambda zmem: int(zmem[1]), r.zscan(f"thread:{thread_id}:messages")[1])
     return list(filter(lambda x: x != -1, id_list))
+
 
 # Added?
 # Allows the thread object to get signature mapped
@@ -321,6 +376,7 @@ def _get_thread_by_id(r, thread_id):
         logger.error("Error thrown in _get_thread_by_id")
         return {}
 
+
 # Addeed?
 def get_thread_by_id(thread_id):
     thread = _get_thread_by_id(thread_id)
@@ -329,6 +385,7 @@ def get_thread_by_id(thread_id):
         return thread
     else:
         return None
+
 
 # Implicit
 @global_poolman
@@ -343,6 +400,7 @@ def get_thread_messages(r, thread_id):
 
     logger.info(f"Thread messages: {thread_messages}")
     return thread_messages
+
 
 # Unused
 def create_message_dict(content, sender, thread, id=None):

@@ -27,14 +27,30 @@ class UserEntry(RedisEntry):
     NO_SID = "NO_SID"
     DEFAULT_USER_EXPIRE = 60 * 60 * 2
 
-    def __init__(self, user_id, username, online, sid=None):
+    def __init__(self, user_id, username, online, sid=None, threads=None):
+        from server.redis_cache.message_cache import ThreadEntry
+
         self.user_id = user_id
         self.username = username
         self.online = online
-        self.threads = []
+        if isinstance(threads, ThreadEntry):
+            self._threads = [threads]
+        else:
+            self._threads = None
         self.sid = sid
 
         super().__init__(self)
+
+    @property
+    def threads(self):
+        if self.threads is None:
+            self.get_threads()
+        return self._threads
+
+    @threads.setter
+    def threads(self, threads):
+        self._threads = threads
+        threads.commit()
 
     def get_threads(self):
         from server.redis_cache.message_cache import ThreadEntry
@@ -47,7 +63,7 @@ class UserEntry(RedisEntry):
             self.threads = []
 
     @classmethod
-    def from_user_id(cls, user_id):
+    def from_user_id(cls, user_id, thread=None):
         try:
             user_id = int(user_id)
             if cls._R.exists(f"user:{user_id}"):
@@ -58,7 +74,7 @@ class UserEntry(RedisEntry):
                     user_data["online"],
                     user_data["sid"],
                 )
-                return cls(user_id, username, online, sid)
+                return cls(user_id, username, online, sid, threads=thread)
 
             else:
                 logger.error(f"User {user_id} does not exist")
@@ -185,7 +201,7 @@ def get_online_users(r):
 
 
 # Added
-@return_signature0(USER_SIG)
+@return_signature(USER_SIG)
 @global_poolman
 def get_user_by_id(r, user_id):
     try:

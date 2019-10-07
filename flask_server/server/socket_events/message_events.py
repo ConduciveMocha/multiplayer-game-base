@@ -15,7 +15,8 @@ from server.redis_cache.user_cache import (
     set_user_offline,
     user_from_sid,
     get_user_by_id,
-    set_user_sid, UserEntry
+    set_user_sid,
+    UserEntry,
 )
 from server.redis_cache.message_cache import (
     get_message_by_id,
@@ -26,7 +27,7 @@ from server.redis_cache.message_cache import (
     get_next_message_id,
     check_if_user_in_thread,
     ThreadEntry,
-    MessageEntry
+    MessageEntry,
 )
 from server.logging import make_logger
 from server.utils.data_generators import FlexDict
@@ -65,12 +66,11 @@ def user_identification_sent(data):
 def join_thread_request(data):
     logger.info("JOIN_THREAD_REQUEST")
     logger.info(f"Client requested thread {data}")
-    thread = ThreadEntry.from_id(data['thread'])
-    sender = UserEntry.from_user_id(data['sender'])
-
+    thread = ThreadEntry.from_id(data["thread"])
+    sender = UserEntry.from_user_id(data["sender"])
 
     if thread.check_if_user_in_thread(sender):
-        logger.info(f'Adding {sender} to thread {thread}')
+        logger.info(f"Adding {sender} to thread {thread}")
         join_room(thread.thread_name)
         emit("THREAD_JOINED", {"thread": thread.to_dict()})
     else:
@@ -84,13 +84,12 @@ def join_thread_request(data):
 def client_thread_request(data):
     logger.info("CLIENT_THREAD_REQUEST")
     logger.info(f"Client requested thread {data}")
-    
-    thread = ThreadEntry.from_id(data['thread'])
+    logger.info(data["thread"])
+    thread = ThreadEntry.from_id(data["thread"])
     user = UserEntry.from_sid(request.sid)
-    
 
-    if thread.check_if_user_in_thread(user):
-        join_room(thread.thread_name)
+    if thread.is_user_in_thread(user):
+        join_room(thread.room_name)
         emit("THREAD_JOINED", {"thread": thread.thread_id})
     else:
         emit(
@@ -108,10 +107,9 @@ def new_message(data):
     sender = UserEntry.from_user_id(data["sender"])
     content = data["content"]
     try:
-        message = MessageEntry(MessageEntry.next_id(incr=True), thread,sender, content)
+        message = MessageEntry(MessageEntry.next_id(incr=True), thread, sender, content)
         message.commit()
-        logger.info(f"{message}")
-        emit("NEW_MESSAGE", message.to_dict(), room=thread.thread_name)
+        emit("NEW_MESSAGE", message.to_dict(), room=thread.room_name)
     except KeyError as e:
         logger.error(e)
         return jsonify(error="Malformed request"), 400

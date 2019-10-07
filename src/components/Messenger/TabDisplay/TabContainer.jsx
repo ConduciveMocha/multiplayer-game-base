@@ -4,7 +4,8 @@ import {
   GLOBAL_THREAD_ID
 } from "../../../constants/ThreadIds";
 const shortenThreadName = name => {
-  return name.length < 15 ? name : name.slice(0, 12).trim() + "...";
+  if (name) return name.length < 15 ? name : name.slice(0, 12).trim() + "...";
+  else return "Error: No thread name found";
 };
 
 const ThreadTab = ({ thread, closeThread, focusTab, tabActive }) => {
