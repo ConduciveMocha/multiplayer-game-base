@@ -21,3 +21,27 @@ class RedisEntry:
 
     def commit(self):
         raise NotImplementedError
+
+
+class LazyList:
+    def __int__(self,load_function, initial_list=None):
+        self._list = initial_list if initial_list is not None else []
+        self.load_function = load_function
+    def __len__(self):
+        return self._list
+    def __getitem__(self,key):
+        return self.load_function(self._list[key])
+    def __setitem__(self,key,value):
+        self._list[key] = value
+
+    def __delitem__(self,key):
+        del self._list[key]
+
+    @property
+    def keys(self):
+        return self._list
+
+    def __iter__(self):
+        for val in self._list:
+            yield self.load_function(val)
+        

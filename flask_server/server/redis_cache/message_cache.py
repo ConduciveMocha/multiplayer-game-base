@@ -35,7 +35,7 @@ class ThreadEntry(RedisEntry):
     def __init__(self, thread_id, thread_name=None, users=None, messages=None):
         self._messages = messages
         self.thread_id = thread_id
-        self._users = users
+        self.users = users
         self.room_name = f"thread-{thread_id}"
         super().__init__(self)
 
@@ -169,16 +169,39 @@ class ThreadEntry(RedisEntry):
             "messages": [message.message_id for message in self.messages],
         }
 
-get_user_
 class MessageEntry(RedisEntrget_user_y):
-    MESSAGE_SIG = {"thread":get_user_ int, "sender": int, "content": str, "id": int}
+    MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
 
-    def __init__(self, message_id, thread, sender, content):
+    def __init__(self, message_id, thread_id, sender_id, content):
         self.message_id = message_id
-        self.thread = thread
-        self.sender = sender
+        self.thread_id = thread_id
+        self._thread = None
+        self.sender_id = sender_id
+        self._sender = None
         self.content = content
         super().__init__(self)
+
+    @property
+    def thread(self):
+        if self._thread is None:
+            self._thread = ThreadEntry.from_id(self.thread_id)
+        return self._thread
+
+    @thread.setter
+    def thread(self,thread):
+        self._thread = thread
+        self.commit()
+
+    @property
+    def sender(self):
+        if self._sender is None:
+            self._sender = UserEntry.from_user_id(self.sender_id)
+        return self._sender
+
+    @sender.setter
+    def sender(self,sender):
+        self._sender = sender
+        self.commit()
 
     @classmethod
     def from_id(cls, message_id, thread=None):
