@@ -15,7 +15,7 @@ from server.redis_cache.user_cache import (
     set_user_offline,
     user_from_sid,
     get_user_by_id,
-    set_user_sid,
+    set_user_sid, UserEntry
 )
 from server.redis_cache.message_cache import (
     get_message_by_id,
@@ -25,6 +25,8 @@ from server.redis_cache.message_cache import (
     create_thread,
     get_next_message_id,
     check_if_user_in_thread,
+    ThreadEntry,
+    MessageEntry
 )
 from server.logging import make_logger
 from server.utils.data_generators import FlexDict
@@ -63,11 +65,14 @@ def user_identification_sent(data):
 def join_thread_request(data):
     logger.info("JOIN_THREAD_REQUEST")
     logger.info(f"Client requested thread {data}")
+    thread = ThreadEntry.from_id(data['thread'])
+    sender = UserEntry.from_user_id(data['sender'])
 
-    if check_if_user_in_thread(data["thread"], data["sender"]):
-        logger.info(f'Adding {data["sender"]} to thread {data["thread"]}')
-        join_room(f"thread-{data['thread']}")
-        emit("THREAD_JOINED", {"thread": data["thread"]})
+
+    if thread.check_if_user_in_thread(sender):
+        logger.info(f'Adding {sender} to thread {thread}')
+        join_room(thread.thread_name)
+        emit("THREAD_JOINED", {"thread": thread.to_dict()})
     else:
         emit(
             "THREAD_JOIN_FAILED",
@@ -79,13 +84,18 @@ def join_thread_request(data):
 def client_thread_request(data):
     logger.info("CLIENT_THREAD_REQUEST")
     logger.info(f"Client requested thread {data}")
-    if check_if_user_in_thread(data["thread"], data["sender"]):
-        join_room(f"thread-{data['thread']}")
-        emit("THREAD_JOINED", {"thread": data["thread"]})
+    
+    thread = ThreadEntry.from_id(data['thread'])
+    user = UserEntry.from_sid(request.sid)
+    
+
+    if thread.check_if_user_in_thread(user):
+        join_room(thread.thread_name)
+        emit("THREAD_JOINED", {"thread": thread.thread_id})
     else:
         emit(
             "THREAD_JOIN_FAILED",
-            {"thread": data["thread"], "error": "USER NOT IN THREAD"},
+            {"thread": thread.thread_id, "error": "USER NOT IN THREAD"},
         )
 
 
@@ -94,14 +104,14 @@ def client_thread_request(data):
 @socketio.on("SEND_MESSAGE", namespace="/message")
 def new_message(data):
     logger.info(f"SEND_MESSAGE Recieved {data}")
-    thread_id = data["thread"]
-    sender_id = data["sender"]
+    thread = ThreadEntry.from_id(data["thread"])
+    sender = UserEntry.from_user_id(data["sender"])
     content = data["content"]
     try:
-        message_dict = create_message_dict(content, sender_id, thread_id)
-        create_message(message_dict)
-        logger.info(f"{message_dict}")
-        emit("NEW_MESSAGE", message_dict, room=f"thread-{data['thread']}")
+        message = MessageEntry(MessageEntry.next_id(incr=True), thread,sender, content)
+        message.commit()
+        logger.info(f"{message}")
+        emit("NEW_MESSAGE", message.to_dict(), room=thread.thread_name)
     except KeyError as e:
         logger.error(e)
         return jsonify(error="Malformed request"), 400

@@ -12,8 +12,10 @@ from server.redis_cache.message_cache import (
     create_thread_dict,
     create_thread,
     check_if_thread_exists,
+    ThreadEntry,
+    MessageEntry
 )
-from server.redis_cache.user_cache import get_user_by_id, NO_SID
+from server.redis_cache.user_cache import get_user_by_id, NO_SID,UserEntry
 
 logger = make_logger(__name__)
 try:
@@ -37,32 +39,36 @@ def request_new_thread():
     try:
         payload = request.get_json()
         logger.info(f"Payload: {payload}")
-        full_members_list = [payload["sender"], payload["users"]]
-        existing = check_if_thread_exists(full_members_list)
+        full_members_list = [payload["sender"], *payload["users"]]
+        existing = ThreadEntry.check_if_thread_exists(full_members_list)
         # TODO Return something more useful
         if existing:
             logger.info("Thread Exists")
-            return existing
+            return existing.to_dict()
 
-        thread_dict = create_thread_dict(
-            payload["sender"], payload["users"], payload["name"]
-        )
-        logger.info("Creating thread")
-        create_thread(thread_dict)
+        thread = ThreadEntry(ThreadEntry.next_id(incr=True),full_members_list)
+        thread.commit()
 
-        for user_id in thread_dict["members"]:
-            logger.info(f"Getting user: {user_id}")
 
-            user = get_user_by_id(user_id)
+        # thread_dict = create_thread_dict(
+        #     payload["sender"], payload["users"], payload["name"]
+        # )
+        # logger.info("Creating thread")
+        # create_thread(thread_dict)
+        
+        for user in thread.members:
+            logger.info(f"Getting user: {user.user_id}")
+
+        
             logger.debug(f'user sid type : {type(user["sid"])}')
-            if user["sid"] != NO_SID:
-                logger.info(f"User {user_id} online. Sending thread request")
-                logger.info(f"User {user_id} has sid: {user['sid']}")
-                socketio.emit("SERVER_THREAD_REQUEST", thread_dict, room=user["sid"])
-                join_room(room=f'thread-{thread_dict["id"]}', sid=user["sid"])
+            if user.sid != NO_SID:
+                logger.info(f"User {user.user_id} online. Sending thread request")
+                logger.info(f"User {user.user_id} has sid: {user.sid}")
+                socketio.emit("SERVER_THREAD_REQUEST", thread.to_dict(), room=user.sid)
+                join_room(room=thread.room_name, sid=user.sid)
             else:
-                logger.info(f"User {user_id} not online")
-        return jsonify(thread_dict), 200
+                logger.info(f"User {user.user_id} not online")
+        return jsonify(thread.to_dict()), 200
     except Exception as e:
 
         logger.error(f"ERROR: {e}")

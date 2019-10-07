@@ -36,11 +36,34 @@ class ThreadEntry(RedisEntry):
         self.messages = messages
         self.thread_id = thread_id
         self.users = users
+        self.room_name = f"thread-{thread_id}"
         super().__init__(self)
+
+    def _read_messages_from_cache(self):
+        id_list = map(lambda zmem: int(zmem[1]), self._R.zscan(f"thread:{self.thread_id}:messages")[1])
+        id_list = filter(lambda x: x != -1, id_list)
+
+        self.messages = [MessageEntry.from_id(message_id) for message_id in id_list]
+        return self.messages
+
+
+
 
     @classmethod
     def from_id(cls, thread_id):
-        raise NotImplementedError
+        try:
+            logger.info(f"Getting thread:{thread_id}")
+            raw_thread_data = cls._R.hgetall(f"thread:{thread_id}")
+            thread_data = cls.fix_thread_signature(raw_thread_data)
+            logger.debug(f"Thread data = {thread_data}")
+            thread_obj = cls(thread_data['id'], thread_data['users'])
+            thread_obj._read_messages_from_cache()
+            return thread_obj
+        
+            
+        except Exception as e:
+            logger.error("Error thrown in _get_thread_by_id")
+            return None
 
     @classmethod
     def fix_thread_signature(cls, returned_thread):
@@ -105,10 +128,10 @@ class ThreadEntry(RedisEntry):
 class MessageEntry(RedisEntry):
     MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
 
-    def __init__(self, message_id, thread, user_id, content):
+    def __init__(self, message_id, thread, sender, content):
         self.message_id = message_id
         self.thread = thread
-        self.user_id = user_id
+        self.sender = sender
         self.content = content
         super().__init__(self)
 
@@ -133,10 +156,11 @@ class MessageEntry(RedisEntry):
         return cls.fix_hash_signature(returned_message, cls.MESSAGE_SIG)
 
     @classmethod
-    def next_id(cls):
+    def next_id(cls,incr=False):
         message_id = int(cls._R.get("message:next-id"))
         logger.info(f"Next available message id: {message_id}")
-        # cls._R.incr("message:next-id")
+        if incr:
+            cls._R.incr("message:next-id")
         logger.info(f"message:next-id Incremented")
         return message_id
 
@@ -149,7 +173,7 @@ class MessageEntry(RedisEntry):
                 f"message:{self.message_id}",
                 {
                     "content": self.content,
-                    "sender": self.user_id,
+                    "sender": self.sender.user_id,
                     "thread": self.thread.id,
                     "id": self.message_id,
                 },
@@ -159,7 +183,8 @@ class MessageEntry(RedisEntry):
                 {str(len(self.thread)): self.message_id},
             )
             pipe.execute()
-
+    def to_dict(self):
+        return {"content":self.content, "sender":self.sender.user_id, "thread":self.thread.thread_id, "id":self.message_id}
 
 # Added
 @global_poolman
@@ -274,7 +299,7 @@ def create_thread(pipe, thread_dict):
     pipe.execute()
     return thread_dict
 
-
+# Added
 @global_poolman
 def get_thread_message_ids(r, thread_id):
     logger.info(f"Message ids for {thread_id}")
@@ -282,7 +307,7 @@ def get_thread_message_ids(r, thread_id):
     id_list = map(lambda zmem: int(zmem[1]), r.zscan(f"thread:{thread_id}:messages")[1])
     return list(filter(lambda x: x != -1, id_list))
 
-
+# Added?
 # Allows the thread object to get signature mapped
 @return_signature(THREAD_SIG)
 @global_poolman
@@ -296,7 +321,7 @@ def _get_thread_by_id(r, thread_id):
         logger.error("Error thrown in _get_thread_by_id")
         return {}
 
-
+# Addeed?
 def get_thread_by_id(thread_id):
     thread = _get_thread_by_id(thread_id)
     if thread:
@@ -305,7 +330,7 @@ def get_thread_by_id(thread_id):
     else:
         return None
 
-
+# Implicit
 @global_poolman
 def get_thread_messages(r, thread_id):
     message_ids = r.zscan(f"thread:{thread_id}:messages")[1]
@@ -319,7 +344,7 @@ def get_thread_messages(r, thread_id):
     logger.info(f"Thread messages: {thread_messages}")
     return thread_messages
 
-
+# Unused
 def create_message_dict(content, sender, thread, id=None):
     return {
         "content": str(content),
@@ -330,6 +355,7 @@ def create_message_dict(content, sender, thread, id=None):
 
 
 # TODO Rename members
+# Unused
 def create_thread_dict(sender, members, name, id=None):
     full_members_list = list(set([sender, *members]))
     return {
