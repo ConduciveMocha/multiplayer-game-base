@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from server.logging import request_log
 from server.db.user_actions import query_user_by_id, query_user_by_username
 from server.auth import require_auth
-from server.redis_cache.user_cache import get_user_by_id, get_online_users, UserEntry
+from server.redis_cache.user_cache import UserEntry
 
 user_bp = Blueprint("user", __name__, url_prefix="/user")
 

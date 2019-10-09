@@ -8,14 +8,8 @@ from flask_socketio import join_room
 # from server.auth import make_thread_id, members_from_thread_id, require_auth
 from server.db.models import User, Thread
 from server.logging import make_logger
-from server.redis_cache.message_cache import (
-    create_thread_dict,
-    create_thread,
-    check_if_thread_exists,
-    ThreadEntry,
-    MessageEntry
-)
-from server.redis_cache.user_cache import get_user_by_id, NO_SID,UserEntry
+from server.redis_cache.message_cache import ThreadEntry, MessageEntry
+from server.redis_cache.user_cache import UserEntry
 
 logger = make_logger(__name__)
 try:
@@ -46,22 +40,14 @@ def request_new_thread():
             logger.info("Thread Exists")
             return existing.to_dict()
 
-        thread = ThreadEntry(ThreadEntry.next_id(incr=True),full_members_list)
+        thread = ThreadEntry(ThreadEntry.next_id(incr=True), full_members_list)
         thread.commit()
 
-
-        # thread_dict = create_thread_dict(
-        #     payload["sender"], payload["users"], payload["name"]
-        # )
-        # logger.info("Creating thread")
-        # create_thread(thread_dict)
-        
         for user in thread.members:
             logger.info(f"Getting user: {user.user_id}")
 
-        
             logger.debug(f'user sid type : {type(user["sid"])}')
-            if user.sid != NO_SID:
+            if user.sid != UserEntry.NO_SID:
                 logger.info(f"User {user.user_id} online. Sending thread request")
                 logger.info(f"User {user.user_id} has sid: {user.sid}")
                 socketio.emit("SERVER_THREAD_REQUEST", thread.to_dict(), room=user.sid)

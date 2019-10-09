@@ -11,21 +11,21 @@ from server.auth import require_auth
 from server.db.user_actions import query_user_by_id
 from server.db.models import Thread
 from server.redis_cache.user_cache import (
-    set_user_online,
-    set_user_offline,
-    user_from_sid,
-    get_user_by_id,
-    set_user_sid,
+    # set_user_online,
+    # set_user_offline,
+    # user_from_sid,
+    # get_user_by_id,
+    # set_user_sid,
     UserEntry,
 )
 from server.redis_cache.message_cache import (
-    get_message_by_id,
-    create_message_dict,
-    create_message,
-    check_if_thread_exists,
-    create_thread,
-    get_next_message_id,
-    check_if_user_in_thread,
+    # get_message_by_id,
+    # create_message_dict,
+    # create_message,
+    # check_if_thread_exists,
+    # create_thread,
+    # get_next_message_id,
+    # check_if_user_in_thread,
     ThreadEntry,
     MessageEntry,
 )
@@ -57,7 +57,10 @@ def message_connect():
 @socketio.on("SEND_IDENTIFICATION", namespace="/message")
 def user_identification_sent(data):
     logger.info(f'User identification sent by {data["user"]}')
-    set_user_online(FlexDict(data["user"]), user_sid=request.sid)
+    user = UserEntry.from_user_id(data["user"]["id"])
+    user.sid = request.sid
+    user._set_user_online()
+    # set_user_online(FlexDict(data["user"]), user_sid=request.sid)
 
 
 # These handlers join the client to the thread-room

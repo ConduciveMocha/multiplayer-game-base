@@ -1,16 +1,14 @@
-from redis import Redis
+from redis import Redis, DataError
 
 from server.logging import make_logger
-from server.redis_cache.user_cache import set_user_online
-from server.redis_cache.message_cache import (
-    create_message,
-    create_message_dict,
-    create_thread,
-    create_thread_dict,
-)
+from server.redis_cache.user_cache import UserEntry
+from server.redis_cache.message_cache import ThreadEntry, MessageEntry
 from server.utils.data_generators import FlexDict
 
 logger = make_logger(__name__)
+
+mock_threads = {0: ThreadEntry("0", "mockthread2")}
+
 
 mock_users = {
     0: {"id": 0, "username": "testuser0", "threads": []},
@@ -46,6 +44,101 @@ mock_messages = {
     11: {"id": 11, "sender": 4, "content": "test11", "thread": 2},
     12: {"id": 12, "sender": 1, "content": "test12", "thread": 0},
 }
+DEFAULT_USER_EXPIRE = 60 * 60 * 2
+
+NO_SID = "NO_SID"
+
+
+def set_user_online(user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
+    r = Redis()
+    pipe = r.pipeline()
+
+    logger.info(f"Setting user online: {user}")
+    pipe.sadd("user:online", user.id)
+    pipe.hmset(
+        f"user:{user.id}",
+        {"username": user.username, "online": 1, "id": user.id, "sid": user_sid},
+    )
+    pipe.set(f"user:sid:{user_sid}", user.id)
+    pipe.expire(f"user:{user.id}", exp)
+    try:
+        for thread_id in user.threads:
+            pipe.sadd(f"user:{user.id}:threads", thread_id)
+        pipe.expire(f"user:{user.id}:threads", exp)
+    except AttributeError:
+        logger.error(f"No threads attached to user object: {user}")
+
+    pipe.execute()
+    logger.info(pipe.hgetall(f"user:{user.id}").execute())
+    logger.info(f"user:{user.id}")
+
+
+def thread_length(thread_id):
+    r = Redis()
+    try:
+        return int(r.zcard(f"thread:{thread_id}:messages"))
+    except TypeError:
+        return 0
+
+
+def set_user_offline(user_sid):
+    pipe = Redis().pipeline()
+    pipe.get(f"user:sid:{user_sid}")
+    user_id = int(pipe.execute()[0])
+    if user_id is None:
+        logger.warning(f"Data missing from user:sid")
+        raise DataError(f"User with sid {user_sid} was not in user:sid")
+    elif not isinstance(user_id, int):
+        logger.critical(
+            f"Pipe returning incorrect type for user_id  (Function: set_user_offline returned {type(user_id)})"
+        )
+        raise DataError(
+            f"Pipe returning incorrect type for user_id  (Function: set_user_offline returned {type(user_id)})"
+        )
+    else:
+        pipe.delete(f"user:sid:{user_sid}")
+        pipe.srem("user:online", user_id)
+        pipe.hset(f"user:{user_id}", "online", 0)
+        pipe.hset(f"user:{user_id}", "sid", NO_SID)
+        pipe.execute()
+        return user_id
+
+
+def create_thread(thread_dict):
+    r = Redis()
+    pipe = r.pipeline()
+
+    members = thread_dict["members"]
+    thread_id = thread_dict["id"]
+
+    logger.info(f"Making thread object: thread:{thread_id}")
+    pipe.hmset(f"thread:{thread_id}", {"id": thread_id, "name": thread_dict["name"]})
+
+    logger.info(f"Adding users to thread:{thread_id}:members")
+    for user in members:
+        pipe.sadd(f"thread:{thread_id}:members", user)
+        pipe.sadd(f"user:{user}:threads", thread_id)
+
+    logger.info(f"Creating thread:{thread_id}:messages")
+    pipe.zadd(f"thread:{thread_id}:messages", {0: -1})
+
+    logger.info("Executing pipe in `create_thread`")
+    pipe.execute()
+    return thread_dict
+
+
+def create_message(message_dict):
+    r = Redis()
+    pipe = r.pipeline()
+    message_id = message_dict["id"]
+
+    thread_len = thread_length(message_dict["thread"])
+    logger.info(f'Thread Length for {message_dict["id"]} is: {thread_len}')
+    pipe.hmset(f"message:{message_id}", message_dict)
+    pipe.zadd(
+        f"thread:{message_dict['thread']}:messages", {str(thread_len): message_id}
+    )
+    pipe.execute()
 
 
 def mock_user_setup():

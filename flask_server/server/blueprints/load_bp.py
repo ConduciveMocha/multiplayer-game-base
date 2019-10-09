@@ -3,13 +3,8 @@ from flask import Blueprint, request, make_response, jsonify
 
 
 from server.logging import make_logger
-from server.redis_cache.user_cache import get_user_threads, get_online_users, UserEntry
-from server.redis_cache.message_cache import (
-    get_thread_messages,
-    get_thread_by_id,
-    ThreadEntry,
-    MessageEntry,
-)
+from server.redis_cache.user_cache import UserEntry
+from server.redis_cache.message_cache import ThreadEntry, MessageEntry
 
 
 logger = make_logger(__name__)
