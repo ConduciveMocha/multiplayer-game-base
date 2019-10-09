@@ -40,6 +40,11 @@ class ThreadEntry(RedisEntry):
         self.room_name = f"thread-{thread_id}"
         super().__init__(self)
 
+    def add_loaded_object(self,obj_id,obj):
+        
+        self.__class__._loaded_objects[obj_id] = obj    
+
+
     # This class variable needs a setter to prevent recursively calling itself
     # when getting messages (which themselves will try to get this thread by id).
     @property
@@ -58,16 +63,18 @@ class ThreadEntry(RedisEntry):
     @property
     def users(self):
         if self._users is None:
+            logger.debug(f"Getting users from cache")
             self._users = self._read_users_from_cache()
         return self._users
 
     @users.setter
     def users(self, users):
+        logger.debug(f"Setting Users")
         self._users = users
         self.dirty = True
 
     def _read_users_from_cache(self):
-        member_ids = self._R.smembers(f"thread:{thread_id}:members")
+        member_ids = self._R.smembers(f"thread:{self.thread_id}:members")
         self._users = [
             UserEntry.from_user_id(int(member_id)) for member_id in member_ids
         ]
@@ -160,16 +167,17 @@ class ThreadEntry(RedisEntry):
             pipe.execute()
 
     def to_dict(self):
-        logger.info("In tget_user_o dict")
+        logger.debug('thread.to_d')
         try:
-            logger.info(f"{self.messages}")
-        except:
-            pass
-        return {
-            "id": self.thread_id,
-            "users": [member.user_id for member in self.users],
-            "messages": [message.message_id for message in self.messages],
-        }
+            logger.debug(f"self.users: {self.users}")
+            return {
+                "id": self.thread_id,
+                "users": [member.user_id for member in self.users],
+                "messages": [message.message_id for message in self.messages],
+            }
+        except Exception as e:
+            logger.debug(f'Thrown in thread.to_dict: ({type(e)}) {e}')
+
 
 
 class MessageEntry(RedisEntry):
@@ -184,6 +192,11 @@ class MessageEntry(RedisEntry):
         self._sender = None
         self.content = content
         super().__init__(self)
+
+
+    def add_loaded_object(self,obj_id,obj):
+        self.__class__._loaded_objects[obj_id] = obj    
+
 
     @property
     def thread(self):
@@ -247,12 +260,12 @@ class MessageEntry(RedisEntry):
                 {
                     "content": self.content,
                     "sender": self.sender.user_id,
-                    "thread": self.thread.thread_id,
+                    "thread": self.thread_id,
                     "id": self.message_id,
                 },
             )
             pipe.zadd(
-                f"thread:{self.thread.thread_id}:messages",
+                f"thread:{self.thread_id}:messages",
                 {str(len(self.thread)): self.message_id},
             )
             pipe.execute()
@@ -261,7 +274,7 @@ class MessageEntry(RedisEntry):
         return {
             "content": self.content,
             "sender": self.sender.user_id,
-            "thread": self.thread.thread_id,
+            "thread": self.thread_id,
             "id": self.message_id,
         }
 
@@ -449,4 +462,15 @@ def create_thread_dict(sender, members, name, id=None):
         "id": int(id) if id else get_next_thread_id(),
         "messages": [],
     }
+
+thread= ThreadEntry(1)
+message = MessageEntry(2,1,3,"4")
+
+thread._save_loaded_object("1")
+message._save_loaded_object("2")
+
+logger.debug("\n\n\n\n\n")
+logger.debug(f"Thread cache: {thread._loaded_objects}")
+logger.debug(f"Message cache: {message._loaded_objects}")
+logger.debug("\n\n\n\n\n")
 

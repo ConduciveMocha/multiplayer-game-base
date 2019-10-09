@@ -3,11 +3,14 @@ import redis
 
 class RedisEntry:
     _R = redis.Redis()
-
+    _loaded_objects = {}
     def __init__(self, prefix=""):
         self.has_been_read = False
         self.prefix = prefix
         self.dirty = None
+    def _save_loaded_object(self,obj_id):
+        self._loaded_objects[str(self.__class__)][obj_id] = self
+        
 
     @staticmethod
     def fix_hash_signature(d, sig):

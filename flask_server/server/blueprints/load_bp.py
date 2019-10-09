@@ -29,7 +29,7 @@ def load_threads():
         thread_list = user.threads
         logger.info("Hey Nate!")
         logger.info(f"Thread List: {thread_list}")
-        logger.debug(thread_list[0].to_dict())
+        logger.debug(f"{[thread.__dict__ for thread in thread_list]}")
         return_payload = {
             "threads": {thread.thread_id: thread.to_dict() for thread in thread_list}
         }
