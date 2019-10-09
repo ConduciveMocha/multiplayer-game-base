@@ -9,6 +9,8 @@ class RedisEntry:
         self.prefix = prefix
         self.dirty = None
     def _save_loaded_object(self,obj_id):
+        
+
         self._loaded_objects[str(self.__class__)][obj_id] = self
         
 
