@@ -27,18 +27,16 @@ def load_threads():
         logger.debug("Loaded user")
         # thread_list = get_user_threads(user.user_id)
         thread_list = user.threads
+        logger.info("Hey Nate!")
         logger.info(f"Thread List: {thread_list}")
-
+        logger.debug(thread_list[0].to_dict())
         return_payload = {
-            "threads": {
-                th_id: ThreadEntry.from_id(th_id).to_dict() for th_id in thread_list
-            }
+            "threads": {thread.thread_id: thread.to_dict() for thread in thread_list}
         }
         logger.info(f"Returning: {return_payload}")
         return jsonify(return_payload)
     except Exception as e:
-        logger.info("Hey Nate!")
-        logger.error(f"ERROR: {type(e)}")
+        logger.error(f"ERROR: ({type(e)}) {e}")
         return jsonify(error="Could not load threads")
 
 

@@ -33,6 +33,7 @@ class ThreadEntry(RedisEntry):
     THREAD_SIG = {"id": int, "name": str}
 
     def __init__(self, thread_id, thread_name=None, users=None, messages=None):
+        logger.debug(f"Creating ThreadEntry-{thread_id}")
         self._messages = messages
         self.thread_id = thread_id
         self.users = users
@@ -88,8 +89,9 @@ class ThreadEntry(RedisEntry):
         try:
             logger.info(f"Getting thread:{thread_id}")
             raw_thread_data = cls._R.hgetall(f"thread:{thread_id}")
+            logger.debug(f"raw_thread_data {raw_thread_data}")
             thread_data = cls.fix_thread_signature(raw_thread_data)
-            
+            logger.debug(f"thread_data {thread_data}")
             thread_obj = cls(thread_data["id"])
 
             return thread_obj
@@ -169,10 +171,12 @@ class ThreadEntry(RedisEntry):
             "messages": [message.message_id for message in self.messages],
         }
 
-class MessageEntry(RedisEntrget_user_y):
+
+class MessageEntry(RedisEntry):
     MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
 
     def __init__(self, message_id, thread_id, sender_id, content):
+        logger.debug("Creating ThreadEntry")
         self.message_id = message_id
         self.thread_id = thread_id
         self._thread = None
@@ -188,7 +192,7 @@ class MessageEntry(RedisEntrget_user_y):
         return self._thread
 
     @thread.setter
-    def thread(self,thread):
+    def thread(self, thread):
         self._thread = thread
         self.commit()
 
@@ -199,7 +203,7 @@ class MessageEntry(RedisEntrget_user_y):
         return self._sender
 
     @sender.setter
-    def sender(self,sender):
+    def sender(self, sender):
         self._sender = sender
         self.commit()
 

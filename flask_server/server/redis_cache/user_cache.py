@@ -30,6 +30,7 @@ class UserEntry(RedisEntry):
     def __init__(self, user_id, username, online, sid=None, threads=None):
         from server.redis_cache.message_cache import ThreadEntry
 
+        logger.debug(f"Creating UserEntry-{user_id}")
         self.user_id = user_id
         self.username = username
         self.online = online
@@ -43,7 +44,7 @@ class UserEntry(RedisEntry):
 
     @property
     def threads(self):
-        if self.threads is None:
+        if self._threads is None:
             self.get_threads()
         return self._threads
 
@@ -55,12 +56,15 @@ class UserEntry(RedisEntry):
     def get_threads(self):
         from server.redis_cache.message_cache import ThreadEntry
 
+        logger.debug("Inside get_threads")
         raw_thread_ids = self._R.smembers(f"user:{self.user_id}:threads")
         if raw_thread_ids:
-            thread_ids = list(map(lambda th: int(th.decode("utf-8")), threads))
-            self.threads = [ThreadEntry.from_id(thread_id) for thread_id in thread_ids]
+
+            thread_ids = list(map(lambda th: int(th.decode("utf-8")), raw_thread_ids))
+            logger.debug(f"thread_ids: {thread_ids}")
+            self._threads = [ThreadEntry.from_id(thread_id) for thread_id in thread_ids]
         else:
-            self.threads = []
+            self._threads = []
 
     @classmethod
     def from_user_id(cls, user_id, thread=None):
