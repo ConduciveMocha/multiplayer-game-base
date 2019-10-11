@@ -23,9 +23,9 @@ class RedisEntry:
 
     @classmethod
     def _object_is_saved(cls, obj_id):
-        logger.debug(f"In {cls}._object_is_saved")
         cls_dict = cls._loaded_objects.get(str(cls), None)
-
+        logger.debug(f"obj_id: {obj_id}")
+        logger.debug(f"class dict: {cls_dict}\n\n")
         if cls_dict:
             return obj_id in cls_dict
         else:
@@ -33,7 +33,6 @@ class RedisEntry:
 
     @classmethod
     def _get_saved_object(cls, obj_id):
-        logger.debug(f"In {cls}._get_saved_object")
         return cls._loaded_objects[str(cls)][obj_id]
 
     @staticmethod

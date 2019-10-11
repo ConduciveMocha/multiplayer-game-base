@@ -1,4 +1,7 @@
 import json
+import traceback
+
+
 from flask import Blueprint, request, make_response, jsonify
 
 
@@ -32,6 +35,7 @@ def load_threads():
         return jsonify(return_payload)
     except Exception as e:
         logger.error(f"ERROR: ({type(e)}) {e}")
+        traceback.print_tb(e)
         return jsonify(error="Could not load threads")
 
 
@@ -43,11 +47,18 @@ def load_thread_messages():
 
         logger.info(f"Payload sent: {payload}")
         thread_id = payload["thread"]
-        return_payload = {"messages": get_thread_messages(thread_id)}
+        thread = ThreadEntry(thread_id)
+        return_payload = {
+            "messages": {
+                message.message_id: message.to_dict() for message in thread.messages
+            }
+        }
         logger.info(f"Returning: {return_payload}")
         return jsonify(return_payload)
     except Exception as e:
         logger.error(f"ERROR: {e}")
+        traceback.print_tb(e.__traceback__)
+
         return jsonify(error="Error loading thread messages")
 
 
@@ -62,6 +73,8 @@ def load_user_list():
 
     except Exception as e:
         logger.error(f"ERROR: {e}")
+        traceback.print_tb(e.__traceback__)
+
         return jsonify(error="Error loading users")
 
 
@@ -69,13 +82,15 @@ def load_user_list():
 def load_game_objects():
     logger.info("Loading game objects")
     try:
-        payload = reqeust.get_json()
+        payload = request.get_json()
         env_id = payload["env"]
     except AttributeError:
         return jsonify(error="Malformed request: `env` was not specified")
     try:
         return get_environment_objects(env_id)
-    except Exception:
+    except Exception as e:
         logger.error("Error thrown getting environment id")
+        traceback.print_tb(e.__traceback__)
+
         return jsonify(error="Error retrieving game objects")
 

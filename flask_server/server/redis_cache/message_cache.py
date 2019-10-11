@@ -19,21 +19,20 @@ message:<id:int> -- (hash) message data
 
 """
 
-# CONSTANTS
-
-# TODO: See if this can be changed to something useful
-THREAD_START = "-1"
-THREAD_SIG = {"id": int, "name": str}
-MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
-
 logger = make_logger(__name__)
 
 
 class ThreadEntry(RedisEntry):
     THREAD_SIG = {"id": int, "name": str}
+    THREAD_START = "-1"
 
-    def __init__(self, thread_id, thread_name=None, users=None, messages=None):
-        logger.debug(f"Creating ThreadEntry-{thread_id}")
+    def __init__(
+        self,
+        thread_id: int,
+        thread_name: str = None,
+        users: list = None,
+        messages: list = None,
+    ):
         self._messages = messages
         self.thread_id = thread_id
         self._users = users
@@ -62,18 +61,15 @@ class ThreadEntry(RedisEntry):
     @property
     def users(self):
         if self._users is None:
-            logger.debug(f"Getting users from cache")
             self._users = self._read_users_from_cache()
         return self._users
 
     @users.setter
     def users(self, users):
-        logger.debug(f"Setting Users")
         self._users = users
         self.dirty = True
 
     def _read_users_from_cache(self):
-        logger.debug("Calling thread._read_users_from_cache")
         member_ids = self._R.smembers(f"thread:{self.thread_id}:members")
         self._users = [
             UserEntry.from_user_id(int(member_id)) for member_id in member_ids
@@ -98,11 +94,8 @@ class ThreadEntry(RedisEntry):
             return cls._get_saved_object(thread_id)
 
         try:
-            logger.info(f"Getting thread:{thread_id}")
             raw_thread_data = cls._R.hgetall(f"thread:{thread_id}")
-            logger.debug(f"raw_thread_data {raw_thread_data}")
             thread_data = cls.fix_thread_signature(raw_thread_data)
-            logger.debug(f"thread_data {thread_data}")
             thread_obj = cls(thread_data["id"])
 
             return thread_obj
@@ -142,7 +135,6 @@ class ThreadEntry(RedisEntry):
             map(lambda mem: f"user:{mem.user_id}:threads", members)
         )
         for th in mutual_threads:
-            logger.info(f"thread: {th}")
             th = int(th.decode("utf-8"))
             if len(members) == cls._R.scard(f"thread:{th}:members"):
                 return cls.from_id(th)
@@ -171,11 +163,8 @@ class ThreadEntry(RedisEntry):
             pipe.execute()
 
     def to_dict(self):
-        logger.debug("thread.to_d")
         try:
-            logger.debug("Calling self.users")
-            logger.debug(f"self.users: {self.users}")
-            logger.debug(f"Called self.users")
+
             return {
                 "id": self.thread_id,
                 "users": [member.user_id for member in self.users],
@@ -188,8 +177,7 @@ class ThreadEntry(RedisEntry):
 class MessageEntry(RedisEntry):
     MESSAGE_SIG = {"thread": int, "sender": int, "content": str, "id": int}
 
-    def __init__(self, message_id, thread_id, sender_id, content):
-        logger.debug("Creating ThreadEntry")
+    def __init__(self, message_id: int, thread_id: int, sender_id: int, content: str):
         self.message_id = message_id
         self.thread_id = thread_id
         self._thread = None
@@ -212,6 +200,7 @@ class MessageEntry(RedisEntry):
     @property
     def sender(self):
         if self._sender is None:
+            logger.debug(f"self.sender_id: {self.sender_id}")
             self._sender = UserEntry.from_user_id(self.sender_id)
         return self._sender
 
@@ -221,11 +210,10 @@ class MessageEntry(RedisEntry):
         self.commit()
 
     @classmethod
-    def from_id(cls, message_id, thread=None):
+    def from_id(cls, message_id: int, thread=None):
         if cls._object_is_saved(message_id):
             return cls._get_saved_object(message_id)
         try:
-            logger.info(f"Getting message:{message_id}")
             raw_message_data = cls._R.hgetall(f"message:{message_id}")
             message_data = cls.fix_message_signature(raw_message_data)
             return cls(
@@ -247,10 +235,8 @@ class MessageEntry(RedisEntry):
     @classmethod
     def next_id(cls, incr=False):
         message_id = int(cls._R.get("message:next-id"))
-        logger.info(f"Next available message id: {message_id}")
         if incr:
             cls._R.incr("message:next-id")
-        logger.info(f"message:next-id Incremented")
         return message_id
 
     def commit(self):

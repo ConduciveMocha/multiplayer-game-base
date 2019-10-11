@@ -15,11 +15,6 @@ from server.redis_cache.poolmanager import (
 from server.logging import make_logger
 
 logger = make_logger(__name__)
-DEFAULT_USER_EXPIRE = 60 * 60 * 2
-
-NO_SID = "NO_SID"
-
-USER_SIG = {"id": int, "username": str, "online": int, "sid": str}
 
 
 class UserEntry(RedisEntry):
@@ -27,10 +22,16 @@ class UserEntry(RedisEntry):
     NO_SID = "NO_SID"
     DEFAULT_USER_EXPIRE = 60 * 60 * 2
 
-    def __init__(self, user_id, username, online, sid=None, threads=None):
+    def __init__(
+        self,
+        user_id: int,
+        username: str,
+        online: bool,
+        sid: str = None,
+        threads: list = None,
+    ):
         from server.redis_cache.message_cache import ThreadEntry
 
-        logger.debug(f"Creating UserEntry-{user_id}")
         self.user_id = user_id
         self.username = username
         self.online = online
@@ -56,12 +57,10 @@ class UserEntry(RedisEntry):
     def get_threads(self):
         from server.redis_cache.message_cache import ThreadEntry
 
-        logger.debug("Inside get_threads")
         raw_thread_ids = self._R.smembers(f"user:{self.user_id}:threads")
         if raw_thread_ids:
 
             thread_ids = list(map(lambda th: int(th.decode("utf-8")), raw_thread_ids))
-            logger.debug(f"thread_ids: {thread_ids}")
             self._threads = [ThreadEntry.from_id(thread_id) for thread_id in thread_ids]
         else:
             self._threads = []
@@ -153,8 +152,6 @@ class UserEntry(RedisEntry):
                 logger.error(f"No threads attached to user object: {self.user_id}")
 
             pipe.execute()
-            logger.info(pipe.hgetall(f"user:{self.user_id}").execute())
-            logger.info(f"user:{self.user_id}")
 
     #! UNFINISHED
     def commit(self):
@@ -171,7 +168,6 @@ class UserEntry(RedisEntry):
 
         self._R.set(f"user:sid:{self.sid}", self.user_id)
         self._R.hset(f"user:{self.user_id}", "sid", self.sid)
-        logger.info(f"user:{self.user_id} sid set to {self.sid}")
 
         #! VV Not true VV. Must catch exception
         # Everything commited, so session is no longer dirty
@@ -180,7 +176,7 @@ class UserEntry(RedisEntry):
     def extend_data(self):
         with self._R.pipeline() as pipe:
             pipe.expire(f"user:{self.user_id}", self.DEFAULT_USER_EXPIRE)
-            pipe.expire(f"user:{user_id}:threads", SELF.DEFAULT_USER_EXPIRE)
+            pipe.expire(f"user:{self.user_id}:threads", self.DEFAULT_USER_EXPIRE)
             pipe.execute()
 
     def __eq__(self, other):

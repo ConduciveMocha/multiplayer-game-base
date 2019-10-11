@@ -110,7 +110,9 @@ def new_message(data):
     sender = UserEntry.from_user_id(data["sender"])
     content = data["content"]
     try:
-        message = MessageEntry(MessageEntry.next_id(incr=True), thread, sender, content)
+        message = MessageEntry(
+            MessageEntry.next_id(incr=True), thread.thread_id, sender.user_id, content
+        )
         message.commit()
         emit("NEW_MESSAGE", message.to_dict(), room=thread.room_name)
     except KeyError as e:

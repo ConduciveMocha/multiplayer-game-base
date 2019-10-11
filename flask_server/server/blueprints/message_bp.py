@@ -35,15 +35,17 @@ def request_new_thread():
         logger.info(f"Payload: {payload}")
         full_members_list = [payload["sender"], *payload["users"]]
         existing = ThreadEntry.check_if_thread_exists(full_members_list)
+        logger.debug("After geting fullmembers listr")
         # TODO Return something more useful
         if existing:
             logger.info("Thread Exists")
             return existing.to_dict()
-
+        logger.info("Creating Thread")
         thread = ThreadEntry(ThreadEntry.next_id(incr=True), full_members_list)
         thread.commit()
 
         for user in thread.members:
+            logger.debug(f"User: {user}")
             logger.info(f"Getting user: {user.user_id}")
 
             logger.debug(f'user sid type : {type(user["sid"])}')
