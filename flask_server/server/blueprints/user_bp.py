@@ -5,8 +5,10 @@ from server.logging import request_log
 from server.db.user_actions import query_user_by_id, query_user_by_username
 from server.auth import require_auth
 from server.redis_cache.user_cache import UserEntry
+from server.logging import make_logger
 
 user_bp = Blueprint("user", __name__, url_prefix="/user")
+logger = make_logger(__name__)
 
 
 @user_bp.route("/online")
@@ -22,6 +24,9 @@ def request_userlist():
 def request_username(user_id):
     """Queries user by ID
     """
+    logger.info(f"In request_username")
+    logger.info(f"Getting user_by_id")
+
     cache_result = get_user_by_id(user_id)
     if cache_result:
         return cache_result

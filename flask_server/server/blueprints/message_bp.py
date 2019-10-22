@@ -1,6 +1,7 @@
 import json
 import base64
 import time
+import traceback
 from flask import Blueprint, request, make_response, jsonify
 from flask_socketio import join_room
 
@@ -35,29 +36,31 @@ def request_new_thread():
         logger.info(f"Payload: {payload}")
         full_members_list = [payload["sender"], *payload["users"]]
         existing = ThreadEntry.check_if_thread_exists(full_members_list)
-        logger.debug("After geting fullmembers listr")
+        logger.debug("After geting fullmembers list")
         # TODO Return something more useful
         if existing:
             logger.info("Thread Exists")
             return existing.to_dict()
         logger.info("Creating Thread")
-        thread = ThreadEntry(ThreadEntry.next_id(incr=True), full_members_list)
+        thread = ThreadEntry(ThreadEntry.next_id(incr=True), users=full_members_list)
         thread.commit()
 
-        for user in thread.members:
+        for user in thread.users:
             logger.debug(f"User: {user}")
-            logger.info(f"Getting user: {user.user_id}")
+            logger.info(f"Getting user: {user.user_id} sid: {user.sid}")
 
-            logger.debug(f'user sid type : {type(user["sid"])}')
             if user.sid != UserEntry.NO_SID:
                 logger.info(f"User {user.user_id} online. Sending thread request")
                 logger.info(f"User {user.user_id} has sid: {user.sid}")
                 socketio.emit("SERVER_THREAD_REQUEST", thread.to_dict(), room=user.sid)
-                join_room(room=thread.room_name, sid=user.sid)
+                logger.info(f"Adding user:<sid>:{user.sid} to room: {thread.room_name}")
+                logger.debug("CALLING JOIN ROOM")
+                join_room(thread.room_name, sid=user.sid)
             else:
+
                 logger.info(f"User {user.user_id} not online")
         return jsonify(thread.to_dict()), 200
     except Exception as e:
-
+        traceback.print_tb(e.__traceback__)
         logger.error(f"ERROR: {e}")
         return jsonify({"error": "ERROR!"}), 503

@@ -35,13 +35,25 @@ function messageChannelSubscribe(socket) {
       console.log("Data:", data);
     });
 
-    socket.on(MessageTypes.SERVER_THREAD_REQUEST, payload => {
+    socket.on("join", data => {
+      socket.emit("join", data);
+    });
+
+    socket.on("REQUEST_NEW_THREAD", payload => {
       console.debug("Request to join thread: ", payload);
+      socket.join(`thread-${payload.thread}`);
+
       emit(MessageActions.serverThreadRequest(payload));
     });
 
-    socket.on(MessageTypes.NEW_MESSAGE, message => {
-      console.log(message);
+    socket.on("NEW_THREAD_CREATED", payload => {
+      console.log("New thread created:", payload);
+      socket.join(`thread-${payload.thread}`);
+      emit(MessageActions.sendMessage(payload.id, payload.content));
+    });
+
+    socket.on("NEW_MESSAGE", message => {
+      console.log("NEW_MESSAGe: ", message);
       emit(MessageActions.recieveMessage(message));
     });
     // TODO FIX
@@ -68,12 +80,12 @@ function* readMessageChannel(socket) {
 
 function* writeRequestThreadJoin(socket) {
   function sendRequestThreadJoin(action) {
-    socket.emit(MessageTypes.CLIENT_THREAD_REQUEST, { ...action, sender: 0 });
-    console.log("Sent request to join thread: ", { ...action, sender: 0 });
+    socket.emit(MessageTypes.REQUEST_NEW_THREAD, { ...action, sender: 1 });
+    console.log("Sent request to join thread: ", { ...action, sender: 1 });
   }
 
   while (true) {
-    let action = yield take(MessageTypes.CLIENT_THREAD_REQUEST);
+    let action = yield take(MessageTypes.REQUEST_NEW_THREAD);
     sendRequestThreadJoin(action);
   }
 }
@@ -115,4 +127,9 @@ export function* handleMessageIO(socket) {
   yield fork(readMessageChannel, socket);
   yield fork(writeMessageEvent, socket);
   yield fork(writeRequestThreadJoin, socket);
+}
+
+export function* messageIO() {
+  const socket = messageConnect();
+  yield handleMessageIO(socket);
 }

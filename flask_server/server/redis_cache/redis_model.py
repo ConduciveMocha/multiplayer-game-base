@@ -13,19 +13,20 @@ class RedisEntry:
         self.has_been_read = False
         self.prefix = prefix
         self.dirty = None
-        self._obj_id = obj_id
+
+        self._obj_id = int(obj_id)
         self._save_object()
 
     def _save_object(self):
         if str(self.__class__) not in self._loaded_objects:
             self._loaded_objects[str(self.__class__)] = {}
-        self._loaded_objects[str(self.__class__)][self._obj_id] = self
+        self._loaded_objects[str(self.__class__)][int(self._obj_id)] = self
 
     @classmethod
     def _object_is_saved(cls, obj_id):
+        obj_id = int(obj_id)
         cls_dict = cls._loaded_objects.get(str(cls), None)
-        logger.debug(f"obj_id: {obj_id}")
-        logger.debug(f"class dict: {cls_dict}\n\n")
+
         if cls_dict:
             return obj_id in cls_dict
         else:
@@ -33,7 +34,7 @@ class RedisEntry:
 
     @classmethod
     def _get_saved_object(cls, obj_id):
-        return cls._loaded_objects[str(cls)][obj_id]
+        return cls._loaded_objects[str(cls)][int(obj_id)]
 
     @staticmethod
     def fix_hash_signature(d, sig):

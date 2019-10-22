@@ -160,7 +160,7 @@ export const serverThreadRequest = thread => {
     thread.messages = [];
   }
   return {
-    type: MessageTypes.SERVER_THREAD_REQUEST,
+    type: "REQUEST_NEW_THREAD",
     thread
   };
 };
@@ -193,4 +193,3 @@ export const newThreadFailed = (threadHash, error) => {
 export const clearNewThread = () => ({
   type: MessageTypes.CLEAR_NEW_THREAD
 });
-

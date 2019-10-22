@@ -11,9 +11,7 @@ const Message = ({ text, sender }) => {
 };
 
 const MessageContainer = ({ users, messages }) => {
-  console.log('Messages',messages)
   let messageComponants = messages.map(m => {
-    console.log('Rendering Message:',m)
     return <Message key={m.id} text={m.content} sender={m.sender} />;
   });
   return <div className="message-container">{messageComponants}</div>;

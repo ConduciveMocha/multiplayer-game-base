@@ -1,6 +1,6 @@
 import json
 import logging
-
+import traceback
 
 from flask import session, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect, send
@@ -74,7 +74,10 @@ def join_thread_request(data):
 
     if thread.check_if_user_in_thread(sender):
         logger.info(f"Adding {sender} to thread {thread}")
+        # join_room(thread.thread_name, namespace="/message")
+        logger.debug("CALLING JOIN ROOM")
         join_room(thread.thread_name)
+        logger.debug(f"Rooms: {session.get['rooms']}")
         emit("THREAD_JOINED", {"thread": thread.to_dict()})
     else:
         emit(
@@ -92,6 +95,7 @@ def client_thread_request(data):
     user = UserEntry.from_sid(request.sid)
 
     if thread.is_user_in_thread(user):
+        logger.debug("CALLING JOIN ROOM")
         join_room(thread.room_name)
         emit("THREAD_JOINED", {"thread": thread.thread_id})
     else:
@@ -105,19 +109,72 @@ def client_thread_request(data):
 # TODO: !!!! Add auth method for sockets !!!!
 @socketio.on("SEND_MESSAGE", namespace="/message")
 def new_message(data):
+    logger.debug(f"session.get('room'): {session.get('room')}")
     logger.info(f"SEND_MESSAGE Recieved {data}")
     thread = ThreadEntry.from_id(data["thread"])
     sender = UserEntry.from_user_id(data["sender"])
     content = data["content"]
     try:
+
+        logger.info(f"Creating MessageEntry with id: {MessageEntry.next_id()}")
         message = MessageEntry(
             MessageEntry.next_id(incr=True), thread.thread_id, sender.user_id, content
         )
+        logger.info("Made MessageEntry object. Commiting...")
         message.commit()
-        emit("NEW_MESSAGE", message.to_dict(), room=thread.room_name)
+        logger.info(f"Emitting NEW_MESSAGE id: {message.message_id}")
+        logger.debug(
+            f"session.get({thread.room_name}): {session.get(thread.room_name)}"
+        )
+        emit(
+            "NEW_MESSAGE",
+            message.to_dict(),
+            room=thread.room_name,
+            namespace="/message",
+        )
     except KeyError as e:
         logger.error(e)
         return jsonify(error="Malformed request"), 400
+
+
+@socketio.on("REQUEST_NEW_THREAD", namespace="/message")
+def new_thread(data):
+    logger.info("REQUEST_NEW_THREAD recieved")
+
+    try:
+        full_members_list = [data["sender"], *data["users"]]
+        existing = ThreadEntry.check_if_thread_exists(full_members_list)
+        logger.debug("After geting fullmembers list")
+        # TODO Return something more useful
+        if existing:
+            logger.info("Thread Exists")
+            return existing.to_dict()
+        logger.info("Creating Thread")
+        thread = ThreadEntry(ThreadEntry.next_id(incr=True), users=full_members_list)
+        thread.commit()
+
+        for user in thread.users:
+            logger.debug(f"User: {user}")
+            logger.info(f"Getting user: {user.user_id} sid: {user.sid}")
+
+            if user.sid != UserEntry.NO_SID:
+                logger.info(f"User {user.user_id} online. Sending thread request")
+                logger.info(f"User {user.user_id} has sid: {user.sid}")
+                socketio.emit("SERVER_THREAD_REQUEST", thread.to_dict(), room=user.sid)
+                logger.debug("CALLING JOIN ROOM")
+                join_room(thread.room_name, sid=user.sid, namespace="/message")
+            else:
+                logger.info(f"User {user.user_id} not online")
+        emit(
+            "NEW_THREAD_CREATED",
+            thread.to_dict(),
+            room=thread.room_name,
+            namesapce="/message",
+        )
+    except Exception as e:
+        traceback.print_tb(e.__traceback__)
+        logger.error(f"ERROR: {e}")
+        socketio.emit("SERVER ERROR", {"msg": "Could not create new thread"})
 
 
 @socketio.on("TEST", namespace="/message")
@@ -125,3 +182,4 @@ def test_messaging2():
     logger.debug(f"/message socket test triggered {request.sid}")
     emit("test", {"data": "data"})
 
+    logger.debug(f"/message socket test triggered {request.sid}")

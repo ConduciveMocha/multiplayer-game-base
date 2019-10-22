@@ -1,6 +1,6 @@
 import { createStore, applyMiddleware, compose } from "redux";
 import createSagaMiddleWare from "redux-saga";
-import requestThreadSaga from "./sagas/message-saga";
+import { messageIO } from "./sagas/socket-sagas/message-socket-saga";
 import socketSaga from "./sagas/socket-saga";
 import authSaga from "./sagas/auth-saga";
 import loadSaga from "./sagas/load-saga";
@@ -24,7 +24,7 @@ const store = createStore(
 
 socketMw.run(socketSaga);
 authMw.run(authSaga);
-messageMw.run(requestThreadSaga);
+messageMw.run(messageIO);
 loadMw.run(loadSaga);
 store.dispatch(createSocket(flaskServer, "auth"));
 

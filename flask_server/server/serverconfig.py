@@ -35,6 +35,7 @@ class Config(object):
 
     LOG_SOCKETS_INCOMING = False
     LOG_SOCKETS_OUTGOING = False
+    SESSION_TYPE = "filesystem"
 
 
 class DevelopmentConfig(Config):

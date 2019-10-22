@@ -2,6 +2,7 @@ import logging
 
 from flask import g, jsonify
 from redis.exceptions import DataError
+import socketio
 import redis
 from server.redis_cache.redis_model import RedisEntry
 
@@ -18,9 +19,20 @@ logger = make_logger(__name__)
 
 
 class UserEntry(RedisEntry):
+    """
+    REDIS STRUCTURE
+    
+        user:<user_id> -> {id, username, online, sid}
+        user:sid:<sid> -> user_id
+    """
+
+    # CLASS VARIABLES
+
     USER_SIG = {"id": int, "username": str, "online": int, "sid": str}
     NO_SID = "NO_SID"
     DEFAULT_USER_EXPIRE = 60 * 60 * 2
+
+    # CONSTRUCTORS
 
     def __init__(
         self,
@@ -43,10 +55,76 @@ class UserEntry(RedisEntry):
 
         super().__init__(user_id)
 
+    @classmethod
+    def from_user_id(cls, user_id):
+        logger.debug(f"Loading user from user_id: {user_id}")
+        user_id = int(user_id)
+
+        # Get cached object
+        if cls._object_is_saved(user_id):
+            return cls._get_saved_object(user_id)
+
+        try:
+
+            raw_user_data = cls._R.hgetall(f"user:{user_id}")
+
+        # Catches user not existing
+        except Exception as e:
+            logger.error("Error thrown in `from_user_id`\nUser does not exist")
+
+            logger.error(e)
+            raise type(e)
+
+        user_data = cls.fix_hash_signature(raw_user_data, cls.USER_SIG)
+        username, online, sid = (
+            user_data["username"],
+            user_data["online"],
+            user_data["sid"],
+        )
+        return cls(user_id, username, online, sid)
+
+    @classmethod
+    def from_sid(cls, sid):
+        logger.debug(f"Loading user from sid: {sid}")
+        user_id = int(cls._R.get(f"user:sid:{sid}"))
+        return cls.from_user_id(user_id)
+
+    # MAGIC METHODS
+
+    def __str__(self):
+        return f"<UserEntry| user_id: {self.user_id} username: {self.username} online: {self.online}>"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        return self.user_id == other.user_id
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    # PROPERTIES
+
+    """
+        Lazy loads threads. Prevents loading threads from cache 
+        for no reason. Might be unnecessary after adding in-class 
+        caching.
+    """
+
     @property
     def threads(self):
         if self._threads is None:
-            self.get_threads()
+            self._get_threads()
+            try:
+                for thread in self._threads:
+                    logger.debug("CALLING JOIN ROOM")
+                    socketio.join_room(room=thread.room_name, sid=self.sid)
+                    logger.debug(
+                        f"User ({self.user_id}) joined room {thread.room_name} "
+                    )
+            except Exception as e:
+                logger.error(f"Error joining thread rooms: {e}")
+                logger.error(f"{type(e)}")
         return self._threads
 
     @threads.setter
@@ -54,45 +132,7 @@ class UserEntry(RedisEntry):
         self._threads = threads
         threads.commit()
 
-    def get_threads(self):
-        from server.redis_cache.message_cache import ThreadEntry
-
-        raw_thread_ids = self._R.smembers(f"user:{self.user_id}:threads")
-        if raw_thread_ids:
-
-            thread_ids = list(map(lambda th: int(th.decode("utf-8")), raw_thread_ids))
-            self._threads = [ThreadEntry.from_id(thread_id) for thread_id in thread_ids]
-        else:
-            self._threads = []
-
-    @classmethod
-    def from_user_id(cls, user_id, thread=None):
-        if cls._object_is_saved(user_id):
-            return cls._get_saved_object(user_id)
-        try:
-            user_id = int(user_id)
-            if cls._R.exists(f"user:{user_id}"):
-                raw_user_data = cls._R.hgetall(f"user:{user_id}")
-                user_data = cls.fix_hash_signature(raw_user_data, cls.USER_SIG)
-                username, online, sid = (
-                    user_data["username"],
-                    user_data["online"],
-                    user_data["sid"],
-                )
-                return cls(user_id, username, online, sid, threads=thread)
-
-            else:
-                logger.error(f"User {user_id} does not exist")
-                return {}
-        except Exception as e:
-            logger.error("Error thrown in `from_user_id`")
-            logger.error(e)
-            raise type(e)
-
-    @classmethod
-    def from_sid(cls, sid):
-        user_id = int(cls._R.get(f"user:sid:{sid}"))
-        return cls.from_user_id(user_id)
+    # STATIC CLASS METHODS
 
     @classmethod
     def get_online_users(cls):
@@ -109,28 +149,49 @@ class UserEntry(RedisEntry):
             }
             return user_list
         except Exception as e:
-            logger.error(e)
+            logger.error(f"Error retrieving online users: {e}")
             raise type(e)
 
     @classmethod
     def user_is_online(cls, user_id):
         return cls._R.sismember("user:online", user_id)
 
+    # HELPER METHODS
+
+    # TODO Make sure this isnt called outside of the class
+    # Helper function that loads threads into `threads` instance variable
+    def _get_threads(self):
+        from server.redis_cache.message_cache import ThreadEntry
+
+        raw_thread_ids = self._R.smembers(f"user:{self.user_id}:threads")
+        # If redis loads something, fix the response and set threads
+        if raw_thread_ids:
+            thread_ids = list(map(lambda th: int(th.decode("utf-8")), raw_thread_ids))
+            self._threads = [ThreadEntry.from_id(thread_id) for thread_id in thread_ids]
+        # Else return empty list
+        else:
+            self._threads = []
+
+    # Sets the user offline. Duh. Raises a DataError if the user isnt
+    # found in redis.
     def _set_user_offline(self):
         if self.sid is None:
             raise DataError
 
         with self._R.pipeline() as pipe:
-            pipe.get(f"user:sid:{self.sid}")
+
             pipe.delete(f"user:sid:{self.sid}")
             pipe.srem("user:online", self.user_id)
             pipe.hset(f"user:{self.user_id}", "online", 0)
             pipe.hset(f"user:{self.user_id}", "sid", NO_SID)
             pipe.execute()
 
+    # ? Could be 'public'?
+    # Sets user to online in redis
     def _set_user_online(self):
         with self._R.pipeline() as pipe:
 
+            # Setting user:<userid>
             logger.info(f"Setting user online: {self.user_id}")
             pipe.sadd("user:online", self.user_id)
             pipe.hmset(
@@ -142,9 +203,15 @@ class UserEntry(RedisEntry):
                     "sid": self.sid,
                 },
             )
+
+            # setting user:sid:<sid>
             pipe.set(f"user:sid:{self.sid}", self.user_id)
             pipe.expire(f"user:{self.user_id}", self.DEFAULT_USER_EXPIRE)
+
+            # ? Probably could be safely removed/removed with little issue
+            # Catches the thread objects not loading a user
             try:
+                # Adds all associated threads to redis
                 for thread in self.threads:
                     pipe.sadd(f"user:{self.user_id}:threads", thread.thread_id)
                 pipe.expire(f"user:{self.user_id}:threads", self.DEFAULT_USER_EXPIRE)
@@ -153,8 +220,9 @@ class UserEntry(RedisEntry):
 
             pipe.execute()
 
-    #! UNFINISHED
+    # ? UNFINISHED
     def commit(self):
+        # TODO: If fails check for user:sid:<sid> but accepts user:<user_id> update user:sid:<sid>
         # Set user sid
         if self._R.exists(f"user:sid:{self.sid}") or self._R.hget(
             f"user:{self.user_id}", "sid"
@@ -178,10 +246,4 @@ class UserEntry(RedisEntry):
             pipe.expire(f"user:{self.user_id}", self.DEFAULT_USER_EXPIRE)
             pipe.expire(f"user:{self.user_id}:threads", self.DEFAULT_USER_EXPIRE)
             pipe.execute()
-
-    def __eq__(self, other):
-        return self.user_id == other.user_id
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 

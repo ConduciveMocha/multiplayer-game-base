@@ -22,12 +22,9 @@ def load_threads():
         payload = request.get_json()
         logger.info(f"Payload sent: {payload}")
         user = UserEntry.from_user_id(payload["user"])
-        logger.debug("Loaded user")
+        logger.debug(f"Loaded user: {user}")
         # thread_list = get_user_threads(user.user_id)
         thread_list = user.threads
-        logger.info("Hey Nate!")
-        logger.info(f"Thread List: {thread_list}")
-        logger.debug(f"{[thread.__dict__ for thread in thread_list]}")
         return_payload = {
             "threads": {thread.thread_id: thread.to_dict() for thread in thread_list}
         }

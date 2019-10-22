@@ -49,7 +49,6 @@ class Thread(CreatedTimestampMixin, db.Model):
     thread_hash = db.Column(db.String(64))
     name = db.Column(db.String(100))
 
-    # members = db.relationship("User",secondary=user_thread,primaryjoin=(user_thread.c.thread_id==id),lazy='dynamic')
     def __init__(self, members, thread_hash, created, thread_name=None):
         if len(members) > 10:
             raise ValueError("List of members must have fewer than 10 elements")
@@ -249,6 +248,7 @@ class ObjectEffect(db.Model):
     def to_dict(self):
         return {}
 
+
 class InventoryObject(db.Model):
     model_log.info("Creating inventory_object table")
     id = db.Column(db.Integer, primary_key=True)
@@ -268,7 +268,6 @@ class UserInventory(db.Model):
 
     inventory_object_id = db.Column(db.Integer, db.ForeignKey("inventory_object.id"))
     # game_object = db.relationship("GameObject")
-
 
 
 """
