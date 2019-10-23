@@ -8,7 +8,6 @@ from celery import Celery
 from flask import Flask, request, make_response, redirect, g
 from flask_cors import CORS
 from flask_socketio import SocketIO
-from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
 from flask_sqlalchemy import Model
@@ -51,7 +50,7 @@ def create_app(conf=None, log=False, return_ext=None):
     app = Flask(__name__)
     config = conf if conf else get_config()
     logger.debug(f"Config name: {config.CONFIG_NAME}")
-    Session(app)
+    # Session(app)
     app.config.from_object(config)
     logger.debug(f"App configured with {config.CONFIG_NAME}")
 
@@ -85,7 +84,6 @@ def create_app(conf=None, log=False, return_ext=None):
     CORS(app)
     db.init_app(app)
     migrate.init_app(app, db=db)
-    Session(app)
     socketio.init_app(
         app,
         logger=socketio_logger,

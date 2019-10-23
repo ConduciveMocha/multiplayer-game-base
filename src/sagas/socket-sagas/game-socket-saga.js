@@ -61,7 +61,6 @@ function* writeInventoryEvent(socket) {
   while (true) {
     let action = yield take(GameTypes.REMOVE_INVENTORY_ITEM);
 
-    console.log("Recieved REMOVE_INVENTORY_ITEM");
     sendRemoveItem(action);
   }
 }

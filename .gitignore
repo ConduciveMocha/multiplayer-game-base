@@ -33,3 +33,4 @@ yarn-error.log*
 **/__pycache__
 /logs
 TODOS.txt
+/flask_server/flask_session/

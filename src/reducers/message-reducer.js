@@ -29,7 +29,6 @@ export default function messagingReducer(
   let newState;
   switch (action.type) {
     case MessageTypes.USERS_LOADED:
-      console.log("USERS_LOADED", action);
       return {
         ...state,
         users: { ...action.online, ...action.friends },
@@ -44,17 +43,18 @@ export default function messagingReducer(
       };
 
     case MessageTypes.THREAD_MESSAGES_LOADED:
-      console.log('THREAD_MESSAGES_LOADED','OLD',state)
+      console.log("THREAD_MESSAGES_LOADED", "OLD", state);
+      console.log("Action value: ", action);
       newState = {
         ...state,
         messages: {
           ...state.messages,
           ...action.messages
         }
-      }
-        console.log('THREAD_MESSAGES_LOADED','NEW',newState)
+      };
+      console.log("THREAD_MESSAGES_LOADED", "NEW", newState);
       return newState;
-    
+
     case MessageTypes.USER_JOINED:
       return {
         ...state,
@@ -75,7 +75,11 @@ export default function messagingReducer(
       console.log("state", state);
       let message = action.message;
       let updatedThread = { ...state.threads[action.message.thread] };
+      console.log("updatedThread message: ", message);
+      console.log("updatedThread.id: ", state.threads[message.thread]);
+      console.log("updatedThread: ", updatedThread);
       updatedThread.messages = [...updatedThread.messages, message.id];
+      console.log("Creating new state");
       let newState = {
         ...state,
         messages: { ...state.messages, [message.id]: message },
@@ -111,6 +115,7 @@ export default function messagingReducer(
       };
 
     case MessageTypes.SERVER_THREAD_REQUEST:
+      console.log("SERVER_THREAD_REQUEST", action);
       return {
         ...state,
         threads: { ...state.threads, [action.thread.id]: action.thread },

@@ -10,7 +10,6 @@ export const threadsLoaded = threads => ({
 });
 
 export const usersLoaded = usersList => {
-  console.log(usersList);
   return {
     type: USERS_LOADED,
     online: usersList.online,

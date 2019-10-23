@@ -9,7 +9,7 @@ const MagicDebugButton = props => {
   return (
     <>
       <button onClick={() => props.sendIdentification()}>
-        Magic Login Button!!!!
+        SEND IDENTIFICATION!!!!
       </button>
       <button onClick={() => props.sendAll()}>Magic Debug Button!</button>
     </>
@@ -20,7 +20,6 @@ export default connect(
   state => ({}),
   dispatch => ({
     sendIdentification: () => {
-      console.log('Send Id button clicked')
       dispatch({ type: "SEND_IDENTIFICATION", user: 1 });
     },
 

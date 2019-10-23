@@ -3,32 +3,24 @@ import logging
 import traceback
 
 from flask import session, request, jsonify
-from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect, send
+from flask_socketio import (
+    SocketIO,
+    emit,
+    join_room,
+    leave_room,
+    disconnect,
+    send,
+    Namespace,
+    rooms,
+)
 from redis.exceptions import DataError
 
 
 from server.auth import require_auth
 from server.db.user_actions import query_user_by_id
 from server.db.models import Thread
-from server.redis_cache.user_cache import (
-    # set_user_online,
-    # set_user_offline,
-    # user_from_sid,
-    # get_user_by_id,
-    # set_user_sid,
-    UserEntry,
-)
-from server.redis_cache.message_cache import (
-    # get_message_by_id,
-    # create_message_dict,
-    # create_message,
-    # check_if_thread_exists,
-    # create_thread,
-    # get_next_message_id,
-    # check_if_user_in_thread,
-    ThreadEntry,
-    MessageEntry,
-)
+from server.redis_cache.user_cache import UserEntry
+from server.redis_cache.message_cache import ThreadEntry, MessageEntry
 from server.logging import make_logger
 from server.utils.data_generators import FlexDict
 
@@ -75,9 +67,12 @@ def join_thread_request(data):
     if thread.check_if_user_in_thread(sender):
         logger.info(f"Adding {sender} to thread {thread}")
         # join_room(thread.thread_name, namespace="/message")
-        logger.debug("CALLING JOIN ROOM")
+        logger.debug("CALLING JOIN ROOM (JOIN_THREAD_REQUEST)")
+
         join_room(thread.thread_name)
-        logger.debug(f"Rooms: {session.get['rooms']}")
+
+        logger.debug(f"Rooms: {rooms()}")
+
         emit("THREAD_JOINED", {"thread": thread.to_dict()})
     else:
         emit(
@@ -95,8 +90,9 @@ def client_thread_request(data):
     user = UserEntry.from_sid(request.sid)
 
     if thread.is_user_in_thread(user):
-        logger.debug("CALLING JOIN ROOM")
+        logger.debug("CALLING JOIN ROOM (CLIENT THREAD REQUEST)")
         join_room(thread.room_name)
+        logger.debug(f"Rooms: {rooms()}")
         emit("THREAD_JOINED", {"thread": thread.thread_id})
     else:
         emit(
@@ -109,11 +105,13 @@ def client_thread_request(data):
 # TODO: !!!! Add auth method for sockets !!!!
 @socketio.on("SEND_MESSAGE", namespace="/message")
 def new_message(data):
-    logger.debug(f"session.get('room'): {session.get('room')}")
     logger.info(f"SEND_MESSAGE Recieved {data}")
     thread = ThreadEntry.from_id(data["thread"])
     sender = UserEntry.from_user_id(data["sender"])
-    content = data["content"]
+    try:
+        content = data["content"]
+    except KeyError:
+        content = ""
     try:
 
         logger.info(f"Creating MessageEntry with id: {MessageEntry.next_id()}")
@@ -123,9 +121,7 @@ def new_message(data):
         logger.info("Made MessageEntry object. Commiting...")
         message.commit()
         logger.info(f"Emitting NEW_MESSAGE id: {message.message_id}")
-        logger.debug(
-            f"session.get({thread.room_name}): {session.get(thread.room_name)}"
-        )
+
         emit(
             "NEW_MESSAGE",
             message.to_dict(),
@@ -165,6 +161,7 @@ def new_thread(data):
                 join_room(thread.room_name, sid=user.sid, namespace="/message")
             else:
                 logger.info(f"User {user.user_id} not online")
+        logger.debug(f"Rooms: {rooms()}")
         emit(
             "NEW_THREAD_CREATED",
             thread.to_dict(),
@@ -180,6 +177,6 @@ def new_thread(data):
 @socketio.on("TEST", namespace="/message")
 def test_messaging2():
     logger.debug(f"/message socket test triggered {request.sid}")
-    emit("test", {"data": "data"})
+    emit("test", {"data": "data"}, room="thread-0")
 
     logger.debug(f"/message socket test triggered {request.sid}")

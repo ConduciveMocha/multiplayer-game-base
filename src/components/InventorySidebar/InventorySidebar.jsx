@@ -20,7 +20,6 @@ const InventorySidebar = props => {
   const [selectedItemId, setSelectedItemId] = useState(NO_ITEM_ID);
 
   const inventoryItems = Object.keys(props.inventory).map(itemId => {
-    console.log(itemId);
     const item = props.inventory[parseInt(itemId)];
     return (
       <InventoryItem

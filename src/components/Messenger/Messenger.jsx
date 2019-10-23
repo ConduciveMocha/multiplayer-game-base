@@ -44,9 +44,7 @@ const Messenger = props => {
     if (currentTabIndex >= openTabIds.length) {
       setCurrentTabIndex(0);
     } else {
-      console.log('Current Tab Index: ', currentTabIndex)
       const currentThread = threads[openTabIds[currentTabIndex]];
-      console.log('currentThread', currentThread)
       if (currentThread) {
         setCurrentMessages(
           currentThread.messages.map(id => {
@@ -140,7 +138,6 @@ const Messenger = props => {
     // Closing currently active tab pulls up the global thread.
     else if (closedTabIndex === currentTabIndex) {
       setCurrentTabIndex(0);
-      console.log("closedTabIndex===currentTabIndex", 0);
     }
     // Remove thread from openTabIds
     setOpenTabIds(openTabIds.filter(el => el !== parseInt(id)));

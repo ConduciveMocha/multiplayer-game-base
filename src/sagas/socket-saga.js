@@ -46,7 +46,6 @@ function* flow() {
 
     const mTask = yield fork(handleMessageIO, messageSocket);
     const gTaks = yield fork(handleGameIO, gameSocket);
-    console.log("HandleIO Forked");
 
     yield take("NOTHING");
   }

@@ -18,7 +18,9 @@ import * as MessageTypes from "../../constants/action-types/message-types";
 import * as GameTypes from "../../constants/action-types/game-types";
 import { getPlayerObject } from "./game-socket-saga";
 export function messageConnect() {
-  const socket = io("http://localhost:5000/message", { forceNew: true });
+  const socket = io.connect("http://localhost:5000/message", {
+    forceNew: true
+  });
   console.log("Connecting to messaging namespace");
   return new Promise(resolve => {
     socket.on("connect", () => {
@@ -42,18 +44,20 @@ function messageChannelSubscribe(socket) {
     socket.on("REQUEST_NEW_THREAD", payload => {
       console.debug("Request to join thread: ", payload);
       socket.join(`thread-${payload.thread}`);
-
+      console.log("REQUEST_NEW_THREAD succesful. Calling serverThreadRequest");
       emit(MessageActions.serverThreadRequest(payload));
     });
 
     socket.on("NEW_THREAD_CREATED", payload => {
       console.log("New thread created:", payload);
-      socket.join(`thread-${payload.thread}`);
+      // socket.join(`thread-${payload.thread}`);
+      emit(MessageActions.serverThreadRequest(payload));
+      console.log("SENDING MESSAGE: ", payload);
       emit(MessageActions.sendMessage(payload.id, payload.content));
     });
 
     socket.on("NEW_MESSAGE", message => {
-      console.log("NEW_MESSAGe: ", message);
+      console.log("NEW_MESSAGE: ", message);
       emit(MessageActions.recieveMessage(message));
     });
     // TODO FIX
@@ -74,6 +78,7 @@ function* readMessageChannel(socket) {
   const channel = yield call(messageChannelSubscribe, socket);
   while (true) {
     let action = yield take(channel);
+    console.log("Read event from message channel: ", action);
     yield put(action);
   }
 }

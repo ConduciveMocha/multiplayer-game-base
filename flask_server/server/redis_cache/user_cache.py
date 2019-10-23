@@ -3,6 +3,7 @@ import logging
 from flask import g, jsonify
 from redis.exceptions import DataError
 import socketio
+from flask_socketio import join_room, rooms
 import redis
 from server.redis_cache.redis_model import RedisEntry
 
@@ -117,8 +118,9 @@ class UserEntry(RedisEntry):
             self._get_threads()
             try:
                 for thread in self._threads:
-                    logger.debug("CALLING JOIN ROOM")
-                    socketio.join_room(room=thread.room_name, sid=self.sid)
+                    logger.debug("CALLING JOIN ROOM (UserEntry.threads)")
+                    join_room(room=thread.room_name, sid=self.sid)
+                    logger.debug(f"Rooms: {rooms()}")
                     logger.debug(
                         f"User ({self.user_id}) joined room {thread.room_name} "
                     )

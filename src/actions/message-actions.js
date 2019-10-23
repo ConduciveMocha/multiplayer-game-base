@@ -160,7 +160,7 @@ export const serverThreadRequest = thread => {
     thread.messages = [];
   }
   return {
-    type: "REQUEST_NEW_THREAD",
+    type: "SERVER_THREAD_REQUEST",
     thread
   };
 };
