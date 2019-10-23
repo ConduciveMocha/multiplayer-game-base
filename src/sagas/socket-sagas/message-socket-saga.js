@@ -74,6 +74,7 @@ function messageChannelSubscribe(socket) {
 }
 
 // Generator that takes all actions
+// Reads message event FROM backend
 function* readMessageChannel(socket) {
   const channel = yield call(messageChannelSubscribe, socket);
   while (true) {
@@ -82,7 +83,7 @@ function* readMessageChannel(socket) {
     yield put(action);
   }
 }
-
+// Writes thread event TO backend
 function* writeRequestThreadJoin(socket) {
   function sendRequestThreadJoin(action) {
     socket.emit(MessageTypes.REQUEST_NEW_THREAD, { ...action, sender: 1 });
@@ -95,6 +96,7 @@ function* writeRequestThreadJoin(socket) {
   }
 }
 
+// Writes message event TO backend
 function* writeMessageEvent(socket) {
   function sendMessage(action) {
     socket.emit(MessageTypes.SEND_MESSAGE, { ...action, sender: 1 });
