@@ -43,8 +43,8 @@ export default function messagingReducer(
       };
 
     case MessageTypes.THREAD_MESSAGES_LOADED:
-      console.log("THREAD_MESSAGES_LOADED", "OLD", state);
-      console.log("Action value: ", action);
+      // console.log("THREAD_MESSAGES_LOADED", "OLD", state);
+      // console.log("Action value: ", action);
       newState = {
         ...state,
         messages: {
@@ -52,7 +52,7 @@ export default function messagingReducer(
           ...action.messages
         }
       };
-      console.log("THREAD_MESSAGES_LOADED", "NEW", newState);
+      // console.log("THREAD_MESSAGES_LOADED", "NEW", newState);
       return newState;
 
     case MessageTypes.USER_JOINED:
@@ -76,9 +76,9 @@ export default function messagingReducer(
       let message = action.message;
       let updatedThread = { ...state.threads[action.message.thread] };
       console.log("updatedThread message: ", message);
-      console.log("updatedThread.id: ", state.threads[message.thread]);
-      console.log("updatedThread: ", updatedThread);
+      console.log("updatedThread (existing): ", state.threads[message.thread]);
       updatedThread.messages = [...updatedThread.messages, message.id];
+      console.log("updatedThread: ", updatedThread);
       console.log("Creating new state");
       let newState = {
         ...state,

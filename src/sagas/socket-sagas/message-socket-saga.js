@@ -9,14 +9,35 @@ import {
   fork,
   cancel
 } from "redux-saga/effects";
-import * as SocketActions from "../../actions/socket-actions";
-import * as SocketTypes from "../../constants/action-types/socket-types";
+
 import io from "socket.io-client";
 import * as MessageActions from "../../actions/message-actions";
 import * as GameActions from "../../actions/game-actions";
 import * as MessageTypes from "../../constants/action-types/message-types";
 import * as GameTypes from "../../constants/action-types/game-types";
 import { getPlayerObject } from "./game-socket-saga";
+
+const socketLogger = {
+  sent: (eventType, payload) =>
+    console.log("SENT::SOCKETEVENT::" + eventType, "payload:", payload),
+  recieved: (eventType, payload) =>
+    console.log("RECIEVED::SOCKETEVENT::" + eventType, "payload:", payload),
+  redux: (eventType, payload) =>
+    console.log("REDUX::SOCKETEVENT::" + eventType, "payload:", payload)
+};
+
+// Logging util for sending socket event
+const logSocketEvent = (eventType, payload, wasSent) => {
+  let directionString = wasSent ? "SENT" : "RECIEVED";
+  console.log(
+    directionString + "::SOCKETEVENT",
+    eventType,
+    "payload: ",
+    payload
+  );
+};
+
+// Initializes connection to message socket namespace
 export function messageConnect() {
   const socket = io.connect("http://localhost:5000/message", {
     forceNew: true
@@ -32,38 +53,30 @@ export function messageConnect() {
 
 function messageChannelSubscribe(socket) {
   return eventChannel(emit => {
-    socket.on("test", data => {
-      console.log("Test Recieved");
-      console.log("Data:", data);
-    });
-
-    socket.on("join", data => {
-      socket.emit("join", data);
-    });
-
-    socket.on("REQUEST_NEW_THREAD", payload => {
-      console.debug("Request to join thread: ", payload);
+    socket.on(MessageTypes.REQUEST_NEW_THREAD, payload => {
+      socketLogger.recieved(MessageTypes.REQUEST_NEW_THREAD, payload);
       socket.join(`thread-${payload.thread}`);
       console.log("REQUEST_NEW_THREAD succesful. Calling serverThreadRequest");
       emit(MessageActions.serverThreadRequest(payload));
     });
 
     socket.on("NEW_THREAD_CREATED", payload => {
-      console.log("New thread created:", payload);
-      // socket.join(`thread-${payload.thread}`);
+      socketLogger.recieved("NEW_THREAD_CREATED", payload);
+      console.log("Bullshit: ", payload);
       emit(MessageActions.serverThreadRequest(payload));
-      console.log("SENDING MESSAGE: ", payload);
+
       emit(MessageActions.sendMessage(payload.id, payload.content));
     });
 
-    socket.on("NEW_MESSAGE", message => {
-      console.log("NEW_MESSAGE: ", message);
-      emit(MessageActions.recieveMessage(message));
+    socket.on("NEW_MESSAGE", payload => {
+      socketLogger.recieved("NEW_MESSAGE", payload);
+      emit(MessageActions.recieveMessage(payload));
     });
+
     // TODO FIX
     //! USES DEBUG VALUE FOR USER ID. DOES NOT ACTUALLY READ VALUE
     socket.on("SEND_IDENTIFICATION", payload => {
-      console.log("Sending user identification");
+      socketLogger.recieved("SEND_IDENTIFICATION", payload);
       socket.emit("USER_IDENTIFICATION", {
         user: { id: 1, username: "testUSER" }
       });
@@ -79,15 +92,15 @@ function* readMessageChannel(socket) {
   const channel = yield call(messageChannelSubscribe, socket);
   while (true) {
     let action = yield take(channel);
-    console.log("Read event from message channel: ", action);
     yield put(action);
   }
 }
 // Writes thread event TO backend
 function* writeRequestThreadJoin(socket) {
   function sendRequestThreadJoin(action) {
-    socket.emit(MessageTypes.REQUEST_NEW_THREAD, { ...action, sender: 1 });
-    console.log("Sent request to join thread: ", { ...action, sender: 1 });
+    let payload = { ...action, sender: 1 };
+    socketLogger.sent(MessageTypes.REQUEST_NEW_THREAD, payload);
+    socket.emit(MessageTypes.REQUEST_NEW_THREAD, payload);
   }
 
   while (true) {
@@ -99,9 +112,9 @@ function* writeRequestThreadJoin(socket) {
 // Writes message event TO backend
 function* writeMessageEvent(socket) {
   function sendMessage(action) {
-    socket.emit(MessageTypes.SEND_MESSAGE, { ...action, sender: 1 });
-    console.log("Emitted event through socket in sendMessage");
-    console.log("action object", action);
+    let payload = { ...action, sender: 1 };
+    socketLogger.sent(MessageTypes.SEND_MESSAGE, payload);
+    socket.emit(MessageTypes.SEND_MESSAGE, payload);
     // yield put({type:"MESSAGE_SENT",message:action.message})
   }
 

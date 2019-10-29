@@ -111,6 +111,8 @@ def new_message(data):
     try:
         content = data["content"]
     except KeyError:
+        logger.error("No content found in message")
+        logger.debug(f"Contents of payload: {data}")
         content = ""
     try:
 
@@ -135,7 +137,7 @@ def new_message(data):
 
 @socketio.on("REQUEST_NEW_THREAD", namespace="/message")
 def new_thread(data):
-    logger.info("REQUEST_NEW_THREAD recieved")
+    logger.info(f"REQUEST_NEW_THREAD recieved with payload {data}")
 
     try:
         full_members_list = [data["sender"], *data["users"]]
@@ -164,7 +166,7 @@ def new_thread(data):
         logger.debug(f"Rooms: {rooms()}")
         emit(
             "NEW_THREAD_CREATED",
-            thread.to_dict(),
+            {"content": data["content"], **thread.to_dict()},
             room=thread.room_name,
             namesapce="/message",
         )

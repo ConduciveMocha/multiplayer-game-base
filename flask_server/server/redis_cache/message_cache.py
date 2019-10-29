@@ -190,6 +190,7 @@ class ThreadEntry(RedisEntry):
                 "id": self.thread_id,
                 "users": [member.user_id for member in self.users],
                 "messages": [message.message_id for message in self.messages],
+                "name": self.create_default_thread_name(),
             }
         except Exception as e:
             logger.debug(f"Thrown in thread.to_dict: ({type(e)}) {e}")

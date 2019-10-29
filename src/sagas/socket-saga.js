@@ -39,7 +39,6 @@ function* flow() {
     const gameSocket = yield call(gameConnect);
 
     let idEvent = yield take("SEND_IDENTIFICATION");
-    console.log("Id event read");
     messageSocket.emit("SEND_IDENTIFICATION", {
       user: { id: 1, username: "TestUser" }
     });

@@ -60,8 +60,6 @@ const Messenger = props => {
   }, [messages, currentTabIndex, openTabIds, threads, showCreateThread.value]);
 
   useEffect(() => {
-    console.log("In effect: ", openTabIds);
-
     const createThreadIndex = openTabIds.indexOf(CREATE_THREAD_ID);
     if (createThreadIndex < 0 || createThreadIndex === null) {
       console.log(createThreadIndex);
