@@ -1,22 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
+import { sendDropItem, sendDeleteItem } from "../../actions/inventory-actions";
+
 import "./InventorySidebar.css";
 
 const NO_ITEM_ID = -1;
 
-const InventoryItem = ({ item, selected, onClickHandler }) => {
+const InventoryItem = ({ item, selected, onClickHandler, dropHandler }) => {
   return (
     <div
       onClick={() => onClickHandler()}
       className={selected ? "inventory-item-selected" : "inventory-item"}
     >
       <h2 className={"inventory-item-name"}>{item.name}</h2>
-      <h3>x{item.quantity}</h3>
+      <div className="inventory-info-row">
+        <h3>x{item.quantity}</h3>
+        <button onClick={() => dropHandler()}>Drop</button>
+      </div>
     </div>
   );
 };
 
 const InventorySidebar = props => {
+  const createDropItemHandler = itemId => () => {};
+
   const [selectedItemId, setSelectedItemId] = useState(NO_ITEM_ID);
 
   const inventoryItems = Object.keys(props.inventory).map(itemId => {
@@ -28,6 +35,9 @@ const InventorySidebar = props => {
         selected={selectedItemId === item.id}
         onClickHandler={() => {
           setSelectedItemId(item.id);
+        }}
+        dropHandler={() => {
+          createDropItemHandler(item.id);
         }}
       />
     );
@@ -48,5 +58,11 @@ const InventorySidebar = props => {
 
 export default connect(
   state => ({ inventory: state.game.inventory }),
-  dispatch => ({})
+  dispatch => {
+    return {
+      dispatchDropItem: itemId => {
+        sendDropItem(itemId);
+      }
+    };
+  }
 )(InventorySidebar);
