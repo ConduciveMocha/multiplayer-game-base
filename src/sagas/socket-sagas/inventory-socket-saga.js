@@ -56,6 +56,7 @@ function inventoryChannelSubscribe(socket) {
         inventoryActions.dropItemError(payload.itemId, payload.errorMessage)
       );
     });
+    return () => {};
   });
 }
 
@@ -94,7 +95,7 @@ function* writeInventorySocket(socket) {
   }
 }
 
-function* handleInventoryIO(socket) {
+export function* handleInventoryIO(socket) {
   yield fork(readInventorySocket, socket);
   yield fork(writeInventorySocket, socket);
 }

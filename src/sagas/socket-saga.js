@@ -16,6 +16,7 @@ import {
 } from "./socket-sagas/message-socket-saga";
 import {
   inventoryIO,
+  handleInventoryIO,
   inventoryConnect
 } from "./socket-sagas/inventory-socket-saga";
 
@@ -57,7 +58,7 @@ function* flow() {
 
     const messageTask = yield fork(handleMessageIO, messageSocket);
     const gameTask = yield fork(handleGameIO, gameSocket);
-    const inventoryTast = yield fork(inventoryIO, inventorySocket);
+    const inventoryTast = yield fork(handleInventoryIO, inventorySocket);
     yield take("NOTHING");
   }
 }
