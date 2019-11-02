@@ -15,27 +15,7 @@ import * as MessageActions from "../../actions/message-actions";
 import * as MessageTypes from "../../constants/action-types/message-types";
 import * as GameTypes from "../../constants/action-types/game-types";
 import { getPlayerObject } from "./game-socket-saga";
-// import * as GameActions from "../../actions/game-actions";
-
-const socketLogger = {
-  sent: (eventType, payload) =>
-    console.log("SENT::SOCKETEVENT::" + eventType, "payload:", payload),
-  recieved: (eventType, payload) =>
-    console.log("RECIEVED::SOCKETEVENT::" + eventType, "payload:", payload),
-  redux: (eventType, payload) =>
-    console.log("REDUX::SOCKETEVENT::" + eventType, "payload:", payload)
-};
-
-// Logging util for sending socket event
-const logSocketEvent = (eventType, payload, wasSent) => {
-  let directionString = wasSent ? "SENT" : "RECIEVED";
-  console.log(
-    directionString + "::SOCKETEVENT",
-    eventType,
-    "payload: ",
-    payload
-  );
-};
+import socketLogger from "../socket-logger";
 
 // Initializes connection to message socket namespace
 export function messageConnect() {
