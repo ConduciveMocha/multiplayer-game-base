@@ -7,7 +7,7 @@ import socketLogger from "../socket-logger";
 import * as inventoryTypes from "../../constants/action-types/inventory-types";
 import * as inventoryActions from "../../actions/inventory-actions";
 
-function inventoryConnect() {
+export function inventoryConnect() {
   const socket = io.connect("http://localhost:5000/inventory", {
     forceNew: true
   });
@@ -99,7 +99,7 @@ function* handleInventoryIO(socket) {
   yield fork(writeInventorySocket, socket);
 }
 
-export default function* inventoryIO() {
+export function* inventoryIO() {
   const socket = inventoryConnect();
   yield handleInventoryIO(socket);
 }

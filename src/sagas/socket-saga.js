@@ -14,6 +14,11 @@ import {
   handleMessageIO,
   messageConnect
 } from "./socket-sagas/message-socket-saga";
+import {
+  inventoryIO,
+  inventoryConnect
+} from "./socket-sagas/inventory-socket-saga";
+
 import { handleGameIO, gameConnect } from "./socket-sagas/game-socket-saga";
 
 /**
@@ -37,15 +42,22 @@ function* flow() {
   while (true) {
     const messageSocket = yield call(messageConnect);
     const gameSocket = yield call(gameConnect);
+    const inventorySocket = yield call(inventoryConnect);
 
+    console.log(
+      "SEND_IDENTIFICATION called in socket-sagas.js--Potentially remove this code"
+    );
     let idEvent = yield take("SEND_IDENTIFICATION");
     messageSocket.emit("SEND_IDENTIFICATION", {
       user: { id: 1, username: "TestUser" }
     });
+    console.log(
+      "Finished SEND_IDENTIFICATION in socket-sagas.js -- Potentially remove this code"
+    );
 
-    const mTask = yield fork(handleMessageIO, messageSocket);
-    const gTaks = yield fork(handleGameIO, gameSocket);
-
+    const messageTask = yield fork(handleMessageIO, messageSocket);
+    const gameTask = yield fork(handleGameIO, gameSocket);
+    const inventoryTast = yield fork(inventoryIO, inventorySocket);
     yield take("NOTHING");
   }
 }

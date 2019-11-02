@@ -79,6 +79,7 @@ def create_app(conf=None, log=False, return_ext=None):
     import server.socket_events.debug_events
     import server.socket_events.connection_events
     import server.socket_events.game_events
+    import server.socket_events.inventory_events
 
     # Extention initialization
     CORS(app)
