@@ -22,7 +22,7 @@ const InventoryItem = ({ item, selected, onClickHandler, dropHandler }) => {
 };
 
 const InventorySidebar = props => {
-  const createDropItemHandler = itemId => () => {};
+  // const createDropItemHandler = itemId => () => props.dispatchDropItem(itemId);
 
   const [selectedItemId, setSelectedItemId] = useState(NO_ITEM_ID);
 
@@ -37,7 +37,8 @@ const InventorySidebar = props => {
           setSelectedItemId(item.id);
         }}
         dropHandler={() => {
-          createDropItemHandler(item.id);
+          console.log("drop handler");
+          props.dispatchDropItem(itemId);
         }}
       />
     );
@@ -61,7 +62,7 @@ export default connect(
   dispatch => {
     return {
       dispatchDropItem: itemId => {
-        sendDropItem(itemId);
+        dispatch(sendDropItem(itemId));
       }
     };
   }

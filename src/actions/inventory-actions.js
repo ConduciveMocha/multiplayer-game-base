@@ -5,10 +5,13 @@ export const sendAcquireItem = itemId => ({
   itemId: itemId
 });
 
-export const sendDropItem = itemId => ({
-  type: inventoryTypes.DROP_ITEM,
-  itemId: itemId
-});
+export const sendDropItem = itemId => {
+  console.log("sendDropItem called");
+  return {
+    type: inventoryTypes.DROP_ITEM,
+    itemId: itemId
+  };
+};
 
 export const sendDeleteItem = itemId => ({
   type: inventoryTypes.DELETE_ITEM,

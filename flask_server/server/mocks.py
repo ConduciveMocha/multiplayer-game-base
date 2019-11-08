@@ -4,6 +4,8 @@ from server.logging import make_logger
 from server.redis_cache.user_cache import UserEntry
 from server.redis_cache.message_cache import ThreadEntry, MessageEntry
 from server.utils.data_generators import FlexDict
+from server.db.models import InventoryObject
+from app import db
 
 logger = make_logger(__name__)
 
@@ -44,9 +46,29 @@ mock_messages = {
     11: {"id": 11, "sender": 4, "content": "test11", "thread": 2},
     12: {"id": 12, "sender": 1, "content": "test12", "thread": 0},
 }
+
+mock_inventory = {
+    0: {"id": 0, "name": "Test Item 0", "quantity": 1},
+    1: {"id": 1, "name": "Test Item 1", "quantity": 1},
+    2: {"id": 2, "name": "Test Item 2", "quantity": 1},
+    3: {"id": 3, "name": "Test Item 3", "quantity": 1},
+    4: {"id": 4, "name": "Test Item 4", "quantity": 1},
+    5: {"id": 5, "name": "Test Item 5", "quantity": 3},
+    6: {"id": 6, "name": "Test Item 6", "quantity": 56},
+    7: {"id": 7, "name": "Test Item 7", "quantity": 128},
+}
+
+
 DEFAULT_USER_EXPIRE = 60 * 60 * 2
 
 NO_SID = "NO_SID"
+
+
+def mock_inventory_setup():
+    for item_id, item_dict in mock_inventory.items():
+        item = InventoryObject(id=item_id, name=item_dict["name"])
+        db.session.add(item)
+    db.session.commit()
 
 
 def set_user_online(user, user_sid=NO_SID, exp=DEFAULT_USER_EXPIRE):
@@ -168,6 +190,7 @@ def setup_mocks():
     r.set("message:next-id", 13)
     r.set("thread:next-id", 3)
     mock_user_setup()
+    mock_inventory_setup()
     mock_threads_setup()
     mock_message_setup()
 

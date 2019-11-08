@@ -9,6 +9,9 @@ from server.db.models import (
     UserStatus,
     ObjectEffect,
 )
+
+from sqlalchemy.orm.exc import NoResultFound
+from redis import DataError
 from server.logging import make_logger
 from server.game.geometric_types.vector import Vector
 
@@ -98,6 +101,17 @@ def object_in_inventory(inventory_object_id, user_id):
         return False
     except NoResultFound:
         return False
+
+
+def get_user_inventory(user_id):
+    try:
+        user_inventory = UserInventory.query.filter_by(user_id=user_id).all()
+        if user_inventory:
+            return {item.id: item.to_json for item in user_inventory}
+        else:
+            raise NoResultFound(f"Nothing found in inventory for user({user_id})")
+    except NoResultFound as e:
+        return {}
 
 
 def get_environment_by_id(env_id):

@@ -58,7 +58,7 @@ function* flow() {
 
     const messageTask = yield fork(handleMessageIO, messageSocket);
     const gameTask = yield fork(handleGameIO, gameSocket);
-    const inventoryTast = yield fork(handleInventoryIO, inventorySocket);
+    const inventoryTask = yield fork(handleInventoryIO, inventorySocket);
     yield take("NOTHING");
   }
 }
