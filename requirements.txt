@@ -14,7 +14,7 @@ Flask-SocketIO==3.3.2
 Flask-SQLAlchemy==2.3.2
 greenlet==0.4.15
 itsdangerous==1.1.0
-Jinja2==2.10.1
+Jinja2==2.11.3
 kombu==4.5.0
 Mako==1.0.9
 MarkupSafe==1.1.1
